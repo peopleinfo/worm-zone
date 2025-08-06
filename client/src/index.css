@@ -1,0 +1,291 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: Arial, sans-serif;
+  background: #000;
+  overflow: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* Game Header Styles */
+.game-header {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 10px;
+  padding: 15px;
+  border: 2px solid #4CAF50;
+}
+
+/* Multiplayer Connection Styles */
+.multiplayer-connection {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  min-width: 300px;
+}
+
+.mode-selector {
+  display: flex;
+  gap: 10px;
+}
+
+.mode-btn {
+  padding: 8px 16px;
+  border: 2px solid #4CAF50;
+  background: transparent;
+  color: #4CAF50;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.mode-btn:hover {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.mode-btn.active {
+  background: #4CAF50;
+  color: #000;
+}
+
+.mode-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.connection-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.server-input {
+  display: flex;
+  flex-direction: column;
+}
+
+.server-url-input {
+  padding: 8px 12px;
+  border: 2px solid #4CAF50;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.server-url-input:focus {
+  outline: none;
+  border-color: #66BB6A;
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.server-url-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.connect-btn {
+  padding: 10px 20px;
+  border: 2px solid #4CAF50;
+  background: transparent;
+  color: #4CAF50;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.connect-btn:hover {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.connect-btn.connected {
+  border-color: #f44336;
+  color: #f44336;
+}
+
+.connect-btn.connected:hover {
+  background: rgba(244, 67, 54, 0.2);
+}
+
+.connect-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.connection-error {
+  color: #f44336;
+  font-size: 12px;
+  padding: 5px;
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: 3px;
+  border: 1px solid #f44336;
+}
+
+.connection-status {
+  color: #4CAF50;
+  font-size: 12px;
+  padding: 5px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 3px;
+  border: 1px solid #4CAF50;
+}
+
+.player-id {
+  color: #ccc;
+  font-size: 11px;
+}
+
+/* Game Over Modal Styles */
+.game-over-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: rgba(0, 0, 0, 0.9);
+  border: 3px solid #4CAF50;
+  border-radius: 15px;
+  padding: 30px;
+  text-align: center;
+  color: #fff;
+  min-width: 300px;
+}
+
+.modal-content h2 {
+  color: #4CAF50;
+  font-size: 28px;
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px #4CAF50;
+}
+
+.final-stats {
+  margin: 20px 0;
+}
+
+.final-stats p {
+  font-size: 18px;
+  margin: 10px 0;
+  color: #fff;
+}
+
+.restart-button {
+  padding: 12px 24px;
+  border: 2px solid #4CAF50;
+  background: transparent;
+  color: #4CAF50;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  margin: 10px 0;
+}
+
+.restart-button:hover {
+  background: #4CAF50;
+  color: #000;
+  transform: scale(1.05);
+}
+
+.restart-hint {
+  color: #ccc;
+  font-size: 14px;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+/* Game Layout Styles */
+.game-layout {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.game-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Game UI Styles */
+.game-ui {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.meta-info {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #4CAF50;
+  border-radius: 10px;
+  padding: 15px;
+  color: #fff;
+  font-size: 14px;
+  pointer-events: auto;
+}
+
+.meta-info div {
+  margin: 5px 0;
+}
+
+.start-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #4CAF50;
+  border-radius: 15px;
+  padding: 30px;
+  pointer-events: auto;
+}
+
+.start-message h2 {
+  color: #4CAF50;
+  font-size: 32px;
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px #4CAF50;
+}
+
+.start-message p {
+  font-size: 18px;
+  margin: 10px 0;
+  color: #ccc;
+}

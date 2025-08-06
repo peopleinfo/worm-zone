@@ -1,0 +1,37 @@
+# Node.js
+node_modules/
+
+# npm package manager cache
+.npm
+
+# production build files
+build/
+
+# misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDEs and editors
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.localized
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Multiplayer server and client files
+multiplayer/client.js
