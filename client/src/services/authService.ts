@@ -9,6 +9,17 @@ interface BackendLoginResponse {
   data: string; // token
 }
 
+interface UserInfo {
+  id: string;
+  username: string;
+  score: number;
+  rank: number;
+}
+
+interface GetUserInfoResponse {
+  data: UserInfo[];
+}
+
 class AuthService {
   private token: string | null = null;
   private appKey: string = import.meta.env.VITE_MOS_APP_KEY;
@@ -102,6 +113,35 @@ class AuthService {
    */
   setBackendUrl(url: string): void {
     this.backendUrl = url;
+  }
+
+  /**
+   * Gets user information from the backend
+   */
+  async getUserInfo(): Promise<UserInfo[]> {
+    try {
+      if (!this.token) {
+        throw new Error('No token available. Please login first.');
+      }
+
+      const response = await fetch(`${this.backendUrl}/getUserInfo`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Get user info failed: ${response.status}`);
+      }
+
+      const userInfoResponse: GetUserInfoResponse = await response.json();
+      return userInfoResponse.data || [];
+    } catch (error) {
+      console.error('Get user info failed:', error);
+      throw error;
+    }
   }
 }
 
