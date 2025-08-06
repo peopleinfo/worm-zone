@@ -1,11 +1,13 @@
 {
-  "name": "worm-zone-api",
+  "name": "snake-zone-api",
   "version": "1.0.0",
   "description": "Multiplayer worm zone game with real-time communication",
-  "main": "server/server.js",
+
   "scripts": {
     "start-client": "cd client && npm run dev",
-    "start": "node server/server.js",
+    "build-client": "cd client && npm run build",
+    "start-server": "node server/server.js",
+
     "dev": "concurrently \"nodemon server/server.js\" \"npm run start-client\""
   },
   "dependencies": {

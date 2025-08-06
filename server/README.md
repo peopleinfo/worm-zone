@@ -1,12 +1,12 @@
-# Worm Zone Server
+# Snake Zone Server
 
-This file (`server.js`) contains the backend server for the Worm Zone game.
+This file (`server.js`) contains the backend server for the Snake Zone game.
 
 ## Technologies Used
 
 - Node.js
-- Express (if used)
-- Socket.IO (if used)
+- Express
+- Socket.IO
 
 ## Running the Server
 

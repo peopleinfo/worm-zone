@@ -2,7 +2,6 @@
 
 This repository contains the Snake Zone game, a multiplayer snake game. It includes both client and server components.
 
-
 ## Project Structure
 
 - `client/`: Contains the React/TypeScript client application.
