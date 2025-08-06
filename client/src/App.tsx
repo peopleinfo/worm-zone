@@ -1,4 +1,3 @@
-import React from 'react';
 import { GameLayout } from './components/Layout/GameLayout';
 import './App.css';
 

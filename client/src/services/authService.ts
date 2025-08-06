@@ -12,7 +12,7 @@ interface BackendLoginResponse {
 class AuthService {
   private token: string | null = null;
   private appKey: string = import.meta.env.VITE_MOS_APP_KEY;
-  private backendUrl: string = import.meta.env.VITE_BACKEND_LOGIN_URL;
+  private backendUrl: string = import.meta.env.VITE_MOS_API_URL;
 
   constructor() {
     // Restore token from localStorage
@@ -31,7 +31,7 @@ class AuthService {
 
       // Call MOS SDK to get login credentials
       const mosResponse: LoginResponse = await window.mos.login(this.appKey);
-      const code = mosResponse.data.code;
+      const code = mosResponse.data?.code;
 
       if (!code) {
         throw new Error('Failed to get login credentials');
