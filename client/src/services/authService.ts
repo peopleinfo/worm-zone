@@ -1,23 +1,17 @@
 // MOS SDK Authentication Service
 interface LoginResponse {
-  data: {
     code: string;
-  };
-}
-
-interface BackendLoginResponse {
-  data: string; // token
 }
 
 interface UserInfo {
-  id: string;
-  username: string;
-  score: number;
-  rank: number;
+  name: string;
+  headPortrait: string;
 }
 
 interface GetUserInfoResponse {
-  data: UserInfo[];
+  code: number;
+  message: string | null;
+  data: UserInfo;
 }
 
 class AuthService {
@@ -27,7 +21,7 @@ class AuthService {
 
   constructor() {
     // Restore token from localStorage
-    this.token = localStorage.getItem('token');
+    this.token = localStorage.getItem("token");
   }
 
   /**
@@ -36,45 +30,48 @@ class AuthService {
   async login(): Promise<string> {
     try {
       // Check if MOS SDK is available
-      if (typeof window.mos === 'undefined') {
-        throw new Error('MOS SDK not loaded');
+      if (typeof window.mos === "undefined") {
+        throw new Error("MOS SDK not loaded");
       }
 
       // Call MOS SDK to get login credentials
       const mosResponse: LoginResponse = await window.mos.login(this.appKey);
-      const code = mosResponse.data?.code;
+      const code = mosResponse?.code;
+      console.log("mosResponse", mosResponse);
 
       if (!code) {
-        throw new Error('Failed to get login credentials');
+        throw new Error("Failed to get login credentials");
       }
 
       // Send login request to backend
-      const response = await fetch(this.backendUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ code }),
-      });
+      // const response = await fetch(this.backendUrl, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({ code }),
+      // });
 
-      if (!response.ok) {
-        throw new Error(`Login request failed: ${response.status}`);
-      }
+      // if (!response.ok) {
+      //   throw new Error(`Login request failed: ${response.status}`);
+      // }
 
-      const backendResponse: BackendLoginResponse = await response.json();
-      const token = backendResponse.data;
+      // const backendResponse: BackendLoginResponse = await response.json();
+      // const token = backendResponse.data;
 
-      if (!token) {
-        throw new Error('Backend returned empty token');
-      }
+      // if (!token) {
+      //   throw new Error('Backend returned empty token');
+      // }
+      // todo: update to API
+      const token = "123456";
 
       // Save token to memory and localStorage
       this.token = token;
-      localStorage.setItem('token', token);
+      localStorage.setItem("token", token);
 
       return token;
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error("Login failed:", error);
       throw error;
     }
   }
@@ -98,7 +95,7 @@ class AuthService {
    */
   logout(): void {
     this.token = null;
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
   }
 
   /**
@@ -118,28 +115,12 @@ class AuthService {
   /**
    * Gets user information from the backend
    */
-  async getUserInfo(): Promise<UserInfo[]> {
+  async getUserInfo(): Promise<UserInfo> {
     try {
-      if (!this.token) {
-        throw new Error('No token available. Please login first.');
-      }
-
-      const response = await fetch(`${this.backendUrl}/getUserInfo`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Get user info failed: ${response.status}`);
-      }
-
-      const userInfoResponse: GetUserInfoResponse = await response.json();
-      return userInfoResponse.data || [];
+      const userInfoResponse = await window.mos.getUserInfo();
+      return userInfoResponse.data || {};
     } catch (error) {
-      console.error('Get user info failed:', error);
+      console.error("Get user info failed:", error);
       throw error;
     }
   }
@@ -153,7 +134,7 @@ declare global {
   interface Window {
     mos: {
       login: (appKey: string) => Promise<LoginResponse>;
-      // Other MOS SDK methods can be added as needed
+      getUserInfo: () => Promise<GetUserInfoResponse>;
     };
   }
 }
