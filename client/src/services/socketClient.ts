@@ -79,6 +79,9 @@ class SocketClient {
       
       const store = useGameStore.getState();
       
+      // Set current player ID
+      store.setCurrentPlayerId(data.playerId);
+      
       // Convert server players to client snakes
       const otherSnakes = data.gameState.players
         .filter(p => p.id !== this.playerId)
@@ -200,6 +203,25 @@ class SocketClient {
     this.socket.on('gameStats', (data: { playerCount: number; foodCount: number }) => {
       const store = useGameStore.getState();
       store.setGameState({ playerCount: data.playerCount });
+      
+      // Update leaderboard if provided
+      if (data.leaderboard) {
+        const leaderboard = data.leaderboard.map((player: any) => ({
+          ...player,
+          isCurrentPlayer: player.id === store.currentPlayerId
+        }));
+        store.updateLeaderboard(leaderboard);
+      }
+    });
+    
+    // Leaderboard updates
+    this.socket.on('leaderboardUpdate', (data: any) => {
+      const store = useGameStore.getState();
+      const leaderboard = data.leaderboard.map((player: any) => ({
+        ...player,
+        isCurrentPlayer: player.id === store.currentPlayerId
+      }));
+      store.updateLeaderboard(leaderboard);
     });
   }
 

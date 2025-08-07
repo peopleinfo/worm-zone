@@ -4,12 +4,26 @@ import type { Snake } from '../game/Snake';
 import type { Food } from '../game/Food';
 import type { Point } from '../game/Point';
 
+// Leaderboard player interface
+export interface LeaderboardPlayer {
+  id: string;
+  name: string;
+  score: number;
+  rank: number;
+  isBot: boolean;
+  isCurrentPlayer: boolean;
+}
+
 interface GameStore extends GameState {
   // Game Objects
   mySnake: Snake | null;
   otherSnakes: Snake[];
   foods: Food[];
   deadPoints: Point[];
+  
+  // Leaderboard
+  leaderboard: LeaderboardPlayer[];
+  currentPlayerId: string | null;
   
   // Controls
   controls: Controls;
@@ -27,6 +41,8 @@ interface GameStore extends GameState {
   removeDeadPoints: (points: Point[]) => void;
   updateControls: (controls: Partial<Controls>) => void;
   updateSnakeAngle: (angle: number) => void;
+  updateLeaderboard: (leaderboard: LeaderboardPlayer[]) => void;
+  setCurrentPlayerId: (playerId: string) => void;
   resetGame: () => void;
   startGame: () => void;
   endGame: (finalScore: number, finalRank: number) => void;
@@ -48,6 +64,9 @@ const initialState = {
   otherSnakes: [],
   foods: [],
   deadPoints: [],
+  
+  leaderboard: [],
+  currentPlayerId: null,
   
   controls: {
     up: false,
@@ -89,6 +108,10 @@ export const useGameStore = create<GameStore>((set) => ({
     }
     return {}; // Return empty object to trigger re-render
   }),
+  
+  updateLeaderboard: (leaderboard) => set({ leaderboard }),
+  
+  setCurrentPlayerId: (playerId) => set({ currentPlayerId: playerId }),
   
   resetGame: () => set(initialState),
   

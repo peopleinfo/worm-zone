@@ -1,5 +1,6 @@
 import React from 'react';
 import { useGameStore } from '../../stores/gameStore';
+import { Leaderboard } from './Leaderboard';
 
 // Memoized component to prevent unnecessary re-renders
 export const GameUI: React.FC = React.memo(() => {
@@ -12,6 +13,8 @@ export const GameUI: React.FC = React.memo(() => {
   
   return (
     <div className="game-ui">
+      <Leaderboard />
+      
       <div className="meta-info">
         <div className="score">Score: {score}</div>
         <div className="rank">Rank: {rank}</div>

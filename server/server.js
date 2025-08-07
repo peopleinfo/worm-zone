@@ -178,8 +178,20 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Send initial leaderboard to new player
+  const initialLeaderboard = generateLeaderboard();
+  socket.emit('leaderboardUpdate', {
+    leaderboard: initialLeaderboard
+  });
+
   // Broadcast new player to all other players
   socket.broadcast.emit('playerJoined', newPlayer);
+  
+  // Broadcast updated leaderboard to all players
+  const updatedLeaderboard = generateLeaderboard();
+  io.emit('leaderboardUpdate', {
+    leaderboard: updatedLeaderboard
+  });
 
   // Handle player movement
   socket.on('playerMove', (data) => {
@@ -222,6 +234,12 @@ io.on('connection', (socket) => {
       io.emit('scoreUpdate', {
         playerId: playerId,
         score: player.score
+      });
+      
+      // Broadcast updated leaderboard
+      const leaderboard = generateLeaderboard();
+      io.emit('leaderboardUpdate', {
+        leaderboard: leaderboard
       });
     }
   });
@@ -307,6 +325,12 @@ io.on('connection', (socket) => {
       socket.broadcast.emit('playerLeft', {
         playerId: disconnectedPlayerId
       });
+      
+      // Broadcast updated leaderboard after player leaves
+      const leaderboard = generateLeaderboard();
+      io.emit('leaderboardUpdate', {
+        leaderboard: leaderboard
+      });
     }
   });
 });
@@ -337,14 +361,42 @@ setInterval(() => {
   });
 }, 100); // Update bots every 100ms
 
+// Generate leaderboard data
+function generateLeaderboard() {
+  const players = Array.from(gameState.players.values())
+    .filter(player => player.alive)
+    .sort((a, b) => b.score - a.score)
+    .map((player, index) => ({
+      id: player.id,
+      name: player.isBot ? `Guest ${player.id.replace('bot-', '')}` : player.id,
+      score: player.score,
+      rank: index + 1,
+      isBot: player.isBot || false,
+      isCurrentPlayer: false // Will be set on client side
+    }));
+  
+  return players;
+}
+
 // Send periodic game state updates
 setInterval(() => {
   const playerCount = gameState.players.size;
+  const leaderboard = generateLeaderboard();
+  
   io.emit('gameStats', {
     playerCount: playerCount,
-    foodCount: gameState.foods.length
+    foodCount: gameState.foods.length,
+    leaderboard: leaderboard
   });
 }, 5000);
+
+// Send leaderboard updates more frequently
+setInterval(() => {
+  const leaderboard = generateLeaderboard();
+  io.emit('leaderboardUpdate', {
+    leaderboard: leaderboard
+  });
+}, 1000);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
