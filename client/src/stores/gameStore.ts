@@ -31,7 +31,7 @@ const initialState = {
   score: 0,
   rank: 0,
   playerCount: 0,
-  mode: 'single' as const,
+  mode: 'multiplayer' as const,
   status: 'Ready',
   
   mySnake: null,
