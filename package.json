@@ -7,7 +7,8 @@
     "start-client": "cd client && npm run dev",
     "build-client": "cd client && npm run build",
     "start-server": "node server/server.js",
-    "dev": "concurrently \"nodemon server/server.js\" \"npm run start-client\""
+    "kill-dev":"npx kill-port 3000 5173",
+    "dev": "npm run kill-dev && concurrently \"nodemon server/server.js\" \"npm run start-client\""
   },
   "dependencies": {
     "express": "^4.18.2",
