@@ -11,17 +11,28 @@ export const GameCanvas: React.FC = () => {
     if (canvasRef.current && !gameEngineRef.current) {
       gameEngineRef.current = new GameEngine(canvasRef.current);
     }
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      if (gameEngineRef.current) {
+        gameEngineRef.current.stop();
+      }
+    };
   }, []);
   
   useEffect(() => {
     if (gameEngineRef.current) {
       if (isPlaying) {
+        // Ensure we stop any existing loop before starting a new one
+        gameEngineRef.current.stop();
         gameEngineRef.current.start();
       } else {
         gameEngineRef.current.stop();
       }
     }
   }, [isPlaying]);
+  
+
 
   const handleCanvasClick = () => {
     if (!isPlaying) {

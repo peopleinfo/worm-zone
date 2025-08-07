@@ -69,6 +69,9 @@ class SocketClient {
   private setupEventListeners(): void {
     if (!this.socket) return;
 
+    // Remove all existing listeners to prevent duplicates
+    this.socket.removeAllListeners();
+
     // Game initialization
     this.socket.on('gameInit', (data: GameInitData) => {
       console.log('Game initialized:', data);
@@ -82,7 +85,14 @@ class SocketClient {
         .map(p => this.convertServerPlayerToSnake(p));
       
       // Convert server foods to client foods
-      const foods = data.gameState.foods.map(f => new Food(f.radius, data.gameState.worldWidth, data.gameState.worldHeight, f.id));
+      const foods = data.gameState.foods.map(f => {
+        const food = new Food(f.radius, data.gameState.worldWidth, data.gameState.worldHeight);
+        food.id = f.id;
+        food.x = f.x;
+        food.y = f.y;
+        food.color = f.color;
+        return food;
+      });
       
       store.updateOtherSnakes(otherSnakes);
       store.updateFoods(foods);
@@ -241,6 +251,8 @@ class SocketClient {
 
   disconnect(): void {
     if (this.socket) {
+      // Remove all event listeners before disconnecting
+      this.socket.removeAllListeners();
       this.socket.disconnect();
       this.socket = null;
       this.playerId = null;

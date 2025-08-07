@@ -1,10 +1,20 @@
 export class Point {
+  public x: number;
+  public y: number;
+  public radius: number;
+  public color: string;
+
   constructor(
-    public x: number = 0,
-    public y: number = 0,
-    public radius: number = 5,
-    public color: string = 'blue'
-  ) {}
+    x: number = 0,
+    y: number = 0,
+    radius: number = 5,
+    color: string = 'blue'
+  ) {
+    this.x = x;
+    this.y = y;
+    this.radius = radius;
+    this.color = color;
+  }
 
   draw(ctx: CanvasRenderingContext2D, color?: string, radius?: number): void {
     ctx.beginPath();

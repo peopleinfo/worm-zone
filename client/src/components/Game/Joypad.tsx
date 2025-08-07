@@ -5,18 +5,18 @@ interface JoypadProps {
   radius?: number;
 }
 
-export const Joypad: React.FC<JoypadProps> = ({ radius = 50 }) => {
+export const Joypad: React.FC<JoypadProps> = React.memo(({ radius = 50 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isActive, setIsActive] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [innerPosition, setInnerPosition] = useState({ x: 0, y: 0 });
   const outerRadius = radius * 1.3;
   
-  const { mySnake, updateSnakeAngle, isPlaying } = useGameStore();
+  // Use selective subscriptions to minimize re-renders
+  const updateSnakeAngle = useGameStore((state) => state.updateSnakeAngle);
+  const isPlaying = useGameStore((state) => state.isPlaying);
 
-  const centerInner = useCallback((x: number, y: number) => {
-    setInnerPosition({ x, y });
-  }, []);
+
 
   const handleDown = useCallback((clientX: number, clientY: number) => {
     if (!canvasRef.current) return;
@@ -90,7 +90,7 @@ export const Joypad: React.FC<JoypadProps> = ({ radius = 50 }) => {
     handleMove(touch.clientX, touch.clientY);
   }, [handleMove]);
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+  const handleTouchEnd = useCallback((_e: React.TouchEvent) => {
     handleUp();
   }, [handleUp]);
 
@@ -167,4 +167,6 @@ export const Joypad: React.FC<JoypadProps> = ({ radius = 50 }) => {
       onTouchEnd={handleTouchEnd}
     />
   );
-};
+});
+
+Joypad.displayName = 'Joypad';

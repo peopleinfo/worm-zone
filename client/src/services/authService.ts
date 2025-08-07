@@ -29,7 +29,7 @@ interface ContactInfoResponse {
 class AuthService {
   private token: string | null = null;
   private appKey: string = import.meta.env.VITE_MOS_APP_KEY;
-  private backendUrl: string = import.meta.env.VITE_MOS_API_URL;
+  // private backendUrl: string = import.meta.env.VITE_MOS_API_URL;
 
   constructor() {
     // Restore token from localStorage
@@ -122,8 +122,8 @@ class AuthService {
   /**
    * Sets the backend login URL
    */
-  setBackendUrl(url: string): void {
-    this.backendUrl = url;
+  setBackendUrl(_url: string): void {
+    // this.backendUrl = url; // Commented out as backendUrl is not used
   }
 
   /**

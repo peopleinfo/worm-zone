@@ -1,8 +1,8 @@
 import { Snake } from './Snake';
 import { Food } from './Food';
+import { Point } from './Point';
 import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
-import type { Point } from './Point';
 
 export class GameEngine {
   private canvas: HTMLCanvasElement;
@@ -16,6 +16,7 @@ export class GameEngine {
   private maxSnakes = 25;
   private lastSpawnTime = 0;
   private spawnInterval = 1200; // milliseconds
+  private lastSocketUpdate = 0; // Track last socket update time
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -78,6 +79,10 @@ export class GameEngine {
     if (!store.isPlaying || !this.mySnake) return;
 
     const isMultiplayer = store.mode === 'multiplayer' && socketClient.isSocketConnected();
+    
+    // Throttle socket updates to reduce network overhead
+    const now = Date.now();
+    const shouldSendUpdate = !this.lastSocketUpdate || (now - this.lastSocketUpdate) > 16; // ~60fps
 
     // Update player snake
     if (this.mySnake.isAlive) {
@@ -120,9 +125,10 @@ export class GameEngine {
         this.mySnake!.checkCollisionsWithOtherSnakes(snake);
       });
 
-      // Send player movement to server in multiplayer mode
-      if (isMultiplayer) {
+      // Send player movement to server in multiplayer mode (throttled)
+      if (isMultiplayer && shouldSendUpdate) {
         socketClient.sendPlayerMove(this.mySnake);
+        this.lastSocketUpdate = now;
       }
 
       // Update store with current snake state
@@ -273,9 +279,16 @@ export class GameEngine {
   }
 
   resetGame(): void {
+    // Stop any running animation loop
+    this.stop();
+    
     // Clear existing game state
     this.aiSnakes = [];
     Snake.deadPoints = [];
+    
+    // Reset timing variables
+    this.lastSpawnTime = 0;
+    this.lastSocketUpdate = 0;
     
     // Reinitialize game
     this.initializeGame();

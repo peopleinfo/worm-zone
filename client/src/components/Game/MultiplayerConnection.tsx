@@ -12,7 +12,7 @@ export const MultiplayerConnection: React.FC<MultiplayerConnectionProps> = ({ on
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   
-  const { mode, setGameState } = useGameStore();
+  const { mode, setGameState, startCountdown, stopCountdown, isCountingDown, countdownValue } = useGameStore();
 
   useEffect(() => {
     // Check initial connection status
@@ -26,20 +26,35 @@ export const MultiplayerConnection: React.FC<MultiplayerConnectionProps> = ({ on
       setIsConnected(false);
       setGameState({ mode: 'single' });
       onModeChange('single');
+      stopCountdown();
       return;
     }
+
+    // Prevent multiple connection attempts
+    if (isConnecting) return;
 
     setIsConnecting(true);
     setConnectionError(null);
 
     try {
+      // Ensure any existing connection is closed first
+      if (socketClient.isSocketConnected()) {
+        socketClient.disconnect();
+        // Wait a bit for cleanup
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
       await socketClient.connect(serverUrl);
       setIsConnected(true);
       setGameState({ mode: 'multiplayer' });
       onModeChange('multiplayer');
+      
+      // Start countdown after successful connection
+      await startCountdown();
     } catch (error) {
       setConnectionError(error instanceof Error ? error.message : 'Failed to connect to server');
       setIsConnected(false);
+      stopCountdown();
     } finally {
       setIsConnecting(false);
     }
@@ -53,6 +68,7 @@ export const MultiplayerConnection: React.FC<MultiplayerConnectionProps> = ({ on
       setIsConnected(false);
       setGameState({ mode: 'single' });
       onModeChange('single');
+      stopCountdown();
     } else {
       setGameState({ mode: newMode });
       onModeChange(newMode);
@@ -93,11 +109,18 @@ export const MultiplayerConnection: React.FC<MultiplayerConnectionProps> = ({ on
           
           <button 
             onClick={handleConnect}
-            disabled={isConnecting}
+            disabled={isConnecting || isCountingDown}
             className={`connect-btn ${isConnected ? 'connected' : 'disconnected'}`}
           >
             {isConnecting ? 'Connecting...' : isConnected ? 'Disconnect' : 'Connect'}
           </button>
+          
+          {isCountingDown && countdownValue && (
+            <div className="countdown-overlay">
+              <div className="countdown-number">{countdownValue}</div>
+              <div className="countdown-text">Get Ready!</div>
+            </div>
+          )}
           
           {connectionError && (
             <div className="connection-error">

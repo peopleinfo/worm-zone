@@ -1,8 +1,14 @@
 import React from 'react';
 import { useGameStore } from '../../stores/gameStore';
 
-export const GameUI: React.FC = () => {
-  const { score, rank, playerCount, status, isPlaying } = useGameStore();
+// Memoized component to prevent unnecessary re-renders
+export const GameUI: React.FC = React.memo(() => {
+  // Use selective subscriptions to minimize re-renders
+  const score = useGameStore((state) => state.score);
+  const rank = useGameStore((state) => state.rank);
+  const playerCount = useGameStore((state) => state.playerCount);
+  const status = useGameStore((state) => state.status);
+  const isPlaying = useGameStore((state) => state.isPlaying);
   
   return (
     <div className="game-ui">
@@ -17,9 +23,10 @@ export const GameUI: React.FC = () => {
         <div className="start-message">
           <h2>Worm Zone Clone</h2>
           <p>Click to start playing!</p>
-          <p>Use arrow keys to control your worm</p>
         </div>
       )}
     </div>
   );
-};
+});
+
+GameUI.displayName = 'GameUI';

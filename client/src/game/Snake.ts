@@ -30,7 +30,7 @@ export class Snake implements SnakeInterface {
     x: number = 0,
     y: number = 0,
     length: number = 25,
-    color: string = 'red',
+    _color: string = 'red',
     id: string = Math.random().toString(36).substr(2, 9)
   ) {
     this.id = id;

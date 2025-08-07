@@ -5,8 +5,11 @@ interface GameOverModalProps {
   onRestart: () => void;
 }
 
-export const GameOverModal: React.FC<GameOverModalProps> = ({ onRestart }) => {
-  const { isGameOver, score, rank } = useGameStore();
+export const GameOverModal: React.FC<GameOverModalProps> = React.memo(({ onRestart }) => {
+  // Use selective subscriptions to minimize re-renders
+  const isGameOver = useGameStore((state) => state.isGameOver);
+  const score = useGameStore((state) => state.score);
+  const rank = useGameStore((state) => state.rank);
   
   // Add keyboard support for restarting with spacebar
   useEffect(() => {
@@ -46,4 +49,6 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({ onRestart }) => {
       </div>
     </div>
   );
-};
+});
+
+GameOverModal.displayName = 'GameOverModal';
