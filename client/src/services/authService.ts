@@ -28,6 +28,7 @@ class AuthService {
    * Logs in using the MOS SDK
    */
   async login(): Promise<string> {
+    console.log("service login");
     try {
       // Check if MOS SDK is available
       if (typeof window.mos === "undefined") {
@@ -44,7 +45,8 @@ class AuthService {
       }
 
       // Send login request to backend
-      // const response = await fetch(this.backendUrl, {
+      // const response = await fetch(`${this.backendUrl}/login/miniAppLogin`, {
+
       //   method: 'POST',
       //   headers: {
       //     'Content-Type': 'application/json',
@@ -56,7 +58,7 @@ class AuthService {
       //   throw new Error(`Login request failed: ${response.status}`);
       // }
 
-      // const backendResponse: BackendLoginResponse = await response.json();
+      // const backendResponse = await response.json();
       // const token = backendResponse.data;
 
       // if (!token) {
@@ -68,7 +70,7 @@ class AuthService {
       // Save token to memory and localStorage
       this.token = token;
       localStorage.setItem("token", token);
-
+      console.log("token", token);
       return token;
     } catch (error) {
       console.error("Login failed:", error);
@@ -117,7 +119,9 @@ class AuthService {
    */
   async getUserInfo(): Promise<UserInfo> {
     try {
-      const userInfoResponse = await window.mos.getUserInfo();
+      const userInfoResponse = await window.mos.getUserInfo('user_info');
+      console.log("userInfoResponse", userInfoResponse);
+
       return userInfoResponse.data || {};
     } catch (error) {
       console.error("Get user info failed:", error);
@@ -134,7 +138,7 @@ declare global {
   interface Window {
     mos: {
       login: (appKey: string) => Promise<LoginResponse>;
-      getUserInfo: () => Promise<GetUserInfoResponse>;
+      getUserInfo: (scope: string) => Promise<GetUserInfoResponse>;
     };
   }
 }

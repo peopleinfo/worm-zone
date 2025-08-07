@@ -20,23 +20,17 @@ export const GameLayout: React.FC = () => {
   // Auto login on component mount
   useEffect(() => {
     const autoLogin = async () => {
-      // Check if already logged in
-      if (authService.isLoggedIn()) {
-        console.log('User already logged in with token:', authService.getToken());
-        return;
-      }
-      
       // Attempt automatic login if MOS SDK is available
       if (typeof window.mos !== 'undefined') {
         try {
           await authService.login();
+          await authService.getUserInfo();
           console.log('Auto login successful, token:', authService.getToken());
         } catch (error) {
           console.log('Auto login failed, continuing as guest:', error);
+          throw error;
         }
-      } else {
-        console.log('MOS SDK not available, continuing as guest');
-      }
+      } 
     };
     
     // Delay to ensure MOS SDK is loaded
@@ -60,9 +54,7 @@ export const GameLayout: React.FC = () => {
     // Reset game when switching modes
     resetGame();
   };
-  
 
-  
   return (
     <div className="game-layout">
       <div className="game-header">
