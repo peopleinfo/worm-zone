@@ -14,6 +14,18 @@ interface GetUserInfoResponse {
   data: UserInfo;
 }
 
+interface ContactInfoResponse {
+  code: number;
+  message: string | null;
+  data: {
+    authorized: number;
+    dialCode: string;
+    phone: string;
+    email: string | null;
+  };
+}
+
+
 class AuthService {
   private token: string | null = null;
   private appKey: string = import.meta.env.VITE_MOS_APP_KEY;
@@ -115,7 +127,7 @@ class AuthService {
   }
 
   /**
-   * Gets user information from the backend
+   * Gets user information from the sdk
    */
   async getUserInfo(): Promise<UserInfo> {
     try {
@@ -125,6 +137,19 @@ class AuthService {
       return userInfoResponse.data || {};
     } catch (error) {
       console.error("Get user info failed:", error);
+      throw error;
+    }
+  }
+    /**
+   * Gets user contact information from the sdk
+   */
+  async getUserContactInfo() {
+    try {
+      const contactInfo = await window.mos.getUserContactInfo('contact_info');
+      console.log("contactInfo", contactInfo);
+      return contactInfo.data || {};
+    } catch (error) {
+      console.error("Get user contact info failed:", error);
       throw error;
     }
   }
@@ -139,6 +164,7 @@ declare global {
     mos: {
       login: (appKey: string) => Promise<LoginResponse>;
       getUserInfo: (scope: string) => Promise<GetUserInfoResponse>;
+      getUserContactInfo: (scope: string) => Promise<ContactInfoResponse>;
     };
   }
 }
