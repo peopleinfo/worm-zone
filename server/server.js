@@ -49,6 +49,83 @@ function generatePlayerId() {
   return Math.random().toString(36).substr(2, 9);
 }
 
+function createBot(id) {
+  const bot = {
+    id: id,
+    socketId: null, // Bots don't have socket connections
+    x: Math.random() * gameState.worldWidth,
+    y: Math.random() * gameState.worldHeight,
+    points: [],
+    angle: Math.random() * Math.PI * 2,
+    radius: 4,
+    speed: 1.0, // Slightly slower than human players
+    color: getRandomColor(),
+    score: 0,
+    alive: true,
+    isBot: true
+  };
+
+  // Initialize bot with starting points
+  for (let i = 0; i < 20; i++) {
+    bot.points.push({
+      x: bot.x - i * 2,
+      y: bot.y,
+      radius: bot.radius,
+      color: getRandomColor()
+    });
+  }
+
+  return bot;
+}
+
+function spawnBots(count = 5) {
+  for (let i = 0; i < count; i++) {
+    const botId = `bot-${generatePlayerId()}`;
+    const bot = createBot(botId);
+    gameState.players.set(botId, bot); // Only add to players map
+  }
+  console.log(`Spawned ${count} bots`);
+}
+
+function updateBots() {
+  // Iterate over all players and filter for bots
+  gameState.players.forEach((player) => {
+    if (!player.isBot || !player.alive) return;
+
+    // Simple AI movement - change direction occasionally
+    if (Math.random() < 0.02) {
+      player.angle += (Math.random() - 0.5) * 0.5;
+    }
+
+    // Move bot
+    const newX = player.x + Math.cos(player.angle) * player.speed;
+    const newY = player.y + Math.sin(player.angle) * player.speed;
+
+    // Keep bot within bounds
+    if (newX < 50 || newX > gameState.worldWidth - 50) {
+      player.angle = Math.PI - player.angle;
+    }
+    if (newY < 50 || newY > gameState.worldHeight - 50) {
+      player.angle = -player.angle;
+    }
+
+    player.x = Math.max(50, Math.min(gameState.worldWidth - 50, newX));
+    player.y = Math.max(50, Math.min(gameState.worldHeight - 50, newY));
+
+    // Update bot points (simple snake movement)
+    if (player.points.length > 0) {
+      // Move each point to the position of the point in front of it
+      for (let i = player.points.length - 1; i > 0; i--) {
+        player.points[i].x = player.points[i - 1].x;
+        player.points[i].y = player.points[i - 1].y;
+      }
+      // Update head position
+      player.points[0].x = player.x;
+      player.points[0].y = player.y;
+    }
+  });
+}
+
 // Initialize game
 initializeFoods();
 
@@ -82,6 +159,12 @@ io.on('connection', (socket) => {
   }
 
   gameState.players.set(playerId, newPlayer);
+
+  // Automatically spawn 5 bots when a user connects (if not already present)
+  const humanPlayers = Array.from(gameState.players.values()).filter(p => !p.isBot);
+  if (humanPlayers.length === 1) { // First human player
+    spawnBots(5);
+  }
 
   // Send initial game state to new player
   socket.emit('gameInit', {
@@ -190,14 +273,31 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle request for minimum players
+  socket.on('requestMinimumPlayers', (data) => {
+    const { minPlayers } = data;
+    const currentPlayerCount = gameState.players.size;
+    
+    if (currentPlayerCount < minPlayers) {
+      const botsNeeded = minPlayers - currentPlayerCount;
+      spawnBots(botsNeeded);
+      
+      // Broadcast updated game state to all players
+      io.emit('gameStats', {
+        playerCount: gameState.players.size,
+        foodCount: gameState.foods.length
+      });
+    }
+  });
+
   // Handle disconnect
   socket.on('disconnect', () => {
     console.log('Player disconnected:', socket.id);
     
-    // Find and remove player
+    // Find and remove player (only human players, keep bots)
     let disconnectedPlayerId = null;
     for (const [playerId, player] of gameState.players.entries()) {
-      if (player.socketId === socket.id) {
+      if (player.socketId === socket.id && !player.isBot) {
         disconnectedPlayerId = playerId;
       }
     }
@@ -218,6 +318,24 @@ setInterval(() => {
     gameState.deadPoints = gameState.deadPoints.slice(-2500);
   }
 }, 30000);
+
+// Update bots continuously
+setInterval(() => {
+  updateBots();
+  
+  // Broadcast bot movements to all players
+  gameState.players.forEach((player) => {
+    if (player.isBot && player.alive) {
+      io.emit('playerMoved', {
+        playerId: player.id,
+        x: player.x,
+        y: player.y,
+        angle: player.angle,
+        points: player.points
+      });
+    }
+  });
+}, 100); // Update bots every 100ms
 
 // Send periodic game state updates
 setInterval(() => {

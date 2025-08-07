@@ -219,34 +219,61 @@ class SocketClient {
   sendPlayerMove(snake: Snake): void {
     if (!this.socket || !this.isConnected || !this.playerId) return;
     
-    const head = snake.getHead();
-    this.socket.emit('playerMove', {
-      playerId: this.playerId,
-      x: head.x,
-      y: head.y,
-      angle: snake.angle,
-      points: snake.points.map(p => ({ x: p.x, y: p.y, radius: p.radius, color: p.color }))
-    });
+    try {
+      const head = snake.getHead();
+      if (!head) {
+        console.warn('Cannot send player move: snake head is null');
+        return;
+      }
+      
+      this.socket.emit('playerMove', {
+        playerId: this.playerId,
+        x: head.x,
+        y: head.y,
+        angle: snake.angle,
+        points: snake.points.map(p => ({ x: p.x, y: p.y, radius: p.radius, color: p.color }))
+      });
+    } catch (error) {
+      console.error('Error sending player movement:', error);
+      // Attempt to reconnect if socket is disconnected
+      if (!this.socket?.connected) {
+        this.isConnected = false;
+      }
+    }
   }
 
   // Send food eaten event
   sendFoodEaten(foodId: string): void {
     if (!this.socket || !this.isConnected || !this.playerId) return;
     
-    this.socket.emit('foodEaten', {
-      playerId: this.playerId,
-      foodId: foodId
-    });
+    try {
+      this.socket.emit('foodEaten', {
+        playerId: this.playerId,
+        foodId: foodId
+      });
+    } catch (error) {
+      console.error('Error sending food eaten event:', error);
+      if (!this.socket?.connected) {
+        this.isConnected = false;
+      }
+    }
   }
 
   // Send player death event
   sendPlayerDied(deadPoints: Point[]): void {
     if (!this.socket || !this.isConnected || !this.playerId) return;
     
-    this.socket.emit('playerDied', {
-      playerId: this.playerId,
-      deadPoints: deadPoints.map(p => ({ x: p.x, y: p.y, radius: p.radius, color: p.color }))
-    });
+    try {
+      this.socket.emit('playerDied', {
+        playerId: this.playerId,
+        deadPoints: deadPoints.map(p => ({ x: p.x, y: p.y, radius: p.radius, color: p.color }))
+      });
+    } catch (error) {
+      console.error('Error sending player death event:', error);
+      if (!this.socket?.connected) {
+        this.isConnected = false;
+      }
+    }
   }
 
   disconnect(): void {
@@ -266,6 +293,15 @@ class SocketClient {
 
   isSocketConnected(): boolean {
     return this.isConnected;
+  }
+
+  // Request minimum players (server should add bots if needed)
+  requestMinimumPlayers(minPlayers: number): void {
+    if (!this.socket || !this.isConnected) return;
+    
+    this.socket.emit('requestMinimumPlayers', {
+      minPlayers: minPlayers
+    });
   }
 }
 

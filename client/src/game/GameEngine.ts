@@ -82,53 +82,80 @@ export class GameEngine {
     
     // Throttle socket updates to reduce network overhead
     const now = Date.now();
-    const shouldSendUpdate = !this.lastSocketUpdate || (now - this.lastSocketUpdate) > 16; // ~60fps
+    const shouldSendUpdate = !this.lastSocketUpdate || (now - this.lastSocketUpdate) > 50; // Reduced frequency to 20fps for better performance
 
     // Update player snake
     if (this.mySnake.isAlive) {
       this.mySnake.move(store.controls);
       this.mySnake.checkCollisionsWithBoundary(this.canvas.width, this.canvas.height);
 
-      // Check food collisions
+      // Check food collisions - optimized to break early
       const foodsToCheck = isMultiplayer ? store.foods : this.foods;
-      foodsToCheck.forEach(food => {
+      for (let i = 0; i < foodsToCheck.length; i++) {
+        const food = foodsToCheck[i];
         const collision = this.mySnake!.checkCollisionsWithFood(food as unknown as Point);
         if (collision) {
           if (isMultiplayer) {
-            // Send food eaten event to server
-            socketClient.sendFoodEaten(food.id);
+            try {
+              // Send food eaten event to server with error handling
+              socketClient.sendFoodEaten(food.id);
+            } catch (error) {
+              console.warn('Failed to send food eaten event:', error);
+            }
           } else {
             // Single player mode - regenerate food locally
             food.x = Math.random() * this.canvas.width;
             food.y = Math.random() * this.canvas.height;
           }
+          break; // Only one food can be eaten per frame
         }
-      });
-
-      // Check dead points collisions
-      const deadPointsToCheck = isMultiplayer ? store.deadPoints : Snake.deadPoints;
-      if (isMultiplayer) {
-        store.addDeadPoints(deadPointsToCheck.filter(p => {
-          const collision = this.mySnake!.checkCollisionsWithFood(p);
-          return !collision;
-        }));
-      } else {
-        Snake.deadPoints = Snake.deadPoints.filter(p => {
-          const collision = this.mySnake!.checkCollisionsWithFood(p);
-          return !collision;
-        });
       }
 
-      // Check collisions with other snakes
-      const otherSnakes = isMultiplayer ? store.otherSnakes : this.aiSnakes;
-      otherSnakes.forEach(snake => {
-        this.mySnake!.checkCollisionsWithOtherSnakes(snake);
-      });
+      // Optimized dead points collision checking - avoid array recreation
+      const deadPointsToCheck = isMultiplayer ? store.deadPoints : Snake.deadPoints;
+      if (isMultiplayer) {
+        // Process dead points in-place to avoid array recreation
+        const consumedPoints: Point[] = [];
+        for (let i = deadPointsToCheck.length - 1; i >= 0; i--) {
+          const point = deadPointsToCheck[i];
+          const collision = this.mySnake!.checkCollisionsWithFood(point);
+          if (collision) {
+            consumedPoints.push(point);
+            deadPointsToCheck.splice(i, 1);
+          }
+        }
+        if (consumedPoints.length > 0) {
+          store.removeDeadPoints(consumedPoints);
+        }
+      } else {
+        // Single player mode - process in-place
+        for (let i = Snake.deadPoints.length - 1; i >= 0; i--) {
+          const point = Snake.deadPoints[i];
+          const collision = this.mySnake!.checkCollisionsWithFood(point);
+          if (collision) {
+            Snake.deadPoints.splice(i, 1);
+          }
+        }
+      }
 
-      // Send player movement to server in multiplayer mode (throttled)
+      // Optimized collision detection with other snakes - break early on collision
+      const otherSnakes = isMultiplayer ? store.otherSnakes : this.aiSnakes;
+      for (let i = 0; i < otherSnakes.length; i++) {
+        const snake = otherSnakes[i];
+        if (snake.isAlive) {
+          const collided = this.mySnake!.checkCollisionsWithOtherSnakes(snake);
+          if (collided) break; // Stop checking once collision detected
+        }
+      }
+
+      // Send player movement to server in multiplayer mode (throttled with error handling)
       if (isMultiplayer && shouldSendUpdate) {
-        socketClient.sendPlayerMove(this.mySnake);
-        this.lastSocketUpdate = now;
+        try {
+          socketClient.sendPlayerMove(this.mySnake);
+          this.lastSocketUpdate = now;
+        } catch (error) {
+          console.warn('Failed to send player movement:', error);
+        }
       }
 
       // Update store with current snake state
@@ -139,46 +166,60 @@ export class GameEngine {
     } else {
       // Snake is dead
       if (isMultiplayer) {
-        // Send death event to server
-        socketClient.sendPlayerDied(Snake.deadPoints);
+        try {
+          // Send death event to server with error handling
+          socketClient.sendPlayerDied(Snake.deadPoints);
+        } catch (error) {
+          console.warn('Failed to send player death event:', error);
+        }
       }
       store.endGame(this.mySnake.finalScore || 0, this.mySnake.finalRank || 1);
     }
 
-    // Update AI snakes (only in single player mode)
+    // Update AI snakes (only in single player mode) - optimized
     if (!isMultiplayer) {
-      this.aiSnakes.forEach(snake => {
-        if (snake.isAlive) {
-          snake.move();
-          snake.checkCollisionsWithBoundary(this.canvas.width, this.canvas.height);
+      const aliveAiSnakes = this.aiSnakes.filter(snake => snake.isAlive);
+      
+      for (let i = 0; i < aliveAiSnakes.length; i++) {
+        const snake = aliveAiSnakes[i];
+        snake.move();
+        snake.checkCollisionsWithBoundary(this.canvas.width, this.canvas.height);
 
-          // AI snake food collisions
-          this.foods.forEach(food => {
-            const collision = snake.checkCollisionsWithFood(food);
-            if (collision) {
-              food.regenerate(this.canvas.width, this.canvas.height);
-            }
-          });
-
-          // AI snake dead points collisions
-          Snake.deadPoints = Snake.deadPoints.filter(p => {
-            const collision = snake.checkCollisionsWithFood(p);
-            return !collision;
-          });
-
-          // AI snake collisions with other snakes
-          this.aiSnakes.forEach(otherSnake => {
-            if (otherSnake !== snake) {
-              snake.checkCollisionsWithOtherSnakes(otherSnake);
-            }
-          });
-
-          // AI snake collision with player
-          if (this.mySnake && this.mySnake.isAlive) {
-            snake.checkCollisionsWithOtherSnakes(this.mySnake);
+        // AI snake food collisions - break early on first collision
+        let foodCollisionFound = false;
+        for (let j = 0; j < this.foods.length && !foodCollisionFound; j++) {
+          const food = this.foods[j];
+          const collision = snake.checkCollisionsWithFood(food);
+          if (collision) {
+            food.regenerate(this.canvas.width, this.canvas.height);
+            foodCollisionFound = true;
           }
         }
-      });
+
+        // AI snake dead points collisions - optimized in-place processing
+        for (let j = Snake.deadPoints.length - 1; j >= 0; j--) {
+          const point = Snake.deadPoints[j];
+          const collision = snake.checkCollisionsWithFood(point);
+          if (collision) {
+            Snake.deadPoints.splice(j, 1);
+          }
+        }
+
+        // AI snake collisions with other AI snakes - avoid duplicate checks
+        let snakeCollisionFound = false;
+        for (let j = i + 1; j < aliveAiSnakes.length && !snakeCollisionFound; j++) {
+          const otherSnake = aliveAiSnakes[j];
+          const collided = snake.checkCollisionsWithOtherSnakes(otherSnake);
+          if (collided) {
+            snakeCollisionFound = true;
+          }
+        }
+
+        // AI snake collision with player - only if no other collision found
+        if (!snakeCollisionFound && this.mySnake && this.mySnake.isAlive) {
+          snake.checkCollisionsWithOtherSnakes(this.mySnake);
+        }
+      }
 
       // Spawn new AI snakes periodically
       const currentTime = Date.now();
@@ -296,5 +337,67 @@ export class GameEngine {
     // Reset store
     const store = useGameStore.getState();
     store.resetGame();
+  }
+
+  // Cleanup method for proper resource management
+  cleanup(): void {
+    // Stop animation loop
+    this.stop();
+    
+    // Clear all game objects
+    this.aiSnakes = [];
+    this.foods = [];
+    this.mySnake = null;
+    Snake.deadPoints = [];
+    
+    // Reset timing variables
+    this.lastSpawnTime = 0;
+    this.lastSocketUpdate = 0;
+    
+    // Disconnect socket if connected
+    if (socketClient.isSocketConnected()) {
+      socketClient.disconnect();
+    }
+    
+    // Clear canvas
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  // Method to switch between single and multiplayer modes safely
+  switchMode(newMode: 'single' | 'multiplayer'): void {
+    const store = useGameStore.getState();
+    const currentMode = store.mode;
+    
+    if (currentMode === newMode) return;
+    
+    // Stop current game
+    this.stop();
+    
+    // Clean up mode-specific resources
+    if (currentMode === 'multiplayer') {
+      // Cleanup multiplayer resources
+      if (socketClient.isSocketConnected()) {
+        socketClient.disconnect();
+      }
+      store.updateOtherSnakes([]);
+      store.addDeadPoints([]);
+    } else {
+      // Cleanup single player resources
+      this.aiSnakes = [];
+      Snake.deadPoints = [];
+    }
+    
+    // Reset game state
+    store.setGameState({ 
+      mode: newMode,
+      isPlaying: false,
+      isGameOver: false,
+      score: 0,
+      rank: 0,
+      playerCount: 0
+    });
+    
+    // Reinitialize for new mode
+    this.initializeGame();
   }
 }

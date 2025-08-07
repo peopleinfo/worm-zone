@@ -24,8 +24,8 @@ export const MultiplayerConnection: React.FC<MultiplayerConnectionProps> = ({ on
       // Disconnect
       socketClient.disconnect();
       setIsConnected(false);
-      setGameState({ mode: 'single' });
-      onModeChange('single');
+      setGameState({ mode: 'multiplayer' });
+      onModeChange('multiplayer');
       stopCountdown();
       return;
     }

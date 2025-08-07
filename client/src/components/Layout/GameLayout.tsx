@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { GameCanvas } from "../Game/GameCanvas";
 import { GameUI } from "../Game/GameUI";
 import { GameOverModal } from "../Game/GameOverModal";
-import { MultiplayerConnection } from "../Game/MultiplayerConnection";
+import { ToBattleButton } from "../Game/ToBattleButton";
 import { Joypad } from "../Game/Joypad";
 import { useKeyboardControls } from "../../hooks/useKeyboardControls";
 import { useGameStore } from "../../stores/gameStore";
@@ -52,7 +52,7 @@ export const GameLayout: React.FC = () => {
   return (
     <div className="game-layout">
       <div className="game-header">
-        <MultiplayerConnection onModeChange={handleModeChange} />
+        <ToBattleButton onModeChange={handleModeChange} />
       </div>
       <GameCanvas />
       <GameUI />

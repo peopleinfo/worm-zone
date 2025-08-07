@@ -24,6 +24,7 @@ interface GameStore extends GameState {
   updateOtherSnakes: (snakes: Snake[]) => void;
   updateFoods: (foods: Food[]) => void;
   addDeadPoints: (points: Point[]) => void;
+  removeDeadPoints: (points: Point[]) => void;
   updateControls: (controls: Partial<Controls>) => void;
   updateSnakeAngle: (angle: number) => void;
   resetGame: () => void;
@@ -72,6 +73,10 @@ export const useGameStore = create<GameStore>((set) => ({
   
   addDeadPoints: (points) => set((state) => ({
     deadPoints: [...state.deadPoints, ...points]
+  })),
+  
+  removeDeadPoints: (points) => set((state) => ({
+    deadPoints: state.deadPoints.filter(dp => !points.some(p => p.x === dp.x && p.y === dp.y))
   })),
   
   updateControls: (controls) => set((state) => ({
