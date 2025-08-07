@@ -5,6 +5,8 @@ import type { LeaderboardPlayer } from '../../stores/gameStore';
 export const Leaderboard: React.FC = React.memo(() => {
   const leaderboard = useGameStore((state) => state.leaderboard);
   const currentPlayerId = useGameStore((state) => state.currentPlayerId);
+  const isPlaying = useGameStore((state) => state.isPlaying);
+
   
   // Show top 10 players, but always include current player if not in top 10
   const getDisplayedPlayers = (): LeaderboardPlayer[] => {
@@ -22,7 +24,7 @@ export const Leaderboard: React.FC = React.memo(() => {
   const displayedPlayers = getDisplayedPlayers();
   const totalPlayers = leaderboard.length;
   
-  if (displayedPlayers.length === 0) {
+  if (displayedPlayers.length === 0 || !isPlaying) {
     return null;
   }
   

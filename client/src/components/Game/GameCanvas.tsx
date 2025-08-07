@@ -45,7 +45,7 @@ export const GameCanvas: React.FC = () => {
       ref={canvasRef}
       id="gameCanvas"
       className="game-canvas"
-      onClick={handleCanvasClick}
+      // onClick={handleCanvasClick}
       style={{
         display: 'block',
         cursor: isPlaying ? 'none' : 'pointer',

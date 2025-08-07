@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { GameCanvas } from "../Game/GameCanvas";
 import { GameUI } from "../Game/GameUI";
 import { GameOverModal } from "../Game/GameOverModal";
-import { ToBattleButton } from "../Game/ToBattleButton";
 import { Joypad } from "../Game/Joypad";
 import { useKeyboardControls } from "../../hooks/useKeyboardControls";
 import { useGameStore } from "../../stores/gameStore";
 import { authService } from "../../services/authService";
 
 export const GameLayout: React.FC = () => {
-  const [_gameMode, setGameMode] = useState<"single" | "multiplayer">("single");
   const { resetGame, startGame } = useGameStore();
 
   // Initialize keyboard controls
@@ -43,17 +41,8 @@ export const GameLayout: React.FC = () => {
     startGame();
   };
 
-  const handleModeChange = (mode: "single" | "multiplayer") => {
-    setGameMode(mode);
-    // Reset game when switching modes
-    resetGame();
-  };
-
   return (
     <div className="game-layout">
-      <div className="game-header">
-        <ToBattleButton onModeChange={handleModeChange} />
-      </div>
       <GameCanvas />
       <GameUI />
       <GameOverModal onRestart={handleRestart} />

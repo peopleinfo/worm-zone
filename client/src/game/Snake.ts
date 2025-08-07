@@ -57,6 +57,15 @@ export class Snake implements SnakeInterface {
     this.radius = Math.min(10, Math.max(4, this.points.length * this.fatScaler));
   }
 
+  eatSnake(points: number): void {
+    // Award points equal to the length of the eaten snake
+    for (let i = 0; i < points; i++) {
+      const tail = this.points[this.points.length - 1];
+      const newPoint = new Point(tail.x, tail.y, tail.radius, this.color);
+      this.points.push(newPoint);
+    }
+  }
+
   getHead(): Point {
     return this.points[0] ?? new Point(this.overPos.x, this.overPos.y);
   }
@@ -131,17 +140,18 @@ export class Snake implements SnakeInterface {
     return undefined;
   }
 
-  checkCollisionsWithOtherSnakes(snake: Snake): boolean {
-    if (snake === this || !this.isAlive) return false;
+  checkCollisionsWithOtherSnakes(snake: Snake): { collided: boolean; collidedWith?: Snake; points?: number } {
+    if (snake === this || !this.isAlive) return { collided: false };
 
     const head = this.getHead();
     const collided = snake.points.find(p => isCollided(head, p));
     
     if (collided) {
+      const points = this.points.length; // Points to award to the other snake
       this.over();
-      return true;
+      return { collided: true, collidedWith: snake, points };
     }
-    return false;
+    return { collided: false };
   }
 
   checkCollisionsWithBoundary(canvasWidth: number, canvasHeight: number): boolean {

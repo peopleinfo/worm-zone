@@ -143,8 +143,14 @@ export class GameEngine {
       for (let i = 0; i < otherSnakes.length; i++) {
         const snake = otherSnakes[i];
         if (snake.isAlive) {
-          const collided = this.mySnake!.checkCollisionsWithOtherSnakes(snake);
-          if (collided) break; // Stop checking once collision detected
+          const collision = this.mySnake!.checkCollisionsWithOtherSnakes(snake);
+          if (collision.collided) {
+            // Award points to the snake that caused the collision
+            if (collision.collidedWith && collision.points) {
+              collision.collidedWith.eatSnake(collision.points);
+            }
+            break; // Stop checking once collision detected
+          }
         }
       }
 
@@ -209,15 +215,23 @@ export class GameEngine {
         let snakeCollisionFound = false;
         for (let j = i + 1; j < aliveAiSnakes.length && !snakeCollisionFound; j++) {
           const otherSnake = aliveAiSnakes[j];
-          const collided = snake.checkCollisionsWithOtherSnakes(otherSnake);
-          if (collided) {
+          const collision = snake.checkCollisionsWithOtherSnakes(otherSnake);
+          if (collision.collided) {
+            // Award points to the snake that caused the collision
+            if (collision.collidedWith && collision.points) {
+              collision.collidedWith.eatSnake(collision.points);
+            }
             snakeCollisionFound = true;
           }
         }
 
         // AI snake collision with player - only if no other collision found
         if (!snakeCollisionFound && this.mySnake && this.mySnake.isAlive) {
-          snake.checkCollisionsWithOtherSnakes(this.mySnake);
+          const collision = snake.checkCollisionsWithOtherSnakes(this.mySnake);
+          if (collision.collided && collision.collidedWith && collision.points) {
+            // Award points to the player snake
+            collision.collidedWith.eatSnake(collision.points);
+          }
         }
       }
 
