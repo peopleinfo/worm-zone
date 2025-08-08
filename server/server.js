@@ -105,6 +105,44 @@ function isCollided(circle1, circle2) {
   return distance < circle1.radius + circle2.radius;
 }
 
+// Handle bot death - convert body to dead points and remove from game
+function handleBotDeath(bot) {
+  if (!bot.alive) return;
+  
+  bot.alive = false;
+  
+  // Convert bot's body points to dead points
+  const deadPoints = bot.points.map(point => ({
+    x: point.x,
+    y: point.y,
+    radius: point.radius,
+    color: point.color
+  }));
+  
+  // Add dead points to game state
+  gameState.deadPoints.push(...deadPoints);
+  
+  // Remove bot from game state
+  gameState.players.delete(bot.id);
+  
+  console.log(`Bot ${bot.id} died and was removed from arena`);
+  
+  // Broadcast bot death and dead points
+  io.emit('playerDied', {
+    playerId: bot.id,
+    deadPoints: deadPoints
+  });
+  
+  // Broadcast bot removal
+  io.emit('playerDisconnected', bot.id);
+  
+  // Update leaderboard after bot removal
+  const leaderboard = generateLeaderboard();
+  io.emit('leaderboardUpdate', {
+    leaderboard: leaderboard
+  });
+}
+
 function updateBots() {
   // Iterate over all players and filter for bots
   gameState.players.forEach((player) => {
@@ -119,16 +157,36 @@ function updateBots() {
     const newX = player.x + Math.cos(player.angle) * player.speed;
     const newY = player.y + Math.sin(player.angle) * player.speed;
 
-    // Keep bot within bounds
-    if (newX < 50 || newX > gameState.worldWidth - 50) {
-      player.angle = Math.PI - player.angle;
-    }
-    if (newY < 50 || newY > gameState.worldHeight - 50) {
-      player.angle = -player.angle;
+    // Check boundary collision - bot dies if touching boundaries
+    if (newX < player.radius || newX > gameState.worldWidth - player.radius ||
+        newY < player.radius || newY > gameState.worldHeight - player.radius) {
+      // Bot dies from boundary collision
+      handleBotDeath(player);
+      return;
     }
 
-    player.x = Math.max(50, Math.min(gameState.worldWidth - 50, newX));
-    player.y = Math.max(50, Math.min(gameState.worldHeight - 50, newY));
+    player.x = newX;
+    player.y = newY;
+
+    // Check collision with other players/bots before updating position
+    const botHead = { x: player.x, y: player.y, radius: player.radius };
+    let collisionDetected = false;
+    
+    // Check collision with all other players (both human and bot)
+    gameState.players.forEach((otherPlayer) => {
+      if (otherPlayer.id === player.id || !otherPlayer.alive || collisionDetected) return;
+      
+      // Check collision with other player's body points
+      for (const point of otherPlayer.points) {
+        if (isCollided(botHead, point)) {
+          handleBotDeath(player);
+          collisionDetected = true;
+          return;
+        }
+      }
+    });
+    
+    if (collisionDetected) return;
 
     // Update bot points (simple snake movement)
     if (player.points.length > 0) {
@@ -142,8 +200,7 @@ function updateBots() {
       player.points[0].y = player.y;
     }
 
-    // Bot collision detection with food
-    const botHead = { x: player.x, y: player.y, radius: player.radius };
+    // Bot collision detection with food (reuse botHead from collision detection above)
     for (let i = 0; i < gameState.foods.length; i++) {
       const food = gameState.foods[i];
       if (isCollided(botHead, food)) {
