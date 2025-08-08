@@ -200,7 +200,7 @@ class SocketClient {
     });
 
     // Game stats
-    this.socket.on('gameStats', (data: { playerCount: number; foodCount: number }) => {
+    this.socket.on('gameStats', (data) => {
       const store = useGameStore.getState();
       store.setGameState({ playerCount: data.playerCount });
       

@@ -10,8 +10,6 @@ export const ToBattleButton: React.FC<ToBattleButtonProps> = ({ onModeChange }) 
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [serverUrl] = useState('http://localhost:3000');
-  
   const { 
     setGameState, 
     startCountdown, 
@@ -42,7 +40,7 @@ export const ToBattleButton: React.FC<ToBattleButtonProps> = ({ onModeChange }) 
       }
       
       // Auto-connect to multiplayer server
-      await socketClient.connect(serverUrl);
+      await socketClient.connect();
       setIsConnected(true);
       setGameState({ mode: 'multiplayer' });
       onModeChange('multiplayer');
@@ -114,7 +112,7 @@ export const ToBattleButton: React.FC<ToBattleButtonProps> = ({ onModeChange }) 
       
       {connectionError && (
         <div className="connection-error">
-          Error: {connectionError}
+          Error: Connection failed
         </div>
       )}
       

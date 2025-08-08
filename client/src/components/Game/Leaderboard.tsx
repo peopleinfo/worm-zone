@@ -36,7 +36,7 @@ export const Leaderboard: React.FC = React.memo(() => {
       </div>
       
       <div className="leaderboard-list">
-        {displayedPlayers.map((player, index) => {
+        {displayedPlayers.map((player) => {
           const isCurrentPlayer = player.id === currentPlayerId;
           const displayRank = player.rank;
           
