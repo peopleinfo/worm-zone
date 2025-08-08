@@ -99,6 +99,12 @@ function spawnBots(count = 5) {
   console.log(`Spawned ${botsToSpawn} bots (${currentBots + botsToSpawn}/${MAX_BOTS} total)`);
 }
 
+// Helper function for collision detection (same logic as client-side)
+function isCollided(circle1, circle2) {
+  const distance = Math.hypot(circle1.x - circle2.x, circle1.y - circle2.y);
+  return distance < circle1.radius + circle2.radius;
+}
+
 function updateBots() {
   // Iterate over all players and filter for bots
   gameState.players.forEach((player) => {
@@ -134,6 +140,86 @@ function updateBots() {
       // Update head position
       player.points[0].x = player.x;
       player.points[0].y = player.y;
+    }
+
+    // Bot collision detection with food
+    const botHead = { x: player.x, y: player.y, radius: player.radius };
+    for (let i = 0; i < gameState.foods.length; i++) {
+      const food = gameState.foods[i];
+      if (isCollided(botHead, food)) {
+        // Bot eats food - same logic as human players
+        player.score++;
+        
+        // Add new point to bot's body
+        if (player.points.length > 0) {
+          const tail = player.points[player.points.length - 1];
+          player.points.push({
+            x: tail.x,
+            y: tail.y,
+            radius: player.radius,
+            color: food.color
+          });
+        }
+        
+        // Regenerate food
+        food.x = Math.random() * gameState.worldWidth;
+        food.y = Math.random() * gameState.worldHeight;
+        food.color = getRandomColor();
+        
+        // Broadcast food regeneration to all players
+        io.emit('foodRegenerated', food);
+        
+        // Broadcast score update
+        io.emit('scoreUpdate', {
+          playerId: player.id,
+          score: player.score
+        });
+        
+        // Broadcast updated leaderboard
+        const leaderboard = generateLeaderboard();
+        io.emit('leaderboardUpdate', {
+          leaderboard: leaderboard
+        });
+        
+        break; // Only eat one food per update cycle
+      }
+    }
+
+    // Bot collision detection with dead points
+    for (let i = gameState.deadPoints.length - 1; i >= 0; i--) {
+      const deadPoint = gameState.deadPoints[i];
+      if (isCollided(botHead, deadPoint)) {
+        // Bot eats dead point
+        player.score++;
+        
+        // Add new point to bot's body
+        if (player.points.length > 0) {
+          const tail = player.points[player.points.length - 1];
+          player.points.push({
+            x: tail.x,
+            y: tail.y,
+            radius: player.radius,
+            color: deadPoint.color
+          });
+        }
+        
+        // Remove consumed dead point
+        gameState.deadPoints.splice(i, 1);
+        
+        // Broadcast score update
+        io.emit('scoreUpdate', {
+          playerId: player.id,
+          score: player.score
+        });
+        
+        // Broadcast updated leaderboard
+        const leaderboard = generateLeaderboard();
+        io.emit('leaderboardUpdate', {
+          leaderboard: leaderboard
+        });
+        
+        break; // Only eat one dead point per update cycle
+      }
     }
   });
 }
@@ -241,6 +327,46 @@ io.on('connection', (socket) => {
       
       // Broadcast food regeneration to all players
       io.emit('foodRegenerated', food);
+      
+      // Broadcast score update
+      io.emit('scoreUpdate', {
+        playerId: playerId,
+        score: player.score
+      });
+      
+      // Broadcast updated leaderboard
+      const leaderboard = generateLeaderboard();
+      io.emit('leaderboardUpdate', {
+        leaderboard: leaderboard
+      });
+    }
+  });
+
+  // Handle dead point consumption
+  socket.on('deadPointEaten', (data) => {
+    const { playerId, deadPoints } = data;
+    const player = gameState.players.get(playerId);
+    
+    if (player && deadPoints && deadPoints.length > 0) {
+      // Remove consumed dead points from game state
+      deadPoints.forEach(consumedPoint => {
+        const index = gameState.deadPoints.findIndex(dp => 
+          Math.abs(dp.x - consumedPoint.x) < 1 && 
+          Math.abs(dp.y - consumedPoint.y) < 1 &&
+          dp.color === consumedPoint.color
+        );
+        if (index !== -1) {
+          gameState.deadPoints.splice(index, 1);
+        }
+      });
+      
+      // Update player score
+      player.score += deadPoints.length;
+      
+      // Broadcast dead point removal to all clients
+      io.emit('deadPointsRemoved', {
+        deadPoints: deadPoints
+      });
       
       // Broadcast score update
       io.emit('scoreUpdate', {

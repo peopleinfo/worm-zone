@@ -223,6 +223,13 @@ class SocketClient {
       }));
       store.updateLeaderboard(leaderboard);
     });
+
+    // Dead points removed (server broadcast)
+    this.socket.on('deadPointsRemoved', (data: { deadPoints: Point[] }) => {
+      const store = useGameStore.getState();
+      // Remove dead points from local state to maintain synchronization
+      store.removeDeadPoints(data.deadPoints);
+    });
   }
 
   private convertServerPlayerToSnake(player: ServerPlayer): Snake {
@@ -292,6 +299,23 @@ class SocketClient {
       });
     } catch (error) {
       console.error('Error sending player death event:', error);
+      if (!this.socket?.connected) {
+        this.isConnected = false;
+      }
+    }
+  }
+
+  // Send dead point eaten event
+  sendDeadPointEaten(deadPoints: Point[]): void {
+    if (!this.socket || !this.isConnected || !this.playerId) return;
+    
+    try {
+      this.socket.emit('deadPointEaten', {
+        playerId: this.playerId,
+        deadPoints: deadPoints.map(p => ({ x: p.x, y: p.y, radius: p.radius, color: p.color }))
+      });
+    } catch (error) {
+      console.error('Error sending dead point eaten event:', error);
       if (!this.socket?.connected) {
         this.isConnected = false;
       }

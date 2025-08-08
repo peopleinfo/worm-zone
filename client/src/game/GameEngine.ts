@@ -126,6 +126,12 @@ export class GameEngine {
         }
         if (consumedPoints.length > 0) {
           store.removeDeadPoints(consumedPoints);
+          // Notify server about consumed dead points
+          try {
+            socketClient.sendDeadPointEaten(consumedPoints);
+          } catch (error) {
+            console.warn('Failed to send dead point eaten event:', error);
+          }
         }
       } else {
         // Single player mode - process in-place
