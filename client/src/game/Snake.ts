@@ -35,7 +35,7 @@ export class Snake implements SnakeInterface {
   ) {
     this.id = id;
     this.radius = 4;
-    this.speed = 1.3;
+    this.speed = 1.0;
     this.turningSpeed = 7;
     this.points = [new Point(x, y, this.radius, color)];
     this.velocity = { x: 1, y: 0 };
