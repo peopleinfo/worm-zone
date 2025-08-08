@@ -172,7 +172,7 @@ function updateBots() {
         // Broadcast score update
         io.emit('scoreUpdate', {
           playerId: player.id,
-          score: player.score
+          score: Math.round(player.score * 10) / 10
         });
         
         // Broadcast updated leaderboard
@@ -189,8 +189,8 @@ function updateBots() {
     for (let i = gameState.deadPoints.length - 1; i >= 0; i--) {
       const deadPoint = gameState.deadPoints[i];
       if (isCollided(botHead, deadPoint)) {
-        // Bot eats dead point
-        player.score++;
+        // Bot eats dead point - award 1 point per dead snake
+        player.score += 1;
         
         // Add new point to bot's body
         if (player.points.length > 0) {
@@ -209,7 +209,7 @@ function updateBots() {
         // Broadcast score update
         io.emit('scoreUpdate', {
           playerId: player.id,
-          score: player.score
+          score: Math.round(player.score * 10) / 10
         });
         
         // Broadcast updated leaderboard
@@ -331,7 +331,7 @@ io.on('connection', (socket) => {
       // Broadcast score update
       io.emit('scoreUpdate', {
         playerId: playerId,
-        score: player.score
+        score: Math.round(player.score * 10) / 10
       });
       
       // Broadcast updated leaderboard
@@ -360,8 +360,8 @@ io.on('connection', (socket) => {
         }
       });
       
-      // Update player score
-      player.score += deadPoints.length;
+      // Update player score - award 1 point per dead snake consumed
+      player.score += 1;
       
       // Broadcast dead point removal to all clients
       io.emit('deadPointsRemoved', {
@@ -530,7 +530,7 @@ function generateLeaderboard() {
     .map((player, index) => ({
       id: player.id,
       name: player.isBot ? `Guest ${player.id.replace('bot-', '')}` : player.id,
-      score: player.score,
+      score: Math.round(player.score * 10) / 10, // Round to 1 decimal place
       rank: index + 1,
       isBot: player.isBot || false,
       isCurrentPlayer: false // Will be set on client side
@@ -559,7 +559,7 @@ setInterval(() => {
   });
 }, 1000);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 9000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Game available at http://localhost:${PORT}`);
