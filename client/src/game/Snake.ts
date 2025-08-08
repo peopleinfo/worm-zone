@@ -30,17 +30,17 @@ export class Snake implements SnakeInterface {
     x: number = 0,
     y: number = 0,
     length: number = 25,
-    _color: string = 'red',
+    color: string = 'red',
     id: string = Math.random().toString(36).substr(2, 9)
   ) {
     this.id = id;
     this.radius = 4;
     this.speed = 1.3;
     this.turningSpeed = 7;
-    this.points = [new Point(x, y, this.radius, getRandomColor())];
+    this.points = [new Point(x, y, this.radius, color)];
     this.velocity = { x: 1, y: 0 };
     this.overPos = { x: 0, y: 0 };
-    this.color = getRandomColor();
+    this.color = color;
     this.fatScaler = 0.001;
     this.angle = 0;
     this.ai = true;

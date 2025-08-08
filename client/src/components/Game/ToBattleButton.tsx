@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { socketClient } from '../../services/socketClient';
 
+// Configuration constants
+const MIN_PLAYERS_FOR_BATTLE = 10;
+
 interface ToBattleButtonProps {
   onModeChange: (mode: 'single' | 'multiplayer') => void;
 }
@@ -45,7 +48,7 @@ export const ToBattleButton: React.FC<ToBattleButtonProps> = ({ onModeChange }) 
       setGameState({ mode: 'multiplayer' });
       onModeChange('multiplayer');
       
-      // Wait for minimum 6 players (including bots)
+      // Wait for minimum players (including bots)
       await waitForMinimumPlayers();
       
       // Start countdown after ensuring minimum players
@@ -63,12 +66,12 @@ export const ToBattleButton: React.FC<ToBattleButtonProps> = ({ onModeChange }) 
     return new Promise((resolve) => {
       const checkPlayers = () => {
         const currentPlayerCount = useGameStore.getState().playerCount;
-        if (currentPlayerCount >= 6) {
+        if (currentPlayerCount >= MIN_PLAYERS_FOR_BATTLE) {
           resolve();
         } else {
           // Request server to add bots if needed
           if (socketClient.isSocketConnected()) {
-            socketClient.requestMinimumPlayers(6);
+            socketClient.requestMinimumPlayers(MIN_PLAYERS_FOR_BATTLE);
           }
           setTimeout(checkPlayers, 500);
         }
@@ -80,7 +83,7 @@ export const ToBattleButton: React.FC<ToBattleButtonProps> = ({ onModeChange }) 
   const getButtonText = () => {
     if (isConnecting) return 'Connecting...';
     if (isCountingDown && countdownValue) return `Starting in ${countdownValue}...`;
-    if (isConnected && playerCount < 6) return `Waiting for players (${playerCount}/6)`;
+    if (isConnected && playerCount < MIN_PLAYERS_FOR_BATTLE) return `Waiting for players (${playerCount}/${MIN_PLAYERS_FOR_BATTLE})`;
     return 'To Battle!';
   };
 
@@ -118,7 +121,7 @@ export const ToBattleButton: React.FC<ToBattleButtonProps> = ({ onModeChange }) 
       
       {isConnected && (
         <div className="connection-status">
-          ✅ Connected - Players: {playerCount}/6 minimum
+          ✅ Connected - Players: {playerCount}/{MIN_PLAYERS_FOR_BATTLE} minimum
           {socketClient.getPlayerId() && (
             <span className="player-id"> (ID: {socketClient.getPlayerId()})</span>
           )}

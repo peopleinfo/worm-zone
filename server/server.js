@@ -1,5 +1,4 @@
 const express = require('express');
-
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
@@ -12,6 +11,9 @@ const io = socketIo(server, {
     methods: ["GET", "POST"]
   }
 });
+
+// Bot configuration
+const MAX_BOTS = 20;
 
 // Serve static files
 // app.use(express.static(path.join(__dirname)));
@@ -79,12 +81,22 @@ function createBot(id) {
 }
 
 function spawnBots(count = 5) {
-  for (let i = 0; i < count; i++) {
+  // Count current bots
+  const currentBots = Array.from(gameState.players.values()).filter(p => p.isBot).length;
+  const availableSlots = MAX_BOTS - currentBots;
+  const botsToSpawn = Math.min(count, availableSlots);
+  
+  if (botsToSpawn <= 0) {
+    console.log(`Bot limit reached (${MAX_BOTS}). Cannot spawn more bots.`);
+    return;
+  }
+  
+  for (let i = 0; i < botsToSpawn; i++) {
     const botId = `bot-${generatePlayerId()}`;
     const bot = createBot(botId);
     gameState.players.set(botId, bot); // Only add to players map
   }
-  console.log(`Spawned ${count} bots`);
+  console.log(`Spawned ${botsToSpawn} bots (${currentBots + botsToSpawn}/${MAX_BOTS} total)`);
 }
 
 function updateBots() {
@@ -295,10 +307,17 @@ io.on('connection', (socket) => {
   socket.on('requestMinimumPlayers', (data) => {
     const { minPlayers } = data;
     const currentPlayerCount = gameState.players.size;
+    const currentBots = Array.from(gameState.players.values()).filter(p => p.isBot).length;
     
     if (currentPlayerCount < minPlayers) {
       const botsNeeded = minPlayers - currentPlayerCount;
-      spawnBots(botsNeeded);
+      const maxBotsAllowed = Math.min(botsNeeded, MAX_BOTS - currentBots);
+      
+      if (maxBotsAllowed > 0) {
+        spawnBots(maxBotsAllowed);
+      } else {
+        console.log(`Cannot add more bots. Current: ${currentBots}/${MAX_BOTS}`);
+      }
       
       // Broadcast updated game state to all players
       io.emit('gameStats', {

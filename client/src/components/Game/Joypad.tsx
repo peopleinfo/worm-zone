@@ -90,7 +90,7 @@ export const Joypad: React.FC<JoypadProps> = React.memo(({ radius = 50 }) => {
     handleMove(touch.clientX, touch.clientY);
   }, [handleMove]);
 
-  const handleTouchEnd = useCallback((_e: React.TouchEvent) => {
+  const handleTouchEnd = useCallback(() => {
     handleUp();
   }, [handleUp]);
 

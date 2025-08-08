@@ -118,14 +118,6 @@ class AuthService {
   setAppKey(appKey: string): void {
     this.appKey = appKey;
   }
-
-  /**
-   * Sets the backend login URL
-   */
-  setBackendUrl(_url: string): void {
-    // this.backendUrl = url; // Commented out as backendUrl is not used
-  }
-
   /**
    * Gets user information from the sdk
    */

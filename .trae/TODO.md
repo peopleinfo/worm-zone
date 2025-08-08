@@ -1,12 +1,7 @@
 # TODO:
 
-- [x] check-package-json: Check current package.json to see existing testing dependencies (priority: High)
-- [x] install-vitest: Install Vitest and related testing dependencies if not present (priority: High)
-- [x] create-auth-tests: Create comprehensive test file for authService.ts (priority: High)
-- [x] test-login-loadmos: Test login method with loadMosSdk functionality (priority: High)
-- [x] test-concurrent-calls: Test concurrent calls (login and getUserInfo) to ensure SDK loads once (priority: High)
-- [x] run-fix-tests: Run tests and fix any errors found (priority: High)
-- [x] create-vitest-config: Create Vitest configuration file (priority: Medium)
-- [x] test-error-handling: Test error handling and retry logic (priority: Medium)
-- [x] test-caching: Test proper caching behavior of MOS SDK (priority: Medium)
-- [x] run-check-command: Run npm run check to ensure code quality (priority: Medium)
+- [x] 1: Add MAX_BOTS constant set to 20 in server.js (priority: High)
+- [x] 2: Modify spawnBots function to check current bot count before spawning (priority: High)
+- [x] 3: Update requestMinimumPlayers handler to respect the 20 bot limit (priority: High)
+- [x] 4: Add proper logging when bot limit is reached (priority: Medium)
+- [x] 5: Test the bot limit functionality (priority: Medium)
