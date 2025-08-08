@@ -34,7 +34,7 @@ class SocketClient {
   private playerId: string | null = null;
   private isConnected = false;
 
-  connect(serverUrl: string = 'http://localhost:3000'): Promise<void> {
+  connect(serverUrl: string = import.meta.env.VITE_SOCKET_SERVER_URL): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         this.socket = io(serverUrl, {
