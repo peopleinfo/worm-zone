@@ -36,6 +36,7 @@ Thumbs.db
 # Server runtime files
 *.pid
 server/*.pid
+dist.zip
 
 # Multiplayer server and client files
 multiplayer/client.js
