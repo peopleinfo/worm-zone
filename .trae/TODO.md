@@ -5,3 +5,4 @@
 - [x] 4: Implement proper bot death handling that converts body to dead points (priority: High)
 - [x] 3: Add bot-to-bot collision detection for consistent gameplay (priority: Medium)
 - [x] 5: Test bot death mechanics to ensure consistency with human player behavior (priority: Medium)
+- [ ] 6: Fix start_server_script.sh to handle port 9000 conflicts by killing existing processes (**IN PROGRESS**) (priority: High)

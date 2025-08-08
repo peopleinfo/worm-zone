@@ -33,5 +33,9 @@ yarn-error.log*
 ehthumbs.db
 Thumbs.db
 
+# Server runtime files
+*.pid
+server/*.pid
+
 # Multiplayer server and client files
 multiplayer/client.js
