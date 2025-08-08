@@ -184,15 +184,14 @@ html, body {
 /* Leaderboard Styles */
 .leaderboard {
   position: absolute;
-  top: 10px;
+  top: 2px;
   left: 0px;
-  background: rgba(0, 0, 0, 0.85);
   border-radius: 10px;
-  padding: 15px;
+  padding: 2px;
   color: #fff;
   font-size: 12px;
-  min-width: 280px;
-  max-width: 300px;
+  min-width: 180px;
+  max-width: 230px;
   z-index: 100;
   pointer-events: auto;
 }
@@ -200,10 +199,8 @@ html, body {
 .leaderboard-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(76, 175, 80, 0.3);
+  gap: 4px;
+  padding-bottom: 1px;
 }
 
 .leaderboard-icon {
@@ -226,10 +223,11 @@ html, body {
 .leaderboard-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 6px;
+  gap: 4px;
+  padding: 1px 4px;
+  border-radius: 4px;
   transition: background-color 0.2s ease;
+  min-height: 18px;
 }
 
 .leaderboard-item:hover {
@@ -238,7 +236,7 @@ html, body {
 
 .leaderboard-item.current-player {
   background: rgba(76, 175, 80, 0.2);
-  border: 1px solid rgba(76, 175, 80, 0.5);
+  /* border: 1px solid rgba(76, 175, 80, 0.5); */
 }
 
 .player-rank {
@@ -282,103 +280,6 @@ html, body {
 
 .score-value {
   color: #4CAF50;
-}
-
-/* Mobile responsive countdown */
-@media (max-width: 768px) {
-  .countdown-number {
-    font-size: 6rem;
-  }
-  
-  .countdown-text {
-    font-size: 1.5rem;
-  }
-  
-  /* Mobile leaderboard adjustments */
-  .leaderboard {
-    min-width: 260px;
-    max-width: 280px;
-    font-size: 13px;
-  }
-  
-  .leaderboard-title {
-    font-size: 12px;
-  }
-  
-  .player-rank {
-    font-size: 12px;
-  }
-  
-  .player-name {
-    font-size: 12px;
-  }
-  
-  .player-score {
-    font-size: 11px;
-  }
-}
-
-@media (max-width: 480px) {
-  .countdown-number {
-    font-size: 4rem;
-  }
-  
-  .countdown-text {
-    font-size: 1.2rem;
-  }
-   
-  .leaderboard {
-    min-width: 240px;
-    max-width: 260px;
-    font-size: 12px;
-    padding: 12px;
-  }
-   
-  .leaderboard-title {
-    font-size: 11px;
-  }
-   
-  .player-rank {
-    font-size: 11px;
-  }
-   
-  .player-name {
-    font-size: 11px;
-  }
-   
-  .player-score {
-    font-size: 10px;
-  }
-}
-
-/* Landscape mode adjustments for mobile */
-@media (max-height: 500px) and (orientation: landscape) {
-  .leaderboard {
-    top: 10px;
-    left: 10px;
-    min-width: 220px;
-    max-width: 240px;
-    font-size: 11px;
-    padding: 10px;
-  }
-  
-  .leaderboard-header {
-    margin-bottom: 8px;
-    padding-bottom: 6px;
-  }
-  
-  .leaderboard-item {
-    padding: 4px 6px;
-    gap: 6px;
-  }
-  
-  .countdown-number {
-    font-size: 3rem;
-  }
-  
-  .countdown-text {
-    font-size: 1.2rem;
-  }
 }
 
 .connect-btn:disabled {

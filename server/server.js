@@ -272,34 +272,50 @@ io.on('connection', (socket) => {
         deadPoints: deadPoints
       });
       
-      // Respawn player after 3 seconds
-      setTimeout(() => {
-        if (gameState.players.has(data.playerId)) {
-          const respawnedPlayer = {
-            ...player,
-            x: Math.random() * gameState.worldWidth,
-            y: Math.random() * gameState.worldHeight,
-            points: [],
-            alive: true,
-            score: 0
-          };
-          
-          // Initialize respawned player with starting points
-          for (let i = 0; i < 25; i++) {
-            respawnedPlayer.points.push({
-              x: respawnedPlayer.x - i * 2,
-              y: respawnedPlayer.y,
-              radius: respawnedPlayer.radius,
-              color: getRandomColor()
-            });
+      // Only respawn human players, remove bots from arena
+      if (player.isBot) {
+        // Remove bot from game state completely
+        gameState.players.delete(data.playerId);
+        console.log(`Bot ${data.playerId} died and was removed from arena`);
+        
+        // Broadcast bot removal
+        io.emit('playerDisconnected', data.playerId);
+        
+        // Update leaderboard after bot removal
+        const leaderboard = generateLeaderboard();
+        io.emit('leaderboardUpdate', {
+          leaderboard: leaderboard
+        });
+      } else {
+        // Respawn human player after 3 seconds
+        setTimeout(() => {
+          if (gameState.players.has(data.playerId)) {
+            const respawnedPlayer = {
+              ...player,
+              x: Math.random() * gameState.worldWidth,
+              y: Math.random() * gameState.worldHeight,
+              points: [],
+              alive: true,
+              score: 0
+            };
+            
+            // Initialize respawned player with starting points
+            for (let i = 0; i < 25; i++) {
+              respawnedPlayer.points.push({
+                x: respawnedPlayer.x - i * 2,
+                y: respawnedPlayer.y,
+                radius: respawnedPlayer.radius,
+                color: getRandomColor()
+              });
+            }
+            
+            gameState.players.set(data.playerId, respawnedPlayer);
+            
+            // Broadcast respawn
+            io.emit('playerRespawned', respawnedPlayer);
           }
-          
-          gameState.players.set(data.playerId, respawnedPlayer);
-          
-          // Broadcast respawn
-          io.emit('playerRespawned', respawnedPlayer);
-        }
-      }, 3000);
+        }, 3000);
+      }
     }
   });
 
