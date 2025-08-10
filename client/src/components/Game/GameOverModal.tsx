@@ -10,6 +10,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = React.memo(({ onResta
   const isGameOver = useGameStore((state) => state.isGameOver);
   const score = useGameStore((state) => state.score);
   const rank = useGameStore((state) => state.rank);
+  const highestScore = useGameStore((state) => state.highestScore);
   
   // Add keyboard support for restarting with spacebar
   useEffect(() => {
@@ -36,8 +37,23 @@ export const GameOverModal: React.FC<GameOverModalProps> = React.memo(({ onResta
       <div className="modal-content">
         <h2>Game Over!</h2>
         <div className="final-stats">
-          <p>Final Score: {score}</p>
-          <p>Final Rank: #{rank}</p>
+          <div className="stat-item">
+            <span className="stat-label">Current Score:</span>
+            <span className="stat-value">{score}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Highest Score:</span>
+            <span className="stat-value highlight">{highestScore}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Current Rank:</span>
+            <span className="stat-value">#{rank}</span>
+          </div>
+          {score === highestScore && score > 0 && (
+            <div className="new-record">
+              🎉 You got new highest score! 🎉
+            </div>
+          )}
         </div>
         <button 
           className="restart-button"

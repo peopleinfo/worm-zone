@@ -150,6 +150,8 @@ class SocketClient {
       if (data.playerId === this.playerId) {
         const store = useGameStore.getState();
         store.setGameState({ score: data.score });
+        // Update highest score if current score is higher
+        store.updateHighestScore(data.score);
       }
     });
 
@@ -158,8 +160,12 @@ class SocketClient {
       const store = useGameStore.getState();
       
       if (data.playerId === this.playerId) {
-        // Current player died
-        store.endGame(store.score, store.rank);
+        // Current player died - update highest score before ending game
+        store.updateHighestScore(store.score);
+        
+        // Find current player's rank from leaderboard
+        const currentRank = store.leaderboard.find(p => p.isCurrentPlayer)?.rank || store.rank;
+        store.endGame(store.score, currentRank);
       } else {
         // Other player died
         const updatedSnakes = store.otherSnakes.filter(snake => snake.id !== data.playerId);
@@ -222,6 +228,17 @@ class SocketClient {
         isCurrentPlayer: player.id === store.currentPlayerId
       }));
       store.updateLeaderboard(leaderboard);
+      
+      // Update current player's rank from leaderboard
+      const currentPlayer = leaderboard.find((p: any) => p.isCurrentPlayer);
+      if (currentPlayer) {
+        store.setGameState({ 
+          rank: currentPlayer.rank,
+          score: currentPlayer.score
+        });
+        // Update highest score
+        store.updateHighestScore(currentPlayer.score);
+      }
     });
 
     // Dead points removed (server broadcast)

@@ -1,8 +1,7 @@
 # TODO:
 
-- [x] 1: Implement bot boundary collision detection that causes death instead of bouncing (priority: High)
-- [x] 2: Add bot-to-player collision detection in server-side updateBots function (priority: High)
-- [x] 4: Implement proper bot death handling that converts body to dead points (priority: High)
-- [x] 3: Add bot-to-bot collision detection for consistent gameplay (priority: Medium)
-- [x] 5: Test bot death mechanics to ensure consistency with human player behavior (priority: Medium)
-- [ ] 6: Fix start_server_script.sh to handle port 9000 conflicts by killing existing processes (**IN PROGRESS**) (priority: High)
+- [x] 1: Analyze current scoring logic issues between server and client synchronization (priority: High)
+- [x] 2: Update Zustand store to include persistent highest score storage (priority: High)
+- [x] 3: Fix score synchronization in socket client to ensure proper updates (priority: High)
+- [x] 4: Update GameOverModal to display highest score, current score, and current rank (priority: High)
+- [x] 5: Test the scoring system to ensure proper synchronization (priority: Medium)
