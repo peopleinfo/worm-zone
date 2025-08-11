@@ -61,7 +61,6 @@ export const GameOverModal: React.FC<GameOverModalProps> = React.memo(({ onResta
         >
           Play Again
         </button>
-        <p className="restart-hint">Press SPACE to restart</p>
       </div>
     </div>
   );
