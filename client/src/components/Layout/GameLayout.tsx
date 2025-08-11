@@ -8,7 +8,7 @@ import { useGameStore } from "../../stores/gameStore";
 import { authService } from "../../services/authService";
 
 export const GameLayout: React.FC = () => {
-  const { resetGame, startGame } = useGameStore();
+  const { resetGame, startGame, isPlaying } = useGameStore();
 
   // Initialize keyboard controls
   useKeyboardControls();
@@ -35,6 +35,44 @@ export const GameLayout: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Force fullscreen with landscape mode when game starts playing
+  useEffect(() => {
+    const enterFullscreenLandscape = async () => {
+      if (!isPlaying) return;
+
+      try {
+        // Request fullscreen
+        const element = document.documentElement;
+        if (element.requestFullscreen) {
+          await element.requestFullscreen();
+        } else if ((element as any).webkitRequestFullscreen) {
+          await (element as any).webkitRequestFullscreen();
+        } else if ((element as any).msRequestFullscreen) {
+          await (element as any).msRequestFullscreen();
+        }
+
+        // Lock orientation to landscape
+        if (screen.orientation && screen.orientation.lock) {
+          try {
+            await screen.orientation.lock('landscape');
+          } catch (orientationError) {
+            console.log('Orientation lock failed:', orientationError);
+            // Fallback: try to lock to landscape-primary
+            try {
+              await screen.orientation.lock('landscape-primary');
+            } catch (fallbackError) {
+              console.log('Fallback orientation lock failed:', fallbackError);
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Fullscreen request failed:', error);
+      }
+    };
+
+    enterFullscreenLandscape();
+  }, [isPlaying]);
 
   const handleRestart = () => {
     resetGame();
