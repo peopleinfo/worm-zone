@@ -22,12 +22,16 @@ Our Worm Zone game consists of the following main pages:
 1. **Game Arena**: main game canvas, real-time multiplayer gameplay, score display, joypad controls
 2. **Room Lobby**: auto room joining, countdown display (3,2,1), player list with bot indicators
 3. **Game Over Modal**: score summary, highest score display, restart functionality
-4. **Settings Panel**: orientation lock, sound controls, user profile access
+4. **Landing Home**: main entry point with settings icon, language selection, game start
+5. **Settings Modal**: orientation lock, sound controls, language selection, user profile access
 
 ### 2.3 Page Details
 
 | Page Name       | Module Name      | Feature Description                                                        |
 | --------------- | ---------------- | -------------------------------------------------------------------------- |
+| Landing Home    | Settings Icon    | Right-side settings gear icon that opens settings modal                   |
+| Landing Home    | Game Start       | Main entry point with play button and game branding                       |
+| Landing Home    | Language Display | Current language flag indicator in top area                                |
 | Game Arena      | Game Canvas      | Render worm movement, food collection, collision detection, real-time sync |
 | Game Arena      | Joypad Controls  | Touch-based directional controls optimized for landscape mode              |
 | Game Arena      | Score Display    | Real-time score updates, leaderboard during gameplay                       |
@@ -37,36 +41,47 @@ Our Worm Zone game consists of the following main pages:
 | Game Over Modal | Score Summary    | Display current score, highest score, session statistics                   |
 | Game Over Modal | Modal Close      | Close modal and reset all game state (equivalent to SPA hard reload)      |
 | Game Over Modal | Restart Controls | Start new game without page reload, rejoin room with zero score            |
-| Settings Panel  | Orientation Lock | Force landscape mode, prevent rotation                                     |
-| Settings Panel  | User Profile     | MOS SDK integration for user info, login status                            |
+| Settings Modal  | Language Tab     | Flag-based language selection (EN, KH, CN) with react-i18next integration |
+| Settings Modal  | Orientation Lock | Force landscape mode, prevent rotation                                     |
+| Settings Modal  | Sound Controls   | Audio settings and volume controls                                         |
+| Settings Modal  | User Profile     | MOS SDK integration for user info, login status                            |
 
 ## 3. Core Process
 
 **Main Game Flow:**
 
 1. User opens app → Auto-orientation to landscape mode
-2. System auto-connects to available room
-3. Display lobby with player count and 3-2-1 countdown
-4. Game starts with synchronized gameplay
-5. On death → Show game over modal with scores
-6. Modal Close → Complete state reset (equivalent to app restart)
-7. Restart → New game with zero score and rejoin room
+2. Landing home displays with settings icon and current language
+3. User can access settings modal for language/preferences or start game
+4. System auto-connects to available room
+5. Display lobby with player count and 3-2-1 countdown
+6. Game starts with synchronized gameplay
+7. On death → Show game over modal with scores
+8. Modal Close → Complete state reset (equivalent to app restart)
+9. Restart → New game with zero score and rejoin room
 
 ```mermaid
 graph TD
     A[App Launch] --> B[Force Landscape Mode]
-    B --> C[Auto Join Room]
-    C --> D[Lobby Screen]
-    D --> E[Countdown 3-2-1]
-    E --> F[Game Arena]
-    F --> G{Game Over?}
-    G -->|No| F
-    G -->|Yes| H[Game Over Modal]
-    H --> I{User Action}
-    I -->|Close Modal| J[Complete State Reset]
-    I -->|Restart Game| K[New Game Start]
-    J --> C
-    K --> C
+    B --> C[Landing Home]
+    C --> D{User Action}
+    D -->|Settings Icon| E[Settings Modal]
+    D -->|Start Game| F[Auto Join Room]
+    E --> G{Settings Action}
+    G -->|Language Change| H[Update Language]
+    G -->|Close Settings| C
+    H --> C
+    F --> I[Lobby Screen]
+    I --> J[Countdown 3-2-1]
+    J --> K[Game Arena]
+    K --> L{Game Over?}
+    L -->|No| K
+    L -->|Yes| M[Game Over Modal]
+    M --> N{User Action}
+    N -->|Close Modal| O[Complete State Reset]
+    N -->|Restart Game| P[New Game Start]
+    O --> C
+    P --> F
 ```
 
 ## 4. User Interface Design
@@ -89,13 +104,18 @@ graph TD
 
 | Page Name       | Module Name | UI Elements                                                                    |
 | --------------- | ----------- | ------------------------------------------------------------------------------ |
+| Landing Home    | Settings Icon | Gear icon positioned top-right, subtle glow effect, tap animation             |
+| Landing Home    | Language Flag | Current language flag icon in top area, smooth flag transitions               |
+| Landing Home    | Main Layout | Centered game logo, play button, gradient background with game theme          |
+| Settings Modal  | Language Tab | Three flag buttons (🇺🇸 EN, 🇰🇭 KH, 🇨🇳 CN), selected state highlighting        |
+| Settings Modal  | Modal Design | Centered overlay with blur background, rounded corners, slide-up animation    |
+| Settings Modal  | Controls    | Toggle switches, sliders, organized sections with clear labels                |
 | Game Arena      | Game Canvas | Full-screen dark background, neon-style worm trails, particle effects for food |
 | Game Arena      | Joypad      | Semi-transparent circular pad, bottom-right corner, haptic feedback            |
 | Game Arena      | Score HUD   | Top-left floating panel, real-time score updates, mini leaderboard             |
 | Room Lobby      | Player List | Card-based layout, player avatars, bot indicators with robot icons             |
 | Room Lobby      | Countdown   | Large centered numbers with pulsing animation, countdown sound effects         |
 | Game Over Modal | Score Panel | Centered modal with blur background, trophy icons, animated score counting     |
-| Settings Panel  | Controls    | Slide-in panel from right, toggle switches, profile integration                |
 
 ### 4.3 Responsiveness
 
@@ -108,6 +128,8 @@ graph TD
 * **Frontend**: React 18 + TypeScript + Vite
 
 * **State Management**: Zustand for game state and UI state
+
+* **Internationalization**: react-i18next for multi-language support
 
 * **Real-time Communication**: Socket.io client
 
@@ -143,13 +165,27 @@ npx kill-port 3000 5000
 
 ```
 /client
+  /public
+    /locales       # i18n translation files
+      /en          # English translations
+        common.json
+        game.json
+      /kh          # Khmer translations
+        common.json
+        game.json
+      /cn          # Chinese translations
+        common.json
+        game.json
   /src
     /components     # Reusable UI components
+      /modals       # Modal components (Settings, GameOver)
+      /ui           # Basic UI components
     /game          # Game-specific logic
     /hooks         # Custom React hooks
     /stores        # Zustand stores
     /services      # API and socket services
     /utils         # Client utilities
+    /i18n          # Internationalization setup
 /server
   /src
     /controllers   # Route handlers
@@ -168,8 +204,9 @@ npx kill-port 3000 5000
 1. **Orientation Enforcement**: Implement CSS and JavaScript locks for landscape mode
 2. **Socket Synchronization**: Use Zustand middleware for socket state sync
 3. **Game State Management**: Centralized game state with predictable updates
-4. **Error Handling**: Graceful degradation for connection issues
-5. **Performance**: 60fps gameplay with optimized rendering
+4. **Internationalization**: react-i18next setup with JSON translation files
+5. **Error Handling**: Graceful degradation for connection issues
+6. **Performance**: 60fps gameplay with optimized rendering
 
 #### 5.2.4 Testing Strategy
 
@@ -181,13 +218,119 @@ npx kill-port 3000 5000
 
 * **Multiplayer Testing**: Room management and real-time sync
 
-### 5.3 Deployment
+### 5.3 Internationalization Setup
 
-* **Development**: Local development with hot reload
+#### 5.3.1 Language Support
 
-* **Production**: Optimized builds with environment-specific configs
+* **Supported Languages**: English (EN), Khmer (KH), Chinese (CN)
+* **Default Language**: English (EN)
+* **Language Detection**: Browser language detection with fallback to default
+* **Persistence**: Selected language stored in localStorage
 
-* **Mobile**: MOS SDK integration for mini-program deployment
+#### 5.3.2 Translation Structure
+
+**Translation Files Location**: `/client/public/locales/{language}/`
+
+**File Organization**:
+```
+/locales
+  /en
+    common.json     # Common UI elements, buttons, labels
+    game.json       # Game-specific terms, scores, messages
+  /kh
+    common.json     # Khmer translations
+    game.json       # Khmer game terms
+  /cn
+    common.json     # Chinese translations
+    game.json       # Chinese game terms
+```
+
+**Translation Keys Structure**:
+```json
+// common.json
+{
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "sound": "Sound",
+    "close": "Close"
+  },
+  "buttons": {
+    "play": "Play",
+    "restart": "Restart",
+    "close": "Close"
+  }
+}
+
+// game.json
+{
+  "score": {
+    "current": "Score",
+    "highest": "Best Score",
+    "rank": "Rank"
+  },
+  "game": {
+    "gameOver": "Game Over",
+    "countdown": "Get Ready",
+    "waiting": "Waiting for players..."
+  }
+}
+```
+
+#### 5.3.3 Implementation Details
+
+**React-i18next Configuration**:
+```typescript
+// i18n/index.ts
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import Backend from 'i18next-http-backend';
+import LanguageDetector from 'i18next-browser-languagedetector';
+
+i18n
+  .use(Backend)
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    fallbackLng: 'en',
+    supportedLngs: ['en', 'kh', 'cn'],
+    defaultNS: 'common',
+    ns: ['common', 'game'],
+    backend: {
+      loadPath: '/locales/{{lng}}/{{ns}}.json'
+    },
+    detection: {
+      order: ['localStorage', 'navigator'],
+      caches: ['localStorage']
+    }
+  });
+```
+
+**Language Switching Component**:
+```typescript
+// components/LanguageSelector.tsx
+const LanguageSelector = () => {
+  const { i18n } = useTranslation();
+  
+  const languages = [
+    { code: 'en', flag: '🇺🇸', name: 'English' },
+    { code: 'kh', flag: '🇰🇭', name: 'ខ្មែរ' },
+    { code: 'cn', flag: '🇨🇳', name: '中文' }
+  ];
+  
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+};
+```
+
+### 5.4 Deployment
+
+* **Development**: Local development with hot reload and i18n hot reloading
+
+* **Production**: Optimized builds with environment-specific configs and pre-loaded translations
+
+* **Mobile**: MOS SDK integration for mini-program deployment with language detection
 
 ## 6. API Documentation
 
@@ -385,9 +528,104 @@ cleanupGameSession: () => void;   // Cleanup utilities
 - Canvas context reset and reinitialization
 - Timer and interval cleanup
 
-## 8. Implementation Priorities
+## 8. Settings Modal Functionality
+
+### 8.1 Settings Modal Requirements
+
+**Trigger**: Settings gear icon positioned in the top-right corner of the Landing Home page
+
+**Modal Behavior**:
+- Slide-up animation from bottom of screen
+- Blur background overlay
+- Modal can be closed by:
+  - Close button (×) in modal header
+  - Clicking outside modal area
+  - ESC key press
+  - Swipe down gesture (mobile)
+
+**Modal Sections**:
+1. **Language Selection Tab**
+   - Three language options with flag icons
+   - Current language highlighted with border/background
+   - Immediate language switch on selection
+   - Smooth transition animations
+
+2. **Sound Controls**
+   - Master volume slider
+   - Sound effects toggle
+   - Background music toggle
+   - Haptic feedback toggle (mobile)
+
+3. **Game Settings**
+   - Orientation lock toggle
+   - Performance mode selection
+   - Graphics quality settings
+
+4. **User Profile** (MOS SDK Integration)
+   - User avatar and name display
+   - Login/logout functionality
+   - Account settings access
+
+### 8.2 Language Selection Implementation
+
+**Language Options**:
+- 🇺🇸 English (EN) - Default
+- 🇰🇭 Khmer (KH) - ភាសាខ្មែរ
+- 🇨🇳 Chinese (CN) - 中文
+
+**Selection Behavior**:
+- Flag icons with country names
+- Selected language shows active state
+- Instant UI language update
+- Persistent storage in localStorage
+- Fallback to browser language detection
+
+**UI Updates on Language Change**:
+- All text elements update immediately
+- Modal remains open to show changes
+- Smooth text transition animations
+- No page reload required
+
+### 8.3 Settings State Management
+
+**Zustand Store Integration**:
+```typescript
+interface SettingsStore {
+  // Modal state
+  isSettingsOpen: boolean;
+  openSettings: () => void;
+  closeSettings: () => void;
+  
+  // Language state
+  currentLanguage: 'en' | 'kh' | 'cn';
+  changeLanguage: (lang: string) => void;
+  
+  // Audio settings
+  masterVolume: number;
+  soundEffects: boolean;
+  backgroundMusic: boolean;
+  hapticFeedback: boolean;
+  
+  // Game settings
+  orientationLock: boolean;
+  performanceMode: 'high' | 'medium' | 'low';
+  graphicsQuality: 'high' | 'medium' | 'low';
+}
+```
+
+**Persistence Strategy**:
+- Settings stored in localStorage
+- Automatic sync with MOS SDK user preferences
+- Cloud backup for logged-in users
+- Graceful fallback for storage failures
+
+## 9. Implementation Priorities
 
 ### Phase 1: Core Infrastructure
+
+* [ ] Landing Home page with settings icon
+
+* [ ] Settings modal component structure
 
 * [ ] Landscape orientation lock implementation
 
@@ -397,7 +635,19 @@ cleanupGameSession: () => void;   // Cleanup utilities
 
 * [ ] Zustand store architecture
 
-### Phase 2: Game Mechanics
+### Phase 2: Internationalization & Settings
+
+* [ ] React-i18next setup and configuration
+
+* [ ] Translation files for EN, KH, CN languages
+
+* [ ] Language selector component
+
+* [ ] Settings modal functionality
+
+* [ ] Audio and game settings controls
+
+### Phase 3: Game Mechanics
 
 * [ ] Worm movement and collision detection
 
@@ -407,7 +657,7 @@ cleanupGameSession: () => void;   // Cleanup utilities
 
 * [ ] Game over detection
 
-### Phase 3: Multiplayer Features
+### Phase 4: Multiplayer Features
 
 * [ ] Room management system
 
@@ -417,7 +667,7 @@ cleanupGameSession: () => void;   // Cleanup utilities
 
 * [ ] Player connection handling
 
-### Phase 4: UI/UX Polish
+### Phase 5: UI/UX Polish
 
 * [ ] Joypad controls optimization
 
@@ -425,17 +675,25 @@ cleanupGameSession: () => void;   // Cleanup utilities
 
 * [ ] Lobby countdown and player display
 
-* [ ] Settings panel and profile integration
+* [ ] Settings modal animations and transitions
 
-## 9. Success Metrics
+* [ ] Language switching animations
+
+* [ ] MOS SDK profile integration
+
+## 10. Success Metrics
 
 * **Performance**: Maintain 60fps during gameplay
 
 * **Connectivity**: <100ms latency for real-time sync
 
-* **User Experience**: Seamless landscape-only operation
+* **User Experience**: Seamless landscape-only operation with intuitive settings
+
+* **Internationalization**: Support for 3 languages with smooth switching
 
 * **Engagement**: Average session duration >5 minutes
+
+* **Accessibility**: Settings modal accessible via multiple interaction methods
 
 * **Stability**: <1% crash rate during gameplay
 
