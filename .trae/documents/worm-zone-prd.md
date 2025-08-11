@@ -29,8 +29,8 @@ Our Snake Zone game consists of the following main pages:
 
 | Page Name       | Module Name      | Feature Description                                                        |
 | --------------- | ---------------- | -------------------------------------------------------------------------- |
-| Landing Home    | Settings Icon    | Right-side settings gear icon that opens settings modal                   |
-| Landing Home    | Game Start       | Main entry point with play button and game branding                       |
+| Landing Home    | Settings Icon    | Right-side settings gear icon that opens settings modal                    |
+| Landing Home    | Game Start       | Main entry point with play button and game branding                        |
 | Landing Home    | Language Display | Current language flag indicator in top area                                |
 | Game Arena      | Game Canvas      | Render worm movement, food collection, collision detection, real-time sync |
 | Game Arena      | Joypad Controls  | Touch-based directional controls optimized for landscape mode              |
@@ -39,9 +39,9 @@ Our Snake Zone game consists of the following main pages:
 | Room Lobby      | Countdown Timer  | Display 3-2-1 countdown before game starts                                 |
 | Room Lobby      | Player Status    | Show connected players, bot indicators, connection status                  |
 | Game Over Modal | Score Summary    | Display current score, highest score, session statistics                   |
-| Game Over Modal | Modal Close      | Close modal and reset all game state (equivalent to SPA hard reload)      |
+| Game Over Modal | Modal Close      | Close modal and reset all game state (equivalent to SPA hard reload)       |
 | Game Over Modal | Restart Controls | Start new game without page reload, rejoin room with zero score            |
-| Settings Modal  | Language Tab     | Flag-based language selection (EN, KH, CN) with react-i18next integration |
+| Settings Modal  | Language Tab     | Flag-based language selection (EN, KH, CN) with react-i18next integration  |
 | Settings Modal  | Orientation Lock | Force landscape mode, prevent rotation                                     |
 | Settings Modal  | Sound Controls   | Audio settings and volume controls                                         |
 | Settings Modal  | User Profile     | MOS SDK integration for user info, login status                            |
@@ -102,20 +102,20 @@ graph TD
 
 ### 4.2 Page Design Overview
 
-| Page Name       | Module Name | UI Elements                                                                    |
-| --------------- | ----------- | ------------------------------------------------------------------------------ |
-| Landing Home    | Settings Icon | Gear icon positioned top-right, subtle glow effect, tap animation             |
-| Landing Home    | Language Flag | Current language flag icon in top area, smooth flag transitions               |
-| Landing Home    | Main Layout | Centered game logo, play button, gradient background with game theme          |
-| Settings Modal  | Language Tab | Three flag buttons (🇺🇸 EN, 🇰🇭 KH, 🇨🇳 CN), selected state highlighting        |
-| Settings Modal  | Modal Design | Centered overlay with blur background, rounded corners, slide-up animation    |
-| Settings Modal  | Controls    | Toggle switches, sliders, organized sections with clear labels                |
-| Game Arena      | Game Canvas | Full-screen dark background, neon-style worm trails, particle effects for food |
-| Game Arena      | Joypad      | Semi-transparent circular pad, bottom-right corner, haptic feedback            |
-| Game Arena      | Score HUD   | Top-left floating panel, real-time score updates, mini leaderboard             |
-| Room Lobby      | Player List | Card-based layout, player avatars, bot indicators with robot icons             |
-| Room Lobby      | Countdown   | Large centered numbers with pulsing animation, countdown sound effects         |
-| Game Over Modal | Score Panel | Centered modal with blur background, trophy icons, animated score counting     |
+| Page Name       | Module Name   | UI Elements                                                                    |
+| --------------- | ------------- | ------------------------------------------------------------------------------ |
+| Landing Home    | Settings Icon | Gear icon positioned top-right, subtle glow effect, tap animation              |
+| Landing Home    | Language Flag | Current language flag icon in top area, smooth flag transitions                |
+| Landing Home    | Main Layout   | Centered game logo, play button, gradient background with game theme           |
+| Settings Modal  | Language Tab  | Three flag buttons (🇺🇸 EN, 🇰🇭 KH, 🇨🇳 CN), selected state highlighting    |
+| Settings Modal  | Modal Design  | Centered overlay with blur background, rounded corners, slide-up animation     |
+| Settings Modal  | Controls      | Toggle switches, sliders, organized sections with clear labels                 |
+| Game Arena      | Game Canvas   | Full-screen dark background, neon-style worm trails, particle effects for food |
+| Game Arena      | Joypad        | Semi-transparent circular pad, bottom-right corner, haptic feedback            |
+| Game Arena      | Score HUD     | Top-left floating panel, real-time score updates, mini leaderboard             |
+| Room Lobby      | Player List   | Card-based layout, player avatars, bot indicators with robot icons             |
+| Room Lobby      | Countdown     | Large centered numbers with pulsing animation, countdown sound effects         |
+| Game Over Modal | Score Panel   | Centered modal with blur background, trophy icons, animated score counting     |
 
 ### 4.3 Responsiveness
 
@@ -223,8 +223,11 @@ npx kill-port 3000 5000
 #### 5.3.1 Language Support
 
 * **Supported Languages**: English (EN), Khmer (KH), Chinese (CN)
+
 * **Default Language**: English (EN)
+
 * **Language Detection**: Browser language detection with fallback to default
+
 * **Persistence**: Selected language stored in localStorage
 
 #### 5.3.2 Translation Structure
@@ -232,6 +235,7 @@ npx kill-port 3000 5000
 **Translation Files Location**: `/client/public/locales/{language}/`
 
 **File Organization**:
+
 ```
 /locales
   /en
@@ -246,6 +250,7 @@ npx kill-port 3000 5000
 ```
 
 **Translation Keys Structure**:
+
 ```json
 // common.json
 {
@@ -280,6 +285,7 @@ npx kill-port 3000 5000
 #### 5.3.3 Implementation Details
 
 **React-i18next Configuration**:
+
 ```typescript
 // i18n/index.ts
 import i18n from 'i18next';
@@ -307,6 +313,7 @@ i18n
 ```
 
 **Language Switching Component**:
+
 ```typescript
 // components/LanguageSelector.tsx
 const LanguageSelector = () => {
@@ -338,34 +345,35 @@ const LanguageSelector = () => {
 
 #### Client to Server Events
 
-| Event Name | Parameters | Description |
-|------------|------------|-------------|
-| `playerMove` | `{ playerId: string, angle: number, x: number, y: number, points: Array }` | Updates player position and movement data |
-| `foodEaten` | `{ playerId: string, foodId: number }` | Notifies server when player consumes food |
-| `deadPointEaten` | `{ playerId: string, deadPoints: Array }` | Notifies server when player consumes dead points |
-| `playerDied` | `{ playerId: string, deadPoints: Array }` | Notifies server when player dies and provides body points |
-| `requestMinimumPlayers` | `{ minPlayers: number }` | Requests server to spawn bots to reach minimum player count |
+| Event Name              | Parameters                                                                 | Description                                                 |
+| ----------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `playerMove`            | `{ playerId: string, angle: number, x: number, y: number, points: Array }` | Updates player position and movement data                   |
+| `foodEaten`             | `{ playerId: string, foodId: number }`                                     | Notifies server when player consumes food                   |
+| `deadPointEaten`        | `{ playerId: string, deadPoints: Array }`                                  | Notifies server when player consumes dead points            |
+| `playerDied`            | `{ playerId: string, deadPoints: Array }`                                  | Notifies server when player dies and provides body points   |
+| `requestMinimumPlayers` | `{ minPlayers: number }`                                                   | Requests server to spawn bots to reach minimum player count |
 
 #### Server to Client Events
 
-| Event Name | Data Structure | Description |
-|------------|----------------|-------------|
-| `gameInit` | `{ playerId: string, gameState: GameState }` | Initial game state sent to new player |
-| `playerJoined` | `Player` | Broadcasts new player joining to existing players |
-| `playerMoved` | `{ playerId: string, x: number, y: number, angle: number, points: Array }` | Broadcasts player movement to other players |
-| `playerDied` | `{ playerId: string, deadPoints: Array }` | Broadcasts player death and resulting dead points |
-| `playerRespawned` | `Player` | Broadcasts player respawn after death |
-| `playerDisconnected` | `string` | Broadcasts player ID when they disconnect |
-| `playerLeft` | `{ playerId: string }` | Broadcasts when player leaves the game |
-| `foodRegenerated` | `Food` | Broadcasts food regeneration after consumption |
-| `deadPointsRemoved` | `{ deadPoints: Array }` | Broadcasts removal of consumed dead points |
-| `scoreUpdate` | `{ playerId: string, score: number }` | Broadcasts score updates |
-| `leaderboardUpdate` | `{ leaderboard: Array }` | Broadcasts updated leaderboard |
-| `gameStats` | `{ playerCount: number, foodCount: number, leaderboard?: Array }` | Periodic game statistics |
+| Event Name           | Data Structure                                                             | Description                                       |
+| -------------------- | -------------------------------------------------------------------------- | ------------------------------------------------- |
+| `gameInit`           | `{ playerId: string, gameState: GameState }`                               | Initial game state sent to new player             |
+| `playerJoined`       | `Player`                                                                   | Broadcasts new player joining to existing players |
+| `playerMoved`        | `{ playerId: string, x: number, y: number, angle: number, points: Array }` | Broadcasts player movement to other players       |
+| `playerDied`         | `{ playerId: string, deadPoints: Array }`                                  | Broadcasts player death and resulting dead points |
+| `playerRespawned`    | `Player`                                                                   | Broadcasts player respawn after death             |
+| `playerDisconnected` | `string`                                                                   | Broadcasts player ID when they disconnect         |
+| `playerLeft`         | `{ playerId: string }`                                                     | Broadcasts when player leaves the game            |
+| `foodRegenerated`    | `Food`                                                                     | Broadcasts food regeneration after consumption    |
+| `deadPointsRemoved`  | `{ deadPoints: Array }`                                                    | Broadcasts removal of consumed dead points        |
+| `scoreUpdate`        | `{ playerId: string, score: number }`                                      | Broadcasts score updates                          |
+| `leaderboardUpdate`  | `{ leaderboard: Array }`                                                   | Broadcasts updated leaderboard                    |
+| `gameStats`          | `{ playerCount: number, foodCount: number, leaderboard?: Array }`          | Periodic game statistics                          |
 
 ### 6.2 Game State Management
 
 #### Game State Structure
+
 ```typescript
 interface GameState {
   players: Map<string, Player>;
@@ -408,37 +416,58 @@ interface DeadPoint {
 ```
 
 #### Bot Management
-- Maximum 20 bots allowed simultaneously
-- Bots spawn automatically when first human player joins
-- Bots are removed permanently when they die
-- Bot AI includes collision detection, food consumption, and boundary checking
+
+* Maximum 20 bots allowed simultaneously
+
+* Bots spawn automatically when first human player joins
+
+* Bots are removed permanently when they die
+
+* Bot AI includes collision detection, food consumption, and boundary checking
 
 #### Game Mechanics
-- World size: 2000x2000 pixels
-- Maximum 1000 food items
-- Dead points cleanup when exceeding 5000 items
-- Human players respawn after 3 seconds, bots are permanently removed
-- Score system: 1 point per food, 1 point per dead point consumed
+
+* World size: 2000x2000 pixels
+
+* Maximum 1000 food items
+
+* Dead points cleanup when exceeding 5000 items
+
+* Human players respawn after 3 seconds, bots are permanently removed
+
+* Score system: 1 point per food, 1 point per dead point consumed
 
 ### 6.3 Server Configuration
 
 #### Server Setup
-- **Port**: 9000 (configurable via PORT environment variable)
-- **CORS**: Enabled for all origins
-- **Socket.io**: Real-time communication with automatic reconnection
-- **Static Files**: Disabled (client served separately)
+
+* **Port**: 9000 (configurable via PORT environment variable)
+
+* **CORS**: Enabled for all origins
+
+* **Socket.io**: Real-time communication with automatic reconnection
+
+* **Static Files**: Disabled (client served separately)
 
 #### Update Intervals
-- Bot movement updates: 100ms
-- Game statistics broadcast: 5000ms
-- Leaderboard updates: 1000ms
-- Dead points cleanup: 30000ms
+
+* Bot movement updates: 100ms
+
+* Game statistics broadcast: 5000ms
+
+* Leaderboard updates: 1000ms
+
+* Dead points cleanup: 30000ms
 
 #### Performance Optimizations
-- Efficient collision detection using distance calculations
-- Batch processing of dead points
-- Periodic cleanup of game objects
-- Optimized leaderboard generation with sorting and filtering
+
+* Efficient collision detection using distance calculations
+
+* Batch processing of dead points
+
+* Periodic cleanup of game objects
+
+* Optimized leaderboard generation with sorting and filtering
 
 ## 7. Game Over Modal State Management
 
@@ -447,15 +476,23 @@ interface DeadPoint {
 **Requirement**: When user closes the Game Over modal (via close button, ESC key, or clicking outside), the application should perform a complete state reset equivalent to a hard page reload but within the SPA context.
 
 **Implementation Details**:
-- Reset all Zustand store state to initial values (except persistent data like highest score)
-- Clear all game objects (snakes, food, dead points)
-- Disconnect from current multiplayer room
-- Reset socket connection state
-- Clear any running timers or intervals
-- Reset canvas and UI components to initial state
-- Return to initial app state (ready to join new room)
+
+* Reset all Zustand store state to initial values (except persistent data like highest score)
+
+* Clear all game objects (snakes, food, dead points)
+
+* Disconnect from current multiplayer room
+
+* Reset socket connection state
+
+* Clear any running timers or intervals
+
+* Reset canvas and UI components to initial state
+
+* Return to initial app state (ready to join new room)
 
 **State Reset Scope**:
+
 ```typescript
 // Complete state reset includes:
 - Game state (isPlaying, isGameOver, score, rank)
@@ -473,14 +510,21 @@ interface DeadPoint {
 **Requirement**: When user clicks "Restart" or "Play Again" button, start a new game session without page reload while maintaining the current room context if possible.
 
 **Implementation Details**:
-- Reset game-specific state (score, rank, game objects)
-- Preserve room connection and player context
-- Rejoin the same room or find new room if current is full
-- Start new game countdown (3-2-1)
-- Initialize fresh game objects and canvas
-- Maintain socket connection for seamless transition
+
+* Reset game-specific state (score, rank, game objects)
+
+* Preserve room connection and player context
+
+* Rejoin the same room or find new room if current is full
+
+* Start new game countdown (3-2-1)
+
+* Initialize fresh game objects and canvas
+
+* Maintain socket connection for seamless transition
 
 **State Reset Scope**:
+
 ```typescript
 // Restart game reset includes:
 - Game state (score: 0, rank: 0, isGameOver: false)
@@ -497,20 +541,29 @@ interface DeadPoint {
 ### 7.3 User Interface Requirements
 
 **Modal Controls**:
-- **Close Button (×)**: Triggers complete state reset
-- **ESC Key**: Triggers complete state reset
-- **Click Outside Modal**: Triggers complete state reset
-- **Play Again Button**: Triggers restart game functionality
-- **Spacebar**: Triggers restart game functionality (existing)
+
+* **Close Button (×)**: Triggers complete state reset
+
+* **ESC Key**: Triggers complete state reset
+
+* **Click Outside Modal**: Triggers complete state reset
+
+* **Play Again Button**: Triggers restart game functionality
+
+* **Spacebar**: Triggers restart game functionality (existing)
 
 **Visual Feedback**:
-- Loading states during state transitions
-- Clear distinction between close and restart actions
-- Confirmation dialogs for destructive actions (optional)
+
+* Loading states during state transitions
+
+* Clear distinction between close and restart actions
+
+* Confirmation dialogs for destructive actions (optional)
 
 ### 7.4 Technical Implementation
 
 **Zustand Store Actions**:
+
 ```typescript
 // New store actions required:
 resetCompleteState: () => void;  // For modal close
@@ -519,14 +572,20 @@ cleanupGameSession: () => void;   // Cleanup utilities
 ```
 
 **Socket Event Handling**:
-- Proper cleanup of socket listeners on complete reset
-- Graceful room leaving on modal close
-- Room rejoin logic for restart functionality
+
+* Proper cleanup of socket listeners on complete reset
+
+* Graceful room leaving on modal close
+
+* Room rejoin logic for restart functionality
 
 **Component Lifecycle**:
-- Proper cleanup of React components and effects
-- Canvas context reset and reinitialization
-- Timer and interval cleanup
+
+* Proper cleanup of React components and effects
+
+* Canvas context reset and reinitialization
+
+* Timer and interval cleanup
 
 ## 8. Settings Modal Functionality
 
@@ -535,60 +594,95 @@ cleanupGameSession: () => void;   // Cleanup utilities
 **Trigger**: Settings gear icon positioned in the top-right corner of the Landing Home page
 
 **Modal Behavior**:
-- Slide-up animation from bottom of screen
-- Blur background overlay
-- Modal can be closed by:
-  - Close button (×) in modal header
-  - Clicking outside modal area
-  - ESC key press
-  - Swipe down gesture (mobile)
+
+* Slide-up animation from bottom of screen
+
+* Blur background overlay
+
+* Modal can be closed by:
+
+  * Close button (×) in modal header
+
+  * Clicking outside modal area
+
+  * ESC key press
+
+  * Swipe down gesture (mobile)
 
 **Modal Sections**:
+
 1. **Language Selection Tab**
-   - Three language options with flag icons
-   - Current language highlighted with border/background
-   - Immediate language switch on selection
-   - Smooth transition animations
+
+   * Three language options with flag icons
+
+   * Current language highlighted with border/background
+
+   * Immediate language switch on selection
+
+   * Smooth transition animations
 
 2. **Sound Controls**
-   - Master volume slider
-   - Sound effects toggle
-   - Background music toggle
-   - Haptic feedback toggle (mobile)
+
+   * Master volume slider
+
+   * Sound effects toggle
+
+   * Background music toggle
+
+   * Haptic feedback toggle (mobile)
 
 3. **Game Settings**
-   - Orientation lock toggle
-   - Performance mode selection
-   - Graphics quality settings
+
+   * Orientation lock toggle
+
+   * Performance mode selection
+
+   * Graphics quality settings
 
 4. **User Profile** (MOS SDK Integration)
-   - User avatar and name display
-   - Login/logout functionality
-   - Account settings access
+
+   * User avatar and name display
+
+   * Login/logout functionality
+
+   * Account settings access
 
 ### 8.2 Language Selection Implementation
 
 **Language Options**:
-- 🇺🇸 English (EN) - Default
-- 🇰🇭 Khmer (KH) - ភាសាខ្មែរ
-- 🇨🇳 Chinese (CN) - 中文
+
+* 🇺🇸 English (EN) - Default
+
+* 🇰🇭 Khmer (KH) - ភាសាខ្មែរ
+
+* 🇨🇳 Chinese (CN) - 中文
 
 **Selection Behavior**:
-- Flag icons with country names
-- Selected language shows active state
-- Instant UI language update
-- Persistent storage in localStorage
-- Fallback to browser language detection
+
+* Flag icons with country names
+
+* Selected language shows active state
+
+* Instant UI language update
+
+* Persistent storage in localStorage
+
+* Fallback to browser language detection
 
 **UI Updates on Language Change**:
-- All text elements update immediately
-- Modal remains open to show changes
-- Smooth text transition animations
-- No page reload required
+
+* All text elements update immediately
+
+* Modal remains open to show changes
+
+* Smooth text transition animations
+
+* No page reload required
 
 ### 8.3 Settings State Management
 
 **Zustand Store Integration**:
+
 ```typescript
 interface SettingsStore {
   // Modal state
@@ -614,10 +708,14 @@ interface SettingsStore {
 ```
 
 **Persistence Strategy**:
-- Settings stored in localStorage
-- Automatic sync with MOS SDK user preferences
-- Cloud backup for logged-in users
-- Graceful fallback for storage failures
+
+* Settings stored in localStorage
+
+* Automatic sync with MOS SDK user preferences
+
+* Cloud backup for logged-in users
+
+* Graceful fallback for storage failures
 
 ## 9. Implementation Priorities
 
