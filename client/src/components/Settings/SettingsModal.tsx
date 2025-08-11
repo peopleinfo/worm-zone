@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Volume2, VolumeX, Gamepad2, User } from 'lucide-react';
+import { X, Volume2, VolumeX } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { LanguageSelector } from './LanguageSelector';
 
@@ -11,10 +11,6 @@ export const SettingsModal: React.FC = () => {
     closeSettingsModal, 
     sound, 
     updateSoundSettings,
-    controls,
-    updateControlSettings,
-    profile,
-    updateUserProfile
   } = useSettingsStore();
 
   // Handle ESC key to close modal

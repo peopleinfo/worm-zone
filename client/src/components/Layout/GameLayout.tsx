@@ -53,19 +53,19 @@ export const GameLayout: React.FC = () => {
         }
 
         // Lock orientation to landscape
-        if (screen.orientation && screen.orientation.lock) {
-          try {
-            await screen.orientation.lock('landscape');
-          } catch (orientationError) {
-            console.log('Orientation lock failed:', orientationError);
-            // Fallback: try to lock to landscape-primary
-            try {
-              await screen.orientation.lock('landscape-primary');
-            } catch (fallbackError) {
-              console.log('Fallback orientation lock failed:', fallbackError);
-            }
-          }
-        }
+        // if (screen.orientation && screen.orientation.lock) {
+        //   try {
+        //     await screen.orientation.lock('landscape');
+        //   } catch (orientationError) {
+        //     console.log('Orientation lock failed:', orientationError);
+        //     // Fallback: try to lock to landscape-primary
+        //     try {
+        //       await screen.orientation.lock('landscape-primary');
+        //     } catch (fallbackError) {
+        //       console.log('Fallback orientation lock failed:', fallbackError);
+        //     }
+        //   }
+        // }
       } catch (error) {
         console.log('Fullscreen request failed:', error);
       }
