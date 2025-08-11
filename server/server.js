@@ -60,9 +60,9 @@ function createBot(id) {
     points: [],
     angle: Math.random() * Math.PI * 2,
     radius: 4,
-    speed: 1.0, // Slightly slower than human players
+    speed: 0.9, // Slightly slower than human players
     color: getRandomColor(),
-    score: 0,
+    score: 1.0,
     alive: true,
     isBot: true
   };
@@ -297,7 +297,7 @@ io.on('connection', (socket) => {
     points: [],
     angle: 0,
     radius: 4,
-    speed: 1.3,
+    speed: 1,
     color: getRandomColor(),
     score: 0,
     alive: true

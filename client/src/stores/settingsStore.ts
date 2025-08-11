@@ -9,23 +9,6 @@ export interface SoundSettings {
   muted: boolean;
 }
 
-export interface GraphicsSettings {
-  quality: 'low' | 'medium' | 'high';
-  particles: boolean;
-  shadows: boolean;
-}
-
-export interface ControlSettings {
-  sensitivity: number;
-  vibration: boolean;
-  joystickSize: 'small' | 'medium' | 'large';
-}
-
-export interface UserProfile {
-  username: string;
-  avatar: string;
-}
-
 interface SettingsState {
   // UI State
   isSettingsModalOpen: boolean;
@@ -36,27 +19,12 @@ interface SettingsState {
   // Sound Settings
   sound: SoundSettings;
   
-  // Graphics Settings
-  graphics: GraphicsSettings;
-  
-  // Control Settings
-  controls: ControlSettings;
-  
-  // User Profile
-  profile: UserProfile;
-  
   // Actions
   openSettingsModal: () => void;
   closeSettingsModal: () => void;
   toggleSettingsModal: () => void;
-  
   setLanguage: (language: SupportedLanguage) => void;
-  
   updateSoundSettings: (settings: Partial<SoundSettings>) => void;
-  updateGraphicsSettings: (settings: Partial<GraphicsSettings>) => void;
-  updateControlSettings: (settings: Partial<ControlSettings>) => void;
-  updateUserProfile: (profile: Partial<UserProfile>) => void;
-  
   resetSettings: () => void;
 }
 
@@ -68,20 +36,6 @@ const defaultSettings = {
     music: 0.6,
     effects: 0.8,
     muted: false,
-  },
-  graphics: {
-    quality: 'medium' as const,
-    particles: true,
-    shadows: true,
-  },
-  controls: {
-    sensitivity: 0.7,
-    vibration: true,
-    joystickSize: 'medium' as const,
-  },
-  profile: {
-    username: 'Player',
-    avatar: 'default',
   },
 };
 
@@ -106,19 +60,6 @@ export const useSettingsStore = create<SettingsState>()(persist(
     updateSoundSettings: (settings) => set((state) => ({
       sound: { ...state.sound, ...settings }
     })),
-    
-    updateGraphicsSettings: (settings) => set((state) => ({
-      graphics: { ...state.graphics, ...settings }
-    })),
-    
-    updateControlSettings: (settings) => set((state) => ({
-      controls: { ...state.controls, ...settings }
-    })),
-    
-    updateUserProfile: (profile) => set((state) => ({
-      profile: { ...state.profile, ...profile }
-    })),
-    
     resetSettings: () => set(defaultSettings),
   }),
   {
@@ -126,9 +67,6 @@ export const useSettingsStore = create<SettingsState>()(persist(
     partialize: (state) => ({
       language: state.language,
       sound: state.sound,
-      graphics: state.graphics,
-      controls: state.controls,
-      profile: state.profile,
     }),
   }
 ));

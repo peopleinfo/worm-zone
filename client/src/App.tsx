@@ -1,11 +1,13 @@
-import { GameLayout } from './components/Layout/GameLayout';
-import './App.css';
+import { GameLayout } from "./components/Layout/GameLayout";
+import "./App.css";
 
 function App() {
   return (
-    <div className="App">
-      <GameLayout />
-    </div>
+    <>
+      <div className="App">
+        <GameLayout />
+      </div>
+    </>
   );
 }
 

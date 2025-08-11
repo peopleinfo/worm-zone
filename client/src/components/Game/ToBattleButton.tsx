@@ -1,20 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { socketClient } from '../../services/socketClient';
+import { useSettingsStore } from '../../stores/settingsStore';
 
 // Configuration constants
 const MIN_PLAYERS_FOR_BATTLE = 10;
 
-interface ToBattleButtonProps {
-  onModeChange: (mode: 'single' | 'multiplayer') => void;
-}
-
-export const ToBattleButton: React.FC<ToBattleButtonProps> = ({ onModeChange }) => {
+export const ToBattleButton = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const { closeSettingsModal } = useSettingsStore();
   const { 
-    setGameState, 
     startCountdown, 
     stopCountdown, 
     isCountingDown, 
@@ -33,6 +30,7 @@ export const ToBattleButton: React.FC<ToBattleButtonProps> = ({ onModeChange }) 
 
     setIsConnecting(true);
     setConnectionError(null);
+    closeSettingsModal();
 
     try {
       // Ensure any existing connection is closed first
@@ -45,8 +43,6 @@ export const ToBattleButton: React.FC<ToBattleButtonProps> = ({ onModeChange }) 
       // Auto-connect to multiplayer server
       await socketClient.connect();
       setIsConnected(true);
-      setGameState({ mode: 'multiplayer' });
-      onModeChange('multiplayer');
       
       // Wait for minimum players (including bots)
       await waitForMinimumPlayers();

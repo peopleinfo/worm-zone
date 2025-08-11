@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { X } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
 
 interface GameOverModalProps {
@@ -11,13 +12,19 @@ export const GameOverModal: React.FC<GameOverModalProps> = React.memo(({ onResta
   const score = useGameStore((state) => state.score);
   const rank = useGameStore((state) => state.rank);
   const highestScore = useGameStore((state) => state.highestScore);
+  const setGameOver = useGameStore((state) => state.setGameOver);
   
-  // Add keyboard support for restarting with spacebar
+  // Add keyboard support for restarting with spacebar and closing with Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isGameOver && e.code === 'Space') {
-        e.preventDefault();
-        onRestart();
+      if (isGameOver) {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          onRestart();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          setGameOver(false);
+        }
       }
     };
 
@@ -28,13 +35,24 @@ export const GameOverModal: React.FC<GameOverModalProps> = React.memo(({ onResta
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isGameOver, onRestart]);
+  }, [isGameOver, onRestart, setGameOver]);
+
+  const handleClose = () => {
+    setGameOver(false);
+  };
   
   if (!isGameOver) return null;
   
   return (
     <div className="game-over-modal">
-      <div className="modal-content">
+      <div className="modal-content" style={{minHeight: 340}}>
+        <button 
+          className="close-button"
+          onClick={handleClose}
+          aria-label="Close modal"
+        >
+          <X size={24} />
+        </button>
         <h2>Game Over!</h2>
         <div className="final-stats">
           <div className="stat-item">
@@ -55,12 +73,6 @@ export const GameOverModal: React.FC<GameOverModalProps> = React.memo(({ onResta
             </div>
           )}
         </div>
-        <button 
-          className="restart-button"
-          onClick={onRestart}
-        >
-          Play Again
-        </button>
       </div>
     </div>
   );

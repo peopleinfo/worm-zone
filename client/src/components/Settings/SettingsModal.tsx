@@ -140,57 +140,6 @@ export const SettingsModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Control Settings */}
-          <div className="settings-section">
-            <h3 className="section-title">
-              <Gamepad2 size={20} />
-              {t('settings.controls')}
-            </h3>
-            
-            <div className="setting-item">
-              <label>{t('settings.sensitivity')}</label>
-              <div className="slider-container">
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1"
-                  step="0.1"
-                  value={controls.sensitivity}
-                  onChange={(e) => updateControlSettings({ sensitivity: parseFloat(e.target.value) })}
-                  className="sensitivity-slider"
-                />
-                <span className="slider-value">{Math.round(controls.sensitivity * 100)}%</span>
-              </div>
-            </div>
-
-            <div className="setting-item">
-              <button 
-                className={`toggle-button ${controls.vibration ? 'active' : ''}`}
-                onClick={() => updateControlSettings({ vibration: !controls.vibration })}
-              >
-                {t('settings.vibration')}
-              </button>
-            </div>
-          </div>
-
-          {/* User Profile */}
-          <div className="settings-section">
-            <h3 className="section-title">
-              <User size={20} />
-              {t('settings.profile')}
-            </h3>
-            
-            <div className="setting-item">
-              <label>{t('settings.username')}</label>
-              <input
-                type="text"
-                value={profile.username}
-                onChange={(e) => updateUserProfile({ username: e.target.value })}
-                className="username-input"
-                maxLength={20}
-              />
-            </div>
-          </div>
         </div>
       </div>
     </div>
