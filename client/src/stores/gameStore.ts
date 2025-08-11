@@ -86,7 +86,7 @@ const initialState = {
 };
 
 export const useGameStore = create<GameStore>()(persist(
-  (set, get) => ({
+  (set) => ({
     ...initialState,
     
     setGameState: (state) => set((prev) => ({ ...prev, ...state })),
