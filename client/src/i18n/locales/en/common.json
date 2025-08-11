@@ -1,0 +1,47 @@
+{
+  "app": {
+    "title": "Snake Zone",
+    "subtitle": "Multiplayer Snake Game"
+  },
+  "navigation": {
+    "home": "Home",
+    "settings": "Settings",
+    "back": "Back",
+    "close": "Close"
+  },
+  "buttons": {
+    "play": "Play Now",
+    "restart": "Restart",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "save": "Save",
+    "reset": "Reset"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "sound": "Sound",
+    "music": "Music",
+    "effects": "Sound Effects",
+    "vibration": "Vibration",
+    "graphics": "Graphics",
+    "quality": "Quality",
+    "controls": "Controls",
+    "sensitivity": "Sensitivity",
+    "profile": "Profile",
+    "username": "Username",
+    "avatar": "Avatar"
+  },
+  "languages": {
+    "en": "English",
+    "kh": "Khmer",
+    "cn": "Chinese"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information"
+  }
+}

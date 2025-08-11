@@ -1,4 +1,4 @@
-# Worm Zone - Technical Architecture Document
+# Snake Zone - Technical Architecture Document
 
 ## 1. Architecture Design
 

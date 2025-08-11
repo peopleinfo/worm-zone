@@ -1,6 +1,6 @@
 # project brief
 
-- project name: worm zone
+- project name: Snake Zone
 - project type: multiplayer game
 - project description: this is a multiplayer game, you can play with your friend in same room, and you can play with bot is less than 3 player.
 - ux/ui:

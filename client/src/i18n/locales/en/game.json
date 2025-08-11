@@ -1,0 +1,48 @@
+{
+  "status": {
+    "ready": "Ready",
+    "playing": "Playing",
+    "paused": "Paused",
+    "gameOver": "Game Over",
+    "starting": "Starting...",
+    "waiting": "Waiting for players...",
+    "connecting": "Connecting..."
+  },
+  "gameplay": {
+    "score": "Score",
+    "rank": "Rank",
+    "players": "Players",
+    "highScore": "High Score",
+    "yourScore": "Your Score",
+    "finalRank": "Final Rank",
+    "length": "Length",
+    "kills": "Kills"
+  },
+  "countdown": {
+    "3": "3",
+    "2": "2",
+    "1": "1",
+    "go": "GO!"
+  },
+  "messages": {
+    "welcome": "Welcome to Snake Zone!",
+    "gameStarting": "Game starting in {{count}} seconds",
+    "playerJoined": "{{name}} joined the game",
+    "playerLeft": "{{name}} left the game",
+    "youDied": "You died!",
+    "victory": "Victory!",
+    "defeat": "Better luck next time!",
+    "newHighScore": "New High Score!"
+  },
+  "controls": {
+    "instructions": "Use joystick or arrow keys to move",
+    "mobile": "Touch and drag to control your worm",
+    "keyboard": "Use WASD or arrow keys"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "position": "#{{rank}}",
+    "you": "You",
+    "bot": "Bot"
+  }
+}

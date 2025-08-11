@@ -1,6 +1,6 @@
-# Worm Zone Client
+# Snake Zone Client
 
-This directory contains the client-side application for the Worm Zone game.
+This directory contains the client-side application for the Snake Zone game.
 
 ## Technologies Used
 

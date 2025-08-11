@@ -1,7 +1,7 @@
 {
   "name": "snake-zone-api",
   "version": "1.0.0",
-  "description": "Multiplayer worm zone game with real-time communication",
+  "description": "Multiplayer Snake Zone game with real-time communication",
 
   "scripts": {
     "start-client": "cd client && npm run dev",

@@ -181,7 +181,7 @@ export const useGameStore = create<GameStore>()(persist(
     }),
   }),
   {
-    name: 'worm-zone-game-store',
+    name: 'snake-zone-game-store',
     partialize: (state) => ({ highestScore: state.highestScore }),
   }
 ));

@@ -1,0 +1,48 @@
+{
+  "status": {
+    "ready": "准备就绪",
+    "playing": "游戏中",
+    "paused": "暂停",
+    "gameOver": "游戏结束",
+    "starting": "开始中...",
+    "waiting": "等待玩家...",
+    "connecting": "连接中..."
+  },
+  "gameplay": {
+    "score": "得分",
+    "rank": "排名",
+    "players": "玩家",
+    "highScore": "最高分",
+    "yourScore": "你的得分",
+    "finalRank": "最终排名",
+    "length": "长度",
+    "kills": "击杀"
+  },
+  "countdown": {
+    "3": "3",
+    "2": "2",
+    "1": "1",
+    "go": "开始!"
+  },
+  "messages": {
+    "welcome": "欢迎来到蠕虫地带!",
+    "gameStarting": "游戏将在 {{count}} 秒后开始",
+    "playerJoined": "{{name}} 加入了游戏",
+    "playerLeft": "{{name}} 离开了游戏",
+    "youDied": "你死了!",
+    "victory": "胜利!",
+    "defeat": "下次好运!",
+    "newHighScore": "新的最高分!"
+  },
+  "controls": {
+    "instructions": "使用摇杆或方向键移动",
+    "mobile": "触摸并拖动来控制你的蠕虫",
+    "keyboard": "使用 WASD 或方向键"
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "position": "第{{rank}}名",
+    "you": "你",
+    "bot": "机器人"
+  }
+}

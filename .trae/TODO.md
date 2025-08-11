@@ -1,7 +1,7 @@
 # TODO:
 
-- [x] 1: Analyze current scoring logic issues between server and client synchronization (priority: High)
-- [x] 2: Update Zustand store to include persistent highest score storage (priority: High)
-- [x] 3: Fix score synchronization in socket client to ensure proper updates (priority: High)
-- [x] 4: Update GameOverModal to display highest score, current score, and current rank (priority: High)
-- [x] 5: Test the scoring system to ensure proper synchronization (priority: Medium)
+- [x] debug-food-collision: Debug snake-food collision detection issue - snake can eat dead parts but not food (priority: High)
+- [x] test-collision-logic: Test collision detection logic between Snake.checkCollisionsWithFood and Food objects (priority: High)
+- [x] verify-game-engine: Verify GameEngine.ts food collision handling in both single and multiplayer modes (priority: High)
+- [x] fix-css-overflow: Find and fix CSS overflow-x issues causing display problems (priority: Medium)
+- [x] test-game-functionality: Test complete game functionality after fixes (priority: Medium)

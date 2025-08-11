@@ -1,8 +1,8 @@
-# Worm Zone - Product Requirements Document
+# Snake Zone - Product Requirements Document
 
 ## 1. Product Overview
 
-Worm Zone is a real-time multiplayer snake-style game designed for mobile devices in landscape mode. Players compete in shared rooms with up to 3 participants, with AI bots filling empty slots to ensure engaging gameplay.
+Snake Zone is a real-time multiplayer snake-style game designed for mobile devices in landscape mode. Players compete in shared rooms with up to 3 participants, with AI bots filling empty slots to ensure engaging gameplay.
 
 The game targets mobile users seeking quick, competitive multiplayer experiences with seamless room-based matchmaking and social gameplay features.
 
@@ -17,7 +17,7 @@ The game targets mobile users seeking quick, competitive multiplayer experiences
 
 ### 2.2 Feature Module
 
-Our Worm Zone game consists of the following main pages:
+Our Snake Zone game consists of the following main pages:
 
 1. **Game Arena**: main game canvas, real-time multiplayer gameplay, score display, joypad controls
 2. **Room Lobby**: auto room joining, countdown display (3,2,1), player list with bot indicators

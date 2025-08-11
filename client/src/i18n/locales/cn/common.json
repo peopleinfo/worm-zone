@@ -1,0 +1,47 @@
+{
+  "app": {
+    "title": "蠕虫地带",
+    "subtitle": "多人贪吃蛇游戏"
+  },
+  "navigation": {
+    "home": "主页",
+    "settings": "设置",
+    "back": "返回",
+    "close": "关闭"
+  },
+  "buttons": {
+    "play": "立即游戏",
+    "restart": "重新开始",
+    "continue": "继续",
+    "cancel": "取消",
+    "save": "保存",
+    "reset": "重置"
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "sound": "声音",
+    "music": "音乐",
+    "effects": "音效",
+    "vibration": "震动",
+    "graphics": "图形",
+    "quality": "质量",
+    "controls": "控制",
+    "sensitivity": "灵敏度",
+    "profile": "个人资料",
+    "username": "用户名",
+    "avatar": "头像"
+  },
+  "languages": {
+    "en": "英语",
+    "kh": "高棉语",
+    "cn": "中文"
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "warning": "警告",
+    "info": "信息"
+  }
+}
