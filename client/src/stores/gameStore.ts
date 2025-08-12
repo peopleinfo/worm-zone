@@ -41,6 +41,7 @@ interface GameStore extends GameState {
   updateMySnake: (snake: Snake) => void;
   updateOtherSnakes: (snakes: Snake[]) => void;
   updateFoods: (foods: Food[]) => void;
+  removeFood: (foodId: string) => void;
   addDeadPoints: (points: Point[]) => void;
   removeDeadPoints: (points: Point[]) => void;
   updateControls: (controls: Partial<Controls>) => void;
@@ -96,6 +97,10 @@ export const useGameStore = create<GameStore>()(persist(
     updateOtherSnakes: (snakes) => set({ otherSnakes: snakes }),
     
     updateFoods: (foods) => set({ foods }),
+    
+    removeFood: (foodId) => set((state) => ({
+      foods: state.foods.filter(food => food.id !== foodId)
+    })),
     
     addDeadPoints: (points) => set((state) => ({
       deadPoints: [...state.deadPoints, ...points]

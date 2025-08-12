@@ -183,11 +183,12 @@ class SocketClient {
       const store = useGameStore.getState();
       
       if (player.id === this.playerId) {
-        // Current player respawned
+        // Current player respawned - prepare snake but don't auto-start
         const newSnake = this.convertServerPlayerToSnake(player);
         newSnake.ai = false;
         store.updateMySnake(newSnake);
-        store.startGame();
+        // Remove automatic game start - let user manually restart via GameOverModal
+        // store.startGame();
       } else {
         // Other player respawned
         const newSnake = this.convertServerPlayerToSnake(player);

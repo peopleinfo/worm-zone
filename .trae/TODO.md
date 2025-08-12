@@ -1,8 +1,8 @@
 # TODO:
 
-- [x] quality-1: Analyze current CSS rotation implementation for quality issues (priority: High)
-- [x] quality-2: Fix canvas rendering quality and pixelation from CSS transforms (priority: High)
-- [x] joypad-1: Fix joypad touch coordinate mapping in rotated view (priority: High)
-- [x] quality-3: Implement hardware acceleration with transform3d for smoother performance (priority: High)
-- [x] joypad-2: Optimize touch event handling for accurate joypad response (priority: High)
-- [x] performance-1: Test and verify smooth 60fps gameplay experience (priority: Medium)
+- [x] remove_single_player_logic: Remove all single-player mode logic and references from GameEngine.ts (priority: High)
+- [x] fix_food_collision: Fix food collision detection issue where normal food can't be eaten but dead points can (priority: High)
+- [x] simplify_game_modes: Simplify game to only support multiplayer with bots, remove mode switching logic (priority: High)
+- [x] clean_snake_logic: Ensure Snake.ts collision detection works consistently for both food and dead points (priority: High)
+- [x] update_stores: Remove single-player state management from game stores (priority: Medium)
+- [x] test_food_consumption: Test that food consumption works correctly after removing single-player logic (priority: Medium)

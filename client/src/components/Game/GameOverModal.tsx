@@ -1,5 +1,5 @@
 import React from "react";
-import { X } from "lucide-react";
+import { X, RotateCcw } from "lucide-react";
 import { useGameStore } from "../../stores/gameStore";
 
 export const GameOverModal = React.memo(
@@ -11,9 +11,15 @@ export const GameOverModal = React.memo(
     const highestScore = useGameStore((state) => state.highestScore);
     const setGameOver = useGameStore((state) => state.setGameState);
 
+    const resetGame = useGameStore((state) => state.resetGame);
+
     const handleClose = () => {
       setGameOver({ isGameOver: false });
-      window.location.reload();
+    };
+
+    const handleRestart = () => {
+      setGameOver({ isGameOver: false });
+      resetGame();
     };
 
     if (!isGameOver) return null;
@@ -45,6 +51,16 @@ export const GameOverModal = React.memo(
             {score === highestScore && score > 0 && (
               <div className="new-record">🎉 You got new highest score! 🎉</div>
             )}
+          </div>
+          <div className="modal-actions">
+            <button
+              className="restart-button"
+              onClick={handleRestart}
+              aria-label="Restart game"
+            >
+              <RotateCcw size={20} />
+              Restart Game
+            </button>
           </div>
         </div>
       </div>

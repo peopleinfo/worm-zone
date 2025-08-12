@@ -532,6 +532,21 @@ canvas:not(#gameCanvas) {
   font-style: italic;
 }
 
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.modal-actions .restart-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
 /* Game Layout Styles */
 .game-layout {
   position: relative;

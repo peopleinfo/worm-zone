@@ -131,11 +131,30 @@ export class Snake implements SnakeInterface {
     if (this.angle < 0) this.angle += 360;
   }
 
-  checkCollisionsWithFood(point: Point): Point | undefined {
+  checkCollisionsWithFood(target: Point | { x: number; y: number; radius: number; color: string }): Point | { x: number; y: number; radius: number; color: string } | undefined {
     const head = this.getHead();
-    if (isCollided(head, point)) {
-      this.eat(point.color);
-      return point;
+    // Create a temporary Point object for collision detection if target is not a Point
+    const targetPoint = target instanceof Point ? target : new Point(target.x, target.y, target.radius, target.color);
+    
+    // Calculate distance for debugging
+    const distance = Math.hypot(head.x - targetPoint.x, head.y - targetPoint.y);
+    const requiredDistance = head.radius + targetPoint.radius;
+    
+    // Enhanced collision detection with tolerance for better reliability
+    const collisionTolerance = 2; // Add 2 pixels tolerance for better collision detection
+    const enhancedRequiredDistance = requiredDistance + collisionTolerance;
+    const collisionDetected = distance <= enhancedRequiredDistance;
+    
+    // Debug logging for collision detection
+    if (distance < requiredDistance + 8) { // Log near-misses too
+      console.log(`[COLLISION DEBUG] Snake ${this.id.substring(0,6)} - Distance: ${distance.toFixed(2)}, Required: ${requiredDistance.toFixed(2)}, Enhanced: ${enhancedRequiredDistance.toFixed(2)}, Collision: ${collisionDetected}`);
+      console.log(`[COLLISION DEBUG] Head: (${head.x.toFixed(1)}, ${head.y.toFixed(1)}, r:${head.radius}) Food: (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}, r:${targetPoint.radius})`);
+    }
+    
+    if (collisionDetected) {
+      console.log(`[FOOD EATEN] Snake ${this.id.substring(0,6)} ate food at (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}) - Distance: ${distance.toFixed(2)}`);
+      this.eat(target.color);
+      return target;
     }
     return undefined;
   }
@@ -154,7 +173,7 @@ export class Snake implements SnakeInterface {
     return { collided: false };
   }
 
-  checkCollisionsWithBoundary(canvasWidth: number, canvasHeight: number): boolean {
+  checkCollisionsWithBoundary(worldWidth: number, worldHeight: number): boolean {
     if (!this.isAlive) return false;
     
     const head = this.getHead();
@@ -162,8 +181,8 @@ export class Snake implements SnakeInterface {
     if (
       head.x < 0 ||
       head.y < 0 ||
-      head.x + head.radius > canvasWidth ||
-      head.y + head.radius > canvasHeight
+      head.x + head.radius > worldWidth ||
+      head.y + head.radius > worldHeight
     ) {
       this.over();
       return true;

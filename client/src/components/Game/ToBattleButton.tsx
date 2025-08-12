@@ -79,7 +79,7 @@ export const ToBattleButton = () => {
   const getButtonText = () => {
     if (isConnecting) return 'Connecting...';
     if (isCountingDown && countdownValue) return `Starting in ${countdownValue}...`;
-    if (isConnected && playerCount < MIN_PLAYERS_FOR_BATTLE) return `Waiting for players (${playerCount}/${MIN_PLAYERS_FOR_BATTLE})`;
+    // if (isConnected && playerCount < MIN_PLAYERS_FOR_BATTLE) return `Waiting for players (${playerCount}/${MIN_PLAYERS_FOR_BATTLE})`;
     return 'To Battle!';
   };
 

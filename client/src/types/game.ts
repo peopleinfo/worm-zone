@@ -34,7 +34,7 @@ export interface GameState {
   score: number;
   rank: number;
   playerCount: number;
-  mode: 'single' | 'multiplayer';
+  mode: 'multiplayer';
   status: string;
 }
 
