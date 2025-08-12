@@ -1,14 +1,15 @@
 import React, { useEffect } from "react";
 import { GameCanvas } from "../Game/GameCanvas";
 import { GameUI } from "../Game/GameUI";
-import { GameOverModal } from "../Game/GameOverModal";
 import { Joypad } from "../Game/Joypad";
 import { useKeyboardControls } from "../../hooks/useKeyboardControls";
 import { authService } from "../../services/authService";
+import { useGameStore } from "../../stores/gameStore";
 
 export const GameLayout: React.FC = () => {
   // Initialize keyboard controls
   useKeyboardControls();
+  const { isPlaying } = useGameStore();
 
   // Auto login on component mount
   useEffect(() => {
@@ -35,9 +36,9 @@ export const GameLayout: React.FC = () => {
 
   return (
     <div className="game-layout">
-      <GameCanvas />
+      {isPlaying && <GameCanvas />}
       <GameUI />
-      <Joypad />
+      {isPlaying && <Joypad />}
     </div>
   );
 };

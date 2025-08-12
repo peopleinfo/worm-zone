@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { useGameStore } from "../../stores/gameStore";
 import { Leaderboard } from "./Leaderboard";
 import { ToBattleButton } from "./ToBattleButton";
-import { Settings, RotateCcw } from "lucide-react";
+import { Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { SettingsModal } from "../Settings/SettingsModal";
@@ -13,30 +13,6 @@ export const GameUI: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const { openSettingsModal, isSettingsModalOpen } = useSettingsStore();
   const isGameOver = useGameStore((state) => state.isGameOver);
-  const [isRotating, setIsRotating] = useState(false);
-
-  const handleRotationToggle = async () => {
-    if (!screen.orientation) {
-      console.warn('Screen Orientation API not supported');
-      return;
-    }
-
-    setIsRotating(true);
-    try {
-      const currentOrientation = screen.orientation.type;
-      const isPortrait = currentOrientation.includes('portrait');
-      
-      if (isPortrait) {
-        await screen.orientation.lock('landscape');
-      } else {
-        await screen.orientation.lock('portrait');
-      }
-    } catch (error) {
-      console.warn('Failed to lock screen orientation:', error);
-    } finally {
-      setTimeout(() => setIsRotating(false), 500);
-    }
-  };
 
   return (
     <>
@@ -54,18 +30,10 @@ export const GameUI: React.FC = React.memo(() => {
         )}
       </div>
       )}
-      {/* Settings and rotation buttons positioned independently at top-right */}
+      {/* Settings button positioned independently at top-right */}
       {!isPlaying && (
         <>
           <div className="top-right-buttons">
-            <button
-              className="rotation-button"
-              onClick={handleRotationToggle}
-              disabled={isRotating}
-              aria-label="Toggle screen rotation"
-            >
-              <RotateCcw size={24} className={isRotating ? 'rotating' : ''} />
-            </button>
             <button
               className="settings-button"
               onClick={openSettingsModal}

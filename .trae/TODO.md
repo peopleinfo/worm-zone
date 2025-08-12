@@ -1,9 +1,8 @@
 # TODO:
 
-- [ ] orientation-state: Add custom orientation state to settings store (portrait/landscape) (priority: High)
-- [ ] css-transforms: Create CSS classes with transform: rotate() for simulated orientations (priority: High)
-- [ ] fallback-detection: Add detection logic for Screen Orientation API availability (priority: High)
-- [ ] rotation-button-update: Update rotation button to handle both native API and fallback modes (priority: High)
-- [ ] container-transforms: Apply orientation transforms to main game container (priority: Medium)
-- [ ] smooth-transitions: Add smooth CSS transitions between orientation changes (priority: Medium)
-- [ ] test-fallback: Test fallback orientation system on devices without native API (priority: Medium)
+- [x] quality-1: Analyze current CSS rotation implementation for quality issues (priority: High)
+- [x] quality-2: Fix canvas rendering quality and pixelation from CSS transforms (priority: High)
+- [x] joypad-1: Fix joypad touch coordinate mapping in rotated view (priority: High)
+- [x] quality-3: Implement hardware acceleration with transform3d for smoother performance (priority: High)
+- [x] joypad-2: Optimize touch event handling for accurate joypad response (priority: High)
+- [ ] performance-1: Test and verify smooth 60fps gameplay experience (**IN PROGRESS**) (priority: Medium)

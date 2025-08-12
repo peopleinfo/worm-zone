@@ -21,9 +21,18 @@ export const Joypad: React.FC<JoypadProps> = React.memo(({ radius = 50 }) => {
   const handleDown = useCallback((clientX: number, clientY: number) => {
     if (!canvasRef.current) return;
     
+    // Get the rotated coordinates for the joypad
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Transform coordinates to account for 90-degree rotation
+    const relativeX = clientX - centerX;
+    const relativeY = clientY - centerY;
+    
+    // Apply inverse rotation to get correct coordinates
+    const x = relativeY + rect.width / 2;
+    const y = -relativeX + rect.height / 2;
     
     setPosition({ x, y });
     setInnerPosition({ x, y });
@@ -33,9 +42,18 @@ export const Joypad: React.FC<JoypadProps> = React.memo(({ radius = 50 }) => {
   const handleMove = useCallback((clientX: number, clientY: number) => {
     if (!isActive || !canvasRef.current) return;
     
+    // Get the rotated coordinates for the joypad
     const rect = canvasRef.current.getBoundingClientRect();
-    const mouseX = clientX - rect.left;
-    const mouseY = clientY - rect.top;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Transform coordinates to account for 90-degree rotation
+    const relativeX = clientX - centerX;
+    const relativeY = clientY - centerY;
+    
+    // Apply inverse rotation to get correct coordinates
+    const mouseX = relativeY + rect.width / 2;
+    const mouseY = -relativeX + rect.height / 2;
     
     const dX = mouseX - position.x;
     const dY = mouseY - position.y;
@@ -149,15 +167,18 @@ export const Joypad: React.FC<JoypadProps> = React.memo(({ radius = 50 }) => {
   return (
     <canvas
       ref={canvasRef}
-      width={window.innerWidth}
-      height={window.innerHeight}
+      width={window.innerHeight}
+      height={window.innerWidth}
       style={{
-        position: 'absolute',
+        position: 'fixed',
         top: 0,
         left: 0,
+        width: '100%',
+        height: '100%',
         pointerEvents: isPlaying ? 'auto' : 'none',
         zIndex: 100,
-        background: 'transparent'
+        background: 'transparent',
+        touchAction: 'none'
       }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}

@@ -2,12 +2,11 @@
   "name": "snake-zone-api",
   "version": "1.0.0",
   "description": "Multiplayer Snake Zone game with real-time communication",
-
   "scripts": {
     "start-client": "cd client && npm run dev",
     "build-client": "cd client && npm run build",
     "start-server": "node server/server.js",
-    "kill-dev":"npx kill-port 9000 5173",
+    "kill-dev": "npx kill-port 9000 5173",
     "dev": "npm run kill-dev && concurrently \"nodemon server/server.js\" \"npm run start-client\""
   },
   "dependencies": {
@@ -15,6 +14,7 @@
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.54.2",
     "concurrently": "^9.2.0",
     "nodemon": "^3.0.1"
   },

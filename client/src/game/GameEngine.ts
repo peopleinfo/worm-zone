@@ -26,10 +26,13 @@ export class GameEngine {
   }
 
   private setupCanvas(): void {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+    // Use rotated dimensions for landscape mode
+    this.canvas.width = window.innerHeight;
+    this.canvas.height = window.innerWidth;
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
+    // Optimize canvas for better performance
+    this.ctx.imageSmoothingEnabled = false;
   }
 
   // Handle canvas resize for orientation changes
@@ -37,9 +40,9 @@ export class GameEngine {
     const oldWidth = this.canvas.width;
     const oldHeight = this.canvas.height;
     
-    // Update canvas dimensions
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+    // Update canvas dimensions for rotated view
+    this.canvas.width = window.innerHeight;
+    this.canvas.height = window.innerWidth;
     
     // Restore canvas context properties
     this.ctx.lineJoin = 'round';

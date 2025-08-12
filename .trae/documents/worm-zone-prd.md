@@ -2,9 +2,9 @@
 
 ## 1. Product Overview
 
-Snake Zone is a real-time multiplayer snake-style game designed for mobile devices in landscape mode. Players compete in shared rooms with up to 3 participants, with AI bots filling empty slots to ensure engaging gameplay.
+Snake Zone is a real-time multiplayer snake-style game designed for mobile devices with a visually rotated landscape interface. Players hold their devices in portrait orientation while the game interface is rotated 90 degrees via CSS transforms to provide an optimal landscape gaming experience. Players compete in shared rooms with up to 3 participants, with AI bots filling empty slots to ensure engaging gameplay.
 
-The game targets mobile users seeking quick, competitive multiplayer experiences with seamless room-based matchmaking and social gameplay features.
+The game targets mobile users seeking quick, competitive multiplayer experiences with seamless room-based matchmaking and social gameplay features, without requiring native screen rotation APIs.
 
 ## 2. Core Features
 
@@ -23,7 +23,7 @@ Our Snake Zone game consists of the following main pages:
 2. **Room Lobby**: auto room joining, countdown display (3,2,1), player list with bot indicators
 3. **Game Over Modal**: score summary, highest score display, restart functionality
 4. **Landing Home**: main entry point with settings icon, language selection, game start
-5. **Settings Modal**: orientation lock, sound controls, language selection, user profile access
+5. **Settings Modal**: display settings, sound controls, language selection, user profile access
 
 ### 2.3 Page Details
 
@@ -33,7 +33,7 @@ Our Snake Zone game consists of the following main pages:
 | Landing Home    | Game Start       | Main entry point with play button and game branding                        |
 | Landing Home    | Language Display | Current language flag indicator in top area                                |
 | Game Arena      | Game Canvas      | Render worm movement, food collection, collision detection, real-time sync |
-| Game Arena      | Joypad Controls  | Touch-based directional controls optimized for landscape mode              |
+| Game Arena      | Joypad Controls  | Touch-based directional controls optimized for rotated landscape interface |
 | Game Arena      | Score Display    | Real-time score updates, leaderboard during gameplay                       |
 | Room Lobby      | Auto Matchmaking | Connect players to available rooms, fill with bots if needed               |
 | Room Lobby      | Countdown Timer  | Display 3-2-1 countdown before game starts                                 |
@@ -42,7 +42,7 @@ Our Snake Zone game consists of the following main pages:
 | Game Over Modal | Modal Close      | Close modal and reset all game state (equivalent to SPA hard reload)       |
 | Game Over Modal | Restart Controls | Start new game without page reload, rejoin room with zero score            |
 | Settings Modal  | Language Tab     | Flag-based language selection (EN, KH, CN) with react-i18next integration  |
-| Settings Modal  | Orientation Lock | Force landscape mode, prevent rotation                                     |
+| Settings Modal  | Display Settings | Visual rotation controls, interface preferences                            |
 | Settings Modal  | Sound Controls   | Audio settings and volume controls                                         |
 | Settings Modal  | User Profile     | MOS SDK integration for user info, login status                            |
 
@@ -50,7 +50,7 @@ Our Snake Zone game consists of the following main pages:
 
 **Main Game Flow:**
 
-1. User opens app → Auto-orientation to landscape mode
+1. User opens app → Game interface visually rotated to landscape mode (CSS transform)
 2. Landing home displays with settings icon and current language
 3. User can access settings modal for language/preferences or start game
 4. System auto-connects to available room
@@ -62,7 +62,7 @@ Our Snake Zone game consists of the following main pages:
 
 ```mermaid
 graph TD
-    A[App Launch] --> B[Force Landscape Mode]
+    A[App Launch] --> B[Apply CSS Landscape Rotation]
     B --> C[Landing Home]
     C --> D{User Action}
     D -->|Settings Icon| E[Settings Modal]
@@ -119,7 +119,7 @@ graph TD
 
 ### 4.3 Responsiveness
 
-**Landscape-Only Design**: The entire application is optimized exclusively for landscape orientation on mobile devices. Orientation lock is enforced at the application level to prevent rotation to portrait mode.
+**Portrait-Held Landscape Design**: The entire application is designed for users holding their devices in portrait orientation while the game interface is visually rotated 90 degrees using CSS transforms. This approach provides an optimal landscape gaming experience without relying on native screen orientation APIs, making it compatible with mini-app environments that may restrict device orientation controls.
 
 ## 5. Technical Architecture
 
