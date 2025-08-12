@@ -32,6 +32,68 @@ export class GameEngine {
     this.ctx.lineCap = 'round';
   }
 
+  // Handle canvas resize for orientation changes
+  resize(): void {
+    const oldWidth = this.canvas.width;
+    const oldHeight = this.canvas.height;
+    
+    // Update canvas dimensions
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+    
+    // Restore canvas context properties
+    this.ctx.lineJoin = 'round';
+    this.ctx.lineCap = 'round';
+    
+    // Calculate scale factors for repositioning game elements
+    const scaleX = this.canvas.width / oldWidth;
+    const scaleY = this.canvas.height / oldHeight;
+    
+    // Reposition player snake if it exists
+    if (this.mySnake && this.mySnake.isAlive) {
+      this.mySnake.points.forEach(point => {
+        point.x *= scaleX;
+        point.y *= scaleY;
+      });
+    }
+    
+    // Reposition AI snakes
+    this.aiSnakes.forEach(snake => {
+      if (snake.isAlive) {
+        snake.points.forEach(point => {
+          point.x *= scaleX;
+          point.y *= scaleY;
+        });
+      }
+    });
+    
+    // Reposition foods
+    this.foods.forEach(food => {
+      food.x *= scaleX;
+      food.y *= scaleY;
+      // Ensure foods stay within bounds
+      food.x = Math.max(food.radius, Math.min(this.canvas.width - food.radius, food.x));
+      food.y = Math.max(food.radius, Math.min(this.canvas.height - food.radius, food.y));
+    });
+    
+    // Reposition dead points
+    Snake.deadPoints.forEach(point => {
+      point.x *= scaleX;
+      point.y *= scaleY;
+      // Ensure dead points stay within bounds
+      point.x = Math.max(point.radius, Math.min(this.canvas.width - point.radius, point.x));
+      point.y = Math.max(point.radius, Math.min(this.canvas.height - point.radius, point.y));
+    });
+    
+    // Update store with resized elements
+    const store = useGameStore.getState();
+    if (this.mySnake) {
+      store.updateMySnake(this.mySnake);
+    }
+    store.updateFoods(this.foods);
+    store.updateOtherSnakes(this.aiSnakes);
+  }
+
   private initializeGame(): void {
     // Initialize foods
     for (let i = 0; i < this.maxFoods; i++) {

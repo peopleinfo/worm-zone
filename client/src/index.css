@@ -422,6 +422,14 @@ html, body {
   width: 100%;
   height: 100%;
   z-index: 1;
+  /* Prevent canvas stretching during orientation changes */
+  object-fit: contain;
+  /* Ensure smooth transitions during resize */
+  transition: none;
+  /* Prevent any scaling artifacts */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
 }
 
 /* Game UI Styles */
@@ -575,11 +583,18 @@ html, body {
   }
 }
 
-/* Settings Button Styles */
-.settings-button {
+/* Top Right Buttons Container */
+.top-right-buttons {
   position: absolute;
   top: 20px;
   right: 20px;
+  display: flex;
+  gap: 12px;
+  z-index: 100;
+}
+
+/* Settings Button Styles */
+.settings-button {
   background: rgba(0, 0, 0, 0.8);
   border: 2px solid #4CAF50;
   border-radius: 50%;
@@ -588,7 +603,6 @@ html, body {
   padding: 12px;
   transition: all 0.3s ease;
   pointer-events: auto;
-  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -603,6 +617,58 @@ html, body {
 
 .settings-button:active {
   transform: scale(0.95);
+}
+
+/* Rotation Button Styles */
+.rotation-button {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #4CAF50;
+  border-radius: 50%;
+  color: #4CAF50;
+  cursor: pointer;
+  padding: 12px;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rotation-button:hover {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: #66BB6A;
+  color: #66BB6A;
+  transform: scale(1.1);
+}
+
+.rotation-button:active {
+  transform: scale(0.95);
+}
+
+.rotation-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.rotation-button:disabled:hover {
+  transform: none;
+  background: rgba(0, 0, 0, 0.8);
+  border-color: #4CAF50;
+  color: #4CAF50;
+}
+
+/* Rotation Animation */
+.rotating {
+  animation: rotate 0.5s ease-in-out;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Settings Modal Styles */
@@ -1080,14 +1146,30 @@ html, body {
     width: 120px;
   }
   
-  .settings-button {
+  .top-right-buttons {
     top: 15px;
     right: 15px;
+    gap: 10px;
+  }
+  
+  .settings-button,
+  .rotation-button {
     padding: 10px;
   }
 }
 
 @media (max-width: 480px) {
+  .top-right-buttons {
+    top: 12px;
+    right: 12px;
+    gap: 8px;
+  }
+  
+  .settings-button,
+  .rotation-button {
+    padding: 8px;
+  }
+  
   .settings-modal {
     width: 96%;
     max-height: 92vh;
