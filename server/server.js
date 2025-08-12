@@ -60,7 +60,7 @@ function createBot(id) {
     points: [],
     angle: Math.random() * Math.PI * 2,
     radius: 4,
-    speed: 0.9, // Slightly slower than human players
+    speed: 1.1, // Slightly faster than human players for competitive gameplay
     color: getRandomColor(),
     score: 1.0,
     alive: true,

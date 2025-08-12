@@ -12,7 +12,7 @@ export class GameEngine {
   private lastSocketUpdate: number = 0;
   private aiSnakes: Snake[] = [];
   private foods: Food[] = [];
-  private zoom: number = 3;
+  private zoom: number = 4;
   // Single-player variables removed - now using server-managed multiplayer only
   
   // World coordinate system - consistent boundaries for collision and rendering
