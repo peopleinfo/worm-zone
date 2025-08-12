@@ -2,9 +2,9 @@
 
 ## 1. Product Overview
 
-Snake Zone is a real-time multiplayer snake-style game designed for mobile devices with a visually rotated landscape interface. Players hold their devices in portrait orientation while the game interface is rotated 90 degrees via CSS transforms to provide an optimal landscape gaming experience. Players compete in shared rooms with up to 3 participants, with AI bots filling empty slots to ensure engaging gameplay.
+Snake Zone is a real-time multiplayer snake-style game designed for mobile devices with a visually rotated landscape interface. Players hold their devices in portrait orientation while the game interface is rotated 90 degrees via CSS transforms to provide an optimal landscape gaming experience. The game operates exclusively in multiplayer mode where players automatically join shared rooms, with intelligent AI bots filling empty slots to maintain engaging 3-player gameplay at all times.
 
-The game targets mobile users seeking quick, competitive multiplayer experiences with seamless room-based matchmaking and social gameplay features, without requiring native screen rotation APIs.
+The game targets mobile users seeking quick, competitive multiplayer experiences with seamless auto-matchmaking and consistent gameplay quality through bot-assisted room management, without requiring native screen rotation APIs.
 
 ## 2. Core Features
 
@@ -19,9 +19,9 @@ The game targets mobile users seeking quick, competitive multiplayer experiences
 
 Our Snake Zone game consists of the following main pages:
 
-1. **Game Arena**: main game canvas, real-time multiplayer gameplay, score display, joypad controls
+1. **Game Arena**: main game canvas, real-time multiplayer gameplay with bots, score display, joypad controls
 2. **Room Lobby**: auto room joining, countdown display (3,2,1), player list with bot indicators
-3. **Game Over Modal**: score summary, highest score display, restart functionality
+3. **Game Over Modal**: score summary with multiplayer rankings, highest score display, restart functionality
 4. **Landing Home**: main entry point with settings icon, language selection, game start
 5. **Settings Modal**: display settings, sound controls, language selection, user profile access
 
@@ -35,9 +35,9 @@ Our Snake Zone game consists of the following main pages:
 | Game Arena      | Game Canvas      | Render worm movement, food collection, collision detection, real-time sync |
 | Game Arena      | Joypad Controls  | Touch-based directional controls optimized for rotated landscape interface |
 | Game Arena      | Score Display    | Real-time score updates, leaderboard during gameplay                       |
-| Room Lobby      | Auto Matchmaking | Connect players to available rooms, fill with bots if needed               |
+| Room Lobby      | Auto Matchmaking | Connect players to available rooms, automatically spawn bots to maintain 3-player gameplay |
 | Room Lobby      | Countdown Timer  | Display 3-2-1 countdown before game starts                                 |
-| Room Lobby      | Player Status    | Show connected players, bot indicators, connection status                  |
+| Room Lobby      | Player Status    | Show connected players, intelligent bot indicators, connection status      |
 | Game Over Modal | Score Summary    | Display current score, highest score, session statistics                   |
 | Game Over Modal | Modal Close      | Close modal and reset all game state (equivalent to SPA hard reload)       |
 | Game Over Modal | Restart Controls | Start new game without page reload, rejoin room with zero score            |
@@ -53,12 +53,12 @@ Our Snake Zone game consists of the following main pages:
 1. User opens app → Game interface visually rotated to landscape mode (CSS transform)
 2. Landing home displays with settings icon and current language
 3. User can access settings modal for language/preferences or start game
-4. System auto-connects to available room
-5. Display lobby with player count and 3-2-1 countdown
-6. Game starts with synchronized gameplay
-7. On death → Show game over modal with scores
+4. System auto-connects to multiplayer room and spawns bots to ensure 3-player gameplay
+5. Display lobby with player count (human + bot indicators) and 3-2-1 countdown
+6. Game starts with synchronized multiplayer gameplay (human players + AI bots)
+7. On death → Show game over modal with scores and rankings
 8. Modal Close → Complete state reset (equivalent to app restart)
-9. Restart → New game with zero score and rejoin room
+9. Restart → New game with zero score, rejoin multiplayer room with fresh bot spawning
 
 ```mermaid
 graph TD
@@ -66,22 +66,24 @@ graph TD
     B --> C[Landing Home]
     C --> D{User Action}
     D -->|Settings Icon| E[Settings Modal]
-    D -->|Start Game| F[Auto Join Room]
+    D -->|Start Game| F[Auto Join Multiplayer Room]
     E --> G{Settings Action}
     G -->|Language Change| H[Update Language]
     G -->|Close Settings| C
     H --> C
-    F --> I[Lobby Screen]
-    I --> J[Countdown 3-2-1]
-    J --> K[Game Arena]
-    K --> L{Game Over?}
-    L -->|No| K
-    L -->|Yes| M[Game Over Modal]
-    M --> N{User Action}
-    N -->|Close Modal| O[Complete State Reset]
-    N -->|Restart Game| P[New Game Start]
-    O --> C
-    P --> F
+    F --> I[Spawn Bots to Fill 3-Player Slots]
+    I --> J[Lobby Screen - Show Players + Bots]
+    J --> K[Countdown 3-2-1]
+    K --> L[Multiplayer Game Arena]
+    L --> M[Real-time Gameplay with Bots]
+    M --> N{Game Over?}
+    N -->|No| M
+    N -->|Yes| O[Game Over Modal with Rankings]
+    O --> P{User Action}
+    P -->|Close Modal| Q[Complete State Reset]
+    P -->|Restart Game| R[New Game Start]
+    Q --> C
+    R --> F
 ```
 
 ## 4. User Interface Design
@@ -127,15 +129,15 @@ graph TD
 
 * **Frontend**: React 18 + TypeScript + Vite
 
-* **State Management**: Zustand for game state and UI state
+* **State Management**: Zustand for multiplayer game state and UI state
 
 * **Internationalization**: react-i18next for multi-language support
 
-* **Real-time Communication**: Socket.io client
+* **Real-time Communication**: Socket.io client for multiplayer and bot communication
 
 * **Mobile Integration**: MOS SDK for mini-program features
 
-* **Backend**: Node.js + Express + Socket.io server
+* **Backend**: Node.js + Express + Socket.io server with intelligent bot management
 
 ### 5.2 Development Flow
 
@@ -417,13 +419,15 @@ interface DeadPoint {
 
 #### Bot Management
 
-* Maximum 20 bots allowed simultaneously
+* Maximum 20 bots per server instance for optimal performance
 
-* Bots spawn automatically when first human player joins
+* Bots automatically spawn to ensure every room maintains 3-player gameplay
 
-* Bots are removed permanently when they die
+* Dynamic bot management adjusts to human player availability
 
-* Bot AI includes collision detection, food consumption, and boundary checking
+* Advanced AI behavior includes food seeking, dead point collection, and strategic collision avoidance
+
+* Bot difficulty and intelligence scales to provide engaging competition
 
 #### Game Mechanics
 
@@ -719,79 +723,83 @@ interface SettingsStore {
 
 ## 9. Implementation Priorities
 
-### Phase 1: Core Infrastructure
+### Phase 1: Core Infrastructure ✅ **COMPLETED**
 
-* [ ] Landing Home page with settings icon
+* [x] Landing Home page with settings icon
 
-* [ ] Settings modal component structure
+* [x] Settings modal component structure
 
-* [ ] Landscape orientation lock implementation
+* [x] Landscape orientation lock implementation
 
-* [ ] Socket.io client/server setup
+* [x] Socket.io client/server setup
 
-* [ ] Basic game canvas and rendering
+* [x] Basic game canvas and rendering
 
-* [ ] Zustand store architecture
+* [x] Zustand store architecture
 
-### Phase 2: Internationalization & Settings
+### Phase 2: Internationalization & Settings ✅ **COMPLETED**
 
-* [ ] React-i18next setup and configuration
+* [x] React-i18next setup and configuration
 
-* [ ] Translation files for EN, KH, CN languages
+* [x] Translation files for EN, KH, CN languages
 
-* [ ] Language selector component
+* [x] Language selector component
 
-* [ ] Settings modal functionality
+* [x] Settings modal functionality
 
-* [ ] Audio and game settings controls
+* [x] Audio and game settings controls
 
-### Phase 3: Game Mechanics
+### Phase 3: Game Mechanics ✅ **COMPLETED**
 
-* [ ] Worm movement and collision detection
+* [x] Worm movement and collision detection
 
-* [ ] Food generation and consumption
+* [x] Food generation and consumption
 
-* [ ] Score calculation and display
+* [x] Score calculation and display
 
-* [ ] Game over detection
+* [x] Game over detection
 
-### Phase 4: Multiplayer Features
+### Phase 4: Multiplayer Features ✅ **COMPLETED**
 
-* [ ] Room management system
+* [x] Room management system
 
-* [ ] Auto-matchmaking with bots
+* [x] Auto-matchmaking with bots
 
-* [ ] Real-time state synchronization
+* [x] Real-time state synchronization
 
-* [ ] Player connection handling
+* [x] Player connection handling
 
-### Phase 5: UI/UX Polish
+### Phase 5: UI/UX Polish 🔄 **IN PROGRESS**
 
-* [ ] Joypad controls optimization
+* [x] Joypad controls optimization
 
-* [ ] Game over modal with animations
+* [x] Game over modal with animations
 
-* [ ] Lobby countdown and player display
+* [x] Lobby countdown and player display
 
-* [ ] Settings modal animations and transitions
+* [x] Settings modal animations and transitions
 
-* [ ] Language switching animations
+* [x] Language switching animations
 
 * [ ] MOS SDK profile integration
 
 ## 10. Success Metrics
 
-* **Performance**: Maintain 60fps during gameplay
+**Technical Performance:**
+- Game maintains 60 FPS on target mobile devices in multiplayer environment
+- Socket.io latency <100ms for real-time multiplayer and bot synchronization
+- App startup time <3 seconds with automatic room joining
+- Memory usage <150MB during 3-player gameplay with bots
 
-* **Connectivity**: <100ms latency for real-time sync
+**User Experience:**
+- Automatic room connection success rate >98%
+- Game completion rate >85% (players finish multiplayer games they start)
+- Average session duration >6 minutes with engaging bot competition
+- User retention rate >65% after first week of multiplayer experience
 
-* **User Experience**: Seamless landscape-only operation with intuitive settings
-
-* **Internationalization**: Support for 3 languages with smooth switching
-
-* **Engagement**: Average session duration >5 minutes
-
-* **Accessibility**: Settings modal accessible via multiple interaction methods
-
-* **Stability**: <1% crash rate during gameplay
+**Multiplayer & Bot Quality:**
+- Bot auto-spawn rate 100% to maintain consistent 3-player gameplay
+- Multiplayer + bot synchronization accuracy >99.5%
+- Connection stability >97% during multiplayer sessions with intelligent bot management
+- Bot AI engagement score >4.0/5.0 (user satisfaction with bot competition quality)
 
