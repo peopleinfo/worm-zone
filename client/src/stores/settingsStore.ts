@@ -42,7 +42,6 @@ const defaultSettings = {
 export const useSettingsStore = create<SettingsState>()(persist(
   (set) => ({
     ...defaultSettings,
-    
     openSettingsModal: () => set({ isSettingsModalOpen: true }),
     closeSettingsModal: () => set({ isSettingsModalOpen: false }),
     toggleSettingsModal: () => set((state) => ({ 

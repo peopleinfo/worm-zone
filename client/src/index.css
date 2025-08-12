@@ -17,6 +17,12 @@ html, body {
   height: 100%;
 }
 
+.App {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
 /* Game Header Styles */
 .game-header {
   position: absolute;
@@ -337,14 +343,14 @@ html, body {
 
 .game-over-modal .close-button {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 10px;
+  right: 10px;
   background: rgba(76, 175, 80, 0.1);
   border: 1px solid rgba(76, 175, 80, 0.3);
   border-radius: 8px;
   color: #4CAF50;
   cursor: pointer;
-  padding: 8px;
+  padding: 4px;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;

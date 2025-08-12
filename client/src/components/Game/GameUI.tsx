@@ -6,14 +6,19 @@ import { Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { SettingsModal } from "../Settings/SettingsModal";
+import { GameOverModal } from "./GameOverModal";
 
 export const GameUI: React.FC = React.memo(() => {
   const isPlaying = useGameStore((state) => state.isPlaying);
   const { t } = useTranslation();
-  const { openSettingsModal } = useSettingsStore();
+  const { openSettingsModal, isSettingsModalOpen } = useSettingsStore();
+    const isGameOver = useGameStore((state) => state.isGameOver);
+
   return (
     <>
-      <div className="game-ui">
+      <GameOverModal />
+      {(!isSettingsModalOpen && !isGameOver) && (
+        <div className="game-ui">
         <Leaderboard />
         {!isPlaying && (
           <>
@@ -24,6 +29,7 @@ export const GameUI: React.FC = React.memo(() => {
           </>
         )}
       </div>
+      )}
       {/* Settings button positioned independently at top-right */}
       {!isPlaying && (
         <>

@@ -13,25 +13,6 @@ export const SettingsModal: React.FC = () => {
     updateSoundSettings,
   } = useSettingsStore();
 
-  // Handle ESC key to close modal
-  useEffect(() => {
-    const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isSettingsModalOpen) {
-        closeSettingsModal();
-      }
-    };
-
-    if (isSettingsModalOpen) {
-      document.addEventListener('keydown', handleEscKey);
-      document.body.style.overflow = 'hidden';
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscKey);
-      document.body.style.overflow = 'unset';
-    };
-  }, [isSettingsModalOpen, closeSettingsModal]);
-
   // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {

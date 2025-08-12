@@ -1,13 +1,9 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { X } from "lucide-react";
 import { useGameStore } from "../../stores/gameStore";
 
-interface GameOverModalProps {
-  onRestart: () => void;
-}
-
-export const GameOverModal: React.FC<GameOverModalProps> = React.memo(
-  ({ onRestart }) => {
+export const GameOverModal = React.memo(
+  () => {
     // Use selective subscriptions to minimize re-renders
     const isGameOver = useGameStore((state) => state.isGameOver);
     const score = useGameStore((state) => state.score);
@@ -15,31 +11,9 @@ export const GameOverModal: React.FC<GameOverModalProps> = React.memo(
     const highestScore = useGameStore((state) => state.highestScore);
     const setGameOver = useGameStore((state) => state.setGameState);
 
-    // Add keyboard support for restarting with spacebar and closing with Escape
-    useEffect(() => {
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (isGameOver) {
-          if (e.code === "Space") {
-            e.preventDefault();
-            onRestart();
-          } else if (e.key === "Escape") {
-            e.preventDefault();
-            setGameOver({ isGameOver: false });
-          }
-        }
-      };
-
-      if (isGameOver) {
-        window.addEventListener("keydown", handleKeyDown);
-      }
-
-      return () => {
-        window.removeEventListener("keydown", handleKeyDown);
-      };
-    }, [isGameOver, onRestart, setGameOver]);
-
     const handleClose = () => {
       setGameOver({ isGameOver: false });
+      window.location.reload();
     };
 
     if (!isGameOver) return null;

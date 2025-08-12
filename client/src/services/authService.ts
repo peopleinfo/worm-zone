@@ -154,6 +154,7 @@ export const authService = new AuthService();
 declare global {
   interface Window {
     mos: {
+      getWindowInfo: any;
       login: (appKey: string) => Promise<LoginResponse>;
       getUserInfo: (scope: string) => Promise<GetUserInfoResponse>;
       getUserContactInfo: (scope: string) => Promise<ContactInfoResponse>;

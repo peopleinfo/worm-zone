@@ -1,13 +1,14 @@
 import { GameLayout } from "./components/Layout/GameLayout";
-import "./App.css";
+import { useEffect } from "react";
 
 function App() {
+  useEffect(() => {
+   window.mos.getWindowInfo().then((info) => console.log('getWindowInfo', info));
+  }, []);
   return (
-    <>
-      <div className="App">
-        <GameLayout />
-      </div>
-    </>
+    <div className="App">
+      <GameLayout />
+    </div>
   );
 }
 
