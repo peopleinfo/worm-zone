@@ -146,13 +146,13 @@ export class Snake implements SnakeInterface {
     const collisionDetected = distance <= enhancedRequiredDistance;
     
     // Debug logging for collision detection
-    if (distance < requiredDistance + 8) { // Log near-misses too
-      console.log(`[COLLISION DEBUG] Snake ${this.id.substring(0,6)} - Distance: ${distance.toFixed(2)}, Required: ${requiredDistance.toFixed(2)}, Enhanced: ${enhancedRequiredDistance.toFixed(2)}, Collision: ${collisionDetected}`);
-      console.log(`[COLLISION DEBUG] Head: (${head.x.toFixed(1)}, ${head.y.toFixed(1)}, r:${head.radius}) Food: (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}, r:${targetPoint.radius})`);
-    }
+    // if (distance < requiredDistance + 8) { // Log near-misses too
+    //   console.log(`[COLLISION DEBUG] Snake ${this.id.substring(0,6)} - Distance: ${distance.toFixed(2)}, Required: ${requiredDistance.toFixed(2)}, Enhanced: ${enhancedRequiredDistance.toFixed(2)}, Collision: ${collisionDetected}`);
+    //   console.log(`[COLLISION DEBUG] Head: (${head.x.toFixed(1)}, ${head.y.toFixed(1)}, r:${head.radius}) Food: (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}, r:${targetPoint.radius})`);
+    // }
     
     if (collisionDetected) {
-      console.log(`[FOOD EATEN] Snake ${this.id.substring(0,6)} ate food at (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}) - Distance: ${distance.toFixed(2)}`);
+      // console.log(`[FOOD EATEN] Snake ${this.id.substring(0,6)} ate food at (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}) - Distance: ${distance.toFixed(2)}`);
       this.eat(target.color);
       return target;
     }

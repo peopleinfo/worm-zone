@@ -36,6 +36,7 @@ export interface GameState {
   playerCount: number;
   mode: 'multiplayer';
   status: string;
+  finalScore: number;
 }
 
 export interface Controls {
