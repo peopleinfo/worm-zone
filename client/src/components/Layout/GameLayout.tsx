@@ -3,28 +3,22 @@ import { GameCanvas } from "../Game/GameCanvas";
 import { GameUI } from "../Game/GameUI";
 import { Joypad } from "../Game/Joypad";
 import { useKeyboardControls } from "../../hooks/useKeyboardControls";
-import { authService } from "../../services/authService";
+import { useAuthStore } from "../../stores/authStore";
 import { useGameStore } from "../../stores/gameStore";
 
 export const GameLayout: React.FC = () => {
   // Initialize keyboard controls
   useKeyboardControls();
   const { isPlaying } = useGameStore();
+  const { initializeAuth } = useAuthStore();
 
-  // Auto login on component mount
+  // Auto login on component mount using auth store
   useEffect(() => {
     const autoLogin = async () => {
-      // Attempt automatic login if MOS SDK is available
-      if (typeof window.mos !== "undefined") {
-        try {
-          await authService.login();
-          authService.getUserInfo();
-          authService.getUserContactInfo();
-          console.log("Auto login successful, token:", authService.getToken());
-        } catch (error) {
-          console.log("Auto login failed, continuing as guest:", error);
-          throw error;
-        }
+      try {
+        await initializeAuth();
+      } catch (error) {
+        console.log("Auto login failed, continuing as guest:", error);
       }
     };
 
@@ -32,7 +26,7 @@ export const GameLayout: React.FC = () => {
     const timer = setTimeout(autoLogin, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [initializeAuth]);
 
   return (
     <div className="game-layout">

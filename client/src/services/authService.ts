@@ -1,6 +1,6 @@
 // MOS SDK Authentication Service
 interface LoginResponse {
-    code: string;
+  code: string;
 }
 
 interface UserInfo {
@@ -8,23 +8,12 @@ interface UserInfo {
   headPortrait: string;
 }
 
-interface GetUserInfoResponse {
-  code: number;
-  message: string | null;
-  data: UserInfo;
-}
-
 interface ContactInfoResponse {
-  code: number;
-  message: string | null;
-  data: {
-    authorized: number;
-    dialCode: string;
-    phone: string;
-    email: string | null;
-  };
+  authorized: number;
+  dialCode: string;
+  phone: string;
+  email: string | null;
 }
-
 
 class AuthService {
   private token: string | null = null;
@@ -80,9 +69,6 @@ class AuthService {
       const token = "123456";
 
       // Save token to memory and localStorage
-      this.token = token;
-      localStorage.setItem("token", token);
-      console.log("token", token);
       return token;
     } catch (error) {
       console.error("Login failed:", error);
@@ -123,23 +109,23 @@ class AuthService {
    */
   async getUserInfo(): Promise<UserInfo> {
     try {
-      const userInfoResponse = await window.mos.getUserInfo('user_info');
+      const userInfoResponse = await window.mos.getUserInfo("user_info");
       console.log("userInfoResponse", userInfoResponse);
 
-      return userInfoResponse.data || {};
+      return userInfoResponse || {};
     } catch (error) {
       console.error("Get user info failed:", error);
       throw error;
     }
   }
-    /**
+  /**
    * Gets user contact information from the sdk
    */
   async getUserContactInfo() {
     try {
-      const contactInfo = await window.mos.getUserContactInfo('contact_info');
+      const contactInfo = await window.mos.getUserContactInfo("contact_info");
       console.log("contactInfo", contactInfo);
-      return contactInfo.data || {};
+      return contactInfo || {};
     } catch (error) {
       console.error("Get user contact info failed:", error);
       throw error;
@@ -156,7 +142,7 @@ declare global {
     mos: {
       getWindowInfo: any;
       login: (appKey: string) => Promise<LoginResponse>;
-      getUserInfo: (scope: string) => Promise<GetUserInfoResponse>;
+      getUserInfo: (scope: string) => Promise<UserInfo>;
       getUserContactInfo: (scope: string) => Promise<ContactInfoResponse>;
     };
   }

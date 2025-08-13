@@ -21,11 +21,27 @@ Our Snake Zone game consists of the following main pages:
 
 1. **Game Arena**: main game canvas, real-time multiplayer gameplay with bots, score display, joypad controls
 2. **Room Lobby**: auto room joining, countdown display (3,2,1), player list with bot indicators
-3. **Game Over Modal**: score summary with multiplayer rankings, highest score display, restart functionality
+3. **Game Over Modal**: score summary with multiplayer rankings, highest score display, global leaderboard, restart functionality
 4. **Landing Home**: main entry point with settings icon, language selection, game start
 5. **Settings Modal**: display settings, sound controls, language selection, user profile access
 
-### 2.3 Page Details
+### 2.3 Global Leaderboard System
+
+**Core Requirements**:
+- Track top 10 global high scores across all players (excluding bot scores)
+- Automatically save new personal records when user achieves higher score than previous best
+- Display current user's position in global leaderboard if score qualifies for top 10
+- Persistent storage of global records with player identification
+- Real-time updates when new records are achieved
+
+**Display Logic**:
+- Show global leaderboard in Game Over modal alongside personal stats
+- Highlight current user's entry with distinct visual styling if in top 10
+- Display rank, player name, and score for each leaderboard entry
+- Crown icons or special indicators for top 3 positions
+- Smooth animations when leaderboard updates with new records
+
+### 2.4 Page Details
 
 | Page Name       | Module Name      | Feature Description                                                        |
 | --------------- | ---------------- | -------------------------------------------------------------------------- |
@@ -39,12 +55,15 @@ Our Snake Zone game consists of the following main pages:
 | Room Lobby      | Countdown Timer  | Display 3-2-1 countdown before game starts                                 |
 | Room Lobby      | Player Status    | Show connected players, intelligent bot indicators, connection status      |
 | Game Over Modal | Score Summary    | Display current score, highest score, session statistics                   |
+| Game Over Modal | Global Leaderboard | Show top 10 global records (excluding bots), highlight current user position if in top 10 |
 | Game Over Modal | Modal Close      | Close modal and reset all game state (equivalent to SPA hard reload)       |
 | Game Over Modal | Restart Controls | Start new game without page reload, rejoin room with zero score            |
+| Game Over Modal | Scrollable Content | Enable vertical scrolling for modal content in landscape mode              |
 | Settings Modal  | Language Tab     | Flag-based language selection (EN, KH, CN) with react-i18next integration  |
 | Settings Modal  | Display Settings | Visual rotation controls, interface preferences                            |
 | Settings Modal  | Sound Controls   | Audio settings and volume controls                                         |
 | Settings Modal  | User Profile     | MOS SDK integration for user info, login status                            |
+| Settings Modal  | Scrollable Content | Enable vertical scrolling for modal content in landscape mode              |
 
 ## 3. Core Process
 
@@ -110,18 +129,21 @@ graph TD
 | Landing Home    | Language Flag | Current language flag icon in top area, smooth flag transitions                |
 | Landing Home    | Main Layout   | Centered game logo, play button, gradient background with game theme           |
 | Settings Modal  | Language Tab  | Three flag buttons (🇺🇸 EN, 🇰🇭 KH, 🇨🇳 CN), selected state highlighting    |
-| Settings Modal  | Modal Design  | Centered overlay with blur background, rounded corners, slide-up animation     |
+| Settings Modal  | Modal Design  | Centered overlay with blur background, rounded corners, slide-up animation, scrollable content |
 | Settings Modal  | Controls      | Toggle switches, sliders, organized sections with clear labels                 |
 | Game Arena      | Game Canvas   | Full-screen dark background, neon-style worm trails, particle effects for food |
 | Game Arena      | Joypad        | Semi-transparent circular pad, bottom-right corner, haptic feedback            |
 | Game Arena      | Score HUD     | Top-left floating panel, real-time score updates, mini leaderboard             |
 | Room Lobby      | Player List   | Card-based layout, player avatars, bot indicators with robot icons             |
 | Room Lobby      | Countdown     | Large centered numbers with pulsing animation, countdown sound effects         |
-| Game Over Modal | Score Panel   | Centered modal with blur background, trophy icons, animated score counting     |
+| Game Over Modal | Score Panel   | Centered modal with blur background, trophy icons, animated score counting, scrollable content |
+| Game Over Modal | Global Leaderboard | Top 10 list with rank numbers, player names, scores, crown icons for top 3, current user highlighting |
 
 ### 4.3 Responsiveness
 
 **Portrait-Held Landscape Design**: The entire application is designed for users holding their devices in portrait orientation while the game interface is visually rotated 90 degrees using CSS transforms. This approach provides an optimal landscape gaming experience without relying on native screen orientation APIs, making it compatible with mini-app environments that may restrict device orientation controls.
+
+**Modal Scrollability**: All modals (Game Over, Settings) are designed with scrollable content areas to handle varying content heights in landscape mode. Modal containers have maximum height constraints with overflow-y: auto to ensure content accessibility on smaller screens or when additional features like global leaderboards extend content length.
 
 ## 5. Technical Architecture
 

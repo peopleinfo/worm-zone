@@ -116,6 +116,20 @@ interface ModalCloseEvent {
   playerId: string;
   action: 'close' | 'restart';
 }
+
+interface GlobalLeaderboardEvent {
+  leaderboard: GlobalRecord[];
+  currentUserRank?: number;
+  totalPlayers: number;
+}
+
+interface NewRecordEvent {
+  playerId: string;
+  playerName: string;
+  score: number;
+  newRank: number;
+  isPersonalBest: boolean;
+}
 ```
 
 ### 4.2 REST API Endpoints
@@ -149,6 +163,55 @@ Response:
   "gamesPlayed": 45,
   "highestScore": 1250,
   "averageScore": 680
+}
+```
+
+**Global Leaderboard**
+
+```
+GET /api/leaderboard/global
+```
+
+Response:
+
+```json
+{
+  "leaderboard": [
+    {
+      "rank": 1,
+      "playerId": "player456",
+      "playerName": "SnakeKing",
+      "score": 2500,
+      "achievedAt": "2024-01-01T12:00:00Z"
+    }
+  ],
+  "currentUserRank": 5,
+  "totalPlayers": 1250
+}
+```
+
+**Submit Score**
+
+```
+POST /api/player/:id/score
+```
+
+Request:
+
+```json
+{
+  "score": 1500,
+  "gameSession": "session123"
+}
+```
+
+Response:
+
+```json
+{
+  "newPersonalBest": true,
+  "globalRank": 8,
+  "qualifiesForLeaderboard": true
 }
 ```
 
@@ -192,6 +255,7 @@ erDiagram
     ROOM ||--o{ BOT : contains
     ROOM ||--o{ FOOD_ITEM : has
     PLAYER ||--o{ GAME_SESSION : plays
+    PLAYER ||--o{ GLOBAL_RECORD : achieves
     
     ROOM {
         string id PK
@@ -237,6 +301,16 @@ erDiagram
         int duration
         timestamp startTime
         timestamp endTime
+    }
+    
+    GLOBAL_RECORD {
+        string id PK
+        string playerId
+        string playerName
+        int score
+        int rank
+        timestamp achievedAt
+        string gameSessionId
     }
 ```
 
@@ -296,6 +370,24 @@ interface FoodItem {
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 
+// Global Leaderboard
+interface GlobalRecord {
+  id: string;
+  playerId: string;
+  playerName: string;
+  score: number;
+  rank: number;
+  achievedAt: Date;
+  gameSessionId: string;
+}
+
+interface GlobalLeaderboard {
+  records: GlobalRecord[];
+  currentUserRank?: number;
+  totalPlayers: number;
+  lastUpdated: Date;
+}
+
 // Game Configuration
 const GAME_CONFIG = {
   CANVAS_WIDTH: 800,
@@ -305,7 +397,8 @@ const GAME_CONFIG = {
   BOT_FILL_THRESHOLD: 3,
   FOOD_SPAWN_RATE: 2000, // ms
   GAME_TICK_RATE: 60, // fps
-  COUNTDOWN_DURATION: 3000 // ms
+  COUNTDOWN_DURATION: 3000, // ms
+  GLOBAL_LEADERBOARD_SIZE: 10 // top 10 records
 };
 ```
 
@@ -345,7 +438,63 @@ const GAME_CONFIG = {
 }
 ```
 
-### 7.2 JavaScript Orientation Control
+### 7.2 Modal Scrollability for Landscape Mode
+
+```css
+/* Enhanced modal scrollability */
+.modal-content {
+  max-height: calc(85vh - 100px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(76, 175, 80, 0.5) transparent;
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(76, 175, 80, 0.3);
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(76, 175, 80, 0.5);
+}
+
+/* Global leaderboard specific styling */
+.global-leaderboard {
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 20px 0;
+}
+
+.leaderboard-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.leaderboard-entry.current-user {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+}
+
+.rank-crown {
+  color: #FFD700;
+  font-size: 18px;
+}
+```
+
+### 7.3 JavaScript Orientation Control
 
 ```typescript
 // Orientation lock utility
@@ -465,6 +614,8 @@ const handleCompleteReset = () => {
   socketClient.off('playerJoined');
   socketClient.off('playerLeft');
   socketClient.off('gameOver');
+  socketClient.off('globalLeaderboard');
+  socketClient.off('newRecord');
   
   // Disconnect from current room
   socketClient.emit('leaveRoom', {
@@ -479,6 +630,23 @@ const handleCompleteReset = () => {
   setTimeout(() => {
     socketClient.connect();
   }, 100);
+};
+
+// Global leaderboard socket handlers
+const setupGlobalLeaderboardListeners = () => {
+  socketClient.on('globalLeaderboard', (data: GlobalLeaderboardEvent) => {
+    useGameStore.getState().updateGlobalLeaderboard(data.leaderboard, data.currentUserRank);
+  });
+  
+  socketClient.on('newRecord', (data: NewRecordEvent) => {
+    if (data.isPersonalBest) {
+      useGameStore.getState().updateHighestScore(data.score);
+    }
+    // Show celebration animation for new records
+    if (data.playerId === useGameStore.getState().currentPlayerId) {
+      useGameStore.getState().setNewRecordAchieved(true, data.newRank);
+    }
+  });
 };
 
 // Socket management for restart
