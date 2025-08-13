@@ -2,6 +2,7 @@ import React from "react";
 import { useGameStore } from "../../stores/gameStore";
 import { Leaderboard } from "./Leaderboard";
 import { ToBattleButton } from "./ToBattleButton";
+import { MiniMap } from "./MiniMap";
 import { Settings, Trophy } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../../stores/settingsStore";
@@ -33,6 +34,8 @@ export const GameUI: React.FC = React.memo(() => {
           )}
         </div>
       )}
+      {/* MiniMap positioned at top-right during gameplay */}
+      {isPlaying && <MiniMap />}
       {/* Settings button positioned independently at top-right */}
       {!isPlaying && (
         <>

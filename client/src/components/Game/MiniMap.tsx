@@ -7,7 +7,7 @@ interface MiniMapProps {
 
 export const MiniMap: React.FC<MiniMapProps> = ({ className = '' }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(0);
   
   // Get game state from Zustand store
   const {
@@ -44,33 +44,6 @@ export const MiniMap: React.FC<MiniMapProps> = ({ className = '' }) => {
     ctx.strokeStyle = '#4CAF50';
     ctx.lineWidth = 1;
     ctx.strokeRect(0, 0, MINI_MAP_WIDTH, MINI_MAP_HEIGHT);
-    
-    // Draw foods
-    foods.forEach(food => {
-      const x = food.x * scaleX;
-      const y = food.y * scaleY;
-      const radius = Math.max(1, food.radius * scaleX);
-      
-      ctx.fillStyle = food.color;
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    
-    // Draw dead points
-    deadPoints.forEach(point => {
-      const x = point.x * scaleX;
-      const y = point.y * scaleY;
-      const radius = Math.max(0.5, point.radius * scaleX);
-      
-      ctx.fillStyle = point.color;
-      ctx.globalAlpha = 0.7;
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    });
-    
     // Draw other snakes
     otherSnakes.forEach(snake => {
       if (!snake.isAlive || !snake.points || snake.points.length === 0) return;
