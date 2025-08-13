@@ -28,6 +28,8 @@ const gameState = {
   worldHeight: 2000
 };
 
+// Removed server-side score persistence - now handled client-side with Zustand
+
 // Initialize food
 function initializeFoods() {
   gameState.foods = [];
@@ -47,8 +49,26 @@ function getRandomColor() {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
+// Generate random player ID (for guests/fallback)
 function generatePlayerId() {
   return Math.random().toString(36).substr(2, 9);
+}
+
+// Get real user ID from contact info
+function getRealUserId(contactInfo) {
+  if (!contactInfo) return null;
+  
+  // Use phone if available (dialCode + phone)
+  if (contactInfo.phone && contactInfo.dialCode) {
+    return contactInfo.dialCode + contactInfo.phone;
+  }
+  
+  // Use email if available
+  if (contactInfo.email) {
+    return contactInfo.email;
+  }
+  
+  return null;
 }
 
 function createBot(id) {
@@ -287,65 +307,75 @@ initializeFoods();
 io.on('connection', (socket) => {
   console.log('Player connected:', socket.id);
 
-  // Create new player
-  const playerId = generatePlayerId();
-  const newPlayer = {
-    id: playerId,
-    socketId: socket.id,
-    x: Math.random() * gameState.worldWidth,
-    y: Math.random() * gameState.worldHeight,
-    points: [],
-    angle: 0,
-    radius: 4,
-    speed: 1,
-    color: getRandomColor(),
-    score: 0,
-    alive: true
-  };
+  // Handle game initialization with user data
+  socket.on('gameInit', (userData) => {
+    console.log('Game init with user data:', userData);
+    
+    // Extract real user ID and name
+    const realUserId = getRealUserId(userData?.contactInfo);
+    const userName = userData?.userInfo?.name || userData?.userInfo?.firstName;
+    const playerId = realUserId || generatePlayerId();
+    
+    const newPlayer = {
+      id: playerId,
+      socketId: socket.id,
+      x: Math.random() * gameState.worldWidth,
+      y: Math.random() * gameState.worldHeight,
+      points: [],
+      angle: 0,
+      radius: 4,
+      speed: 1,
+      color: getRandomColor(),
+      score: 0,
+      alive: true,
+      realUserId: realUserId, // Store real user ID separately
+      userName: userName // Store user name for leaderboard
+    };
 
-  // Initialize player with starting points
-  for (let i = 0; i < 25; i++) {
-    newPlayer.points.push({
-      x: newPlayer.x - i * 2,
-      y: newPlayer.y,
-      radius: newPlayer.radius,
-      color: getRandomColor()
-    });
-  }
-
-  gameState.players.set(playerId, newPlayer);
-
-  // Automatically spawn 5 bots when a user connects (if not already present)
-  const humanPlayers = Array.from(gameState.players.values()).filter(p => !p.isBot);
-  if (humanPlayers.length === 1) { // First human player
-    spawnBots(5);
-  }
-
-  // Send initial game state to new player
-  socket.emit('gameInit', {
-    playerId: playerId,
-    gameState: {
-      players: Array.from(gameState.players.values()),
-      foods: gameState.foods,
-      deadPoints: gameState.deadPoints,
-      worldWidth: gameState.worldWidth,
-      worldHeight: gameState.worldHeight
+    // Initialize player with starting points
+    for (let i = 0; i < 25; i++) {
+      newPlayer.points.push({
+        x: newPlayer.x - i * 2,
+        y: newPlayer.y,
+        radius: newPlayer.radius,
+        color: getRandomColor()
+      });
     }
-  });
 
-  // Send initial leaderboard to new player
-  const initialLeaderboard = generateLeaderboard();
-  socket.emit('leaderboardUpdate', {
-    leaderboard: initialLeaderboard
-  });
+    gameState.players.set(playerId, newPlayer);
 
-  // Broadcast new player to all other players
-  socket.broadcast.emit('playerJoined', newPlayer);
-  
-  // Broadcast updated leaderboard to all players
-  const updatedLeaderboard = generateLeaderboard();
-  io.emit('leaderboardUpdate', {
-    leaderboard: updatedLeaderboard
+    // Automatically spawn 5 bots when a user connects (if not already present)
+    const humanPlayers = Array.from(gameState.players.values()).filter(p => !p.isBot);
+    if (humanPlayers.length === 1) { // First human player
+      spawnBots(5);
+    }
+
+    // Send initial game state to new player
+    socket.emit('gameInit', {
+      playerId: playerId,
+      gameState: {
+        players: Array.from(gameState.players.values()),
+        foods: gameState.foods,
+        deadPoints: gameState.deadPoints,
+        worldWidth: gameState.worldWidth,
+        worldHeight: gameState.worldHeight
+      }
+    });
+
+    // Send initial leaderboard to new player
+    const initialLeaderboard = generateLeaderboard();
+    socket.emit('leaderboardUpdate', {
+      leaderboard: initialLeaderboard
+    });
+
+    // Broadcast new player to all other players
+    socket.broadcast.emit('playerJoined', newPlayer);
+    
+    // Broadcast updated leaderboard to all players
+    const updatedLeaderboard = generateLeaderboard();
+    io.emit('leaderboardUpdate', {
+      leaderboard: updatedLeaderboard
+    });
   });
 
   // Handle player movement
@@ -381,6 +411,8 @@ io.on('connection', (socket) => {
       food.color = getRandomColor();
       
       player.score++;
+      
+      // Score persistence now handled client-side
       
       // Broadcast food regeneration to all players
       io.emit('foodRegenerated', food);
@@ -443,6 +475,8 @@ io.on('connection', (socket) => {
   socket.on('playerDied', (data) => {
     const player = gameState.players.get(data.playerId);
     if (player) {
+      // Score persistence now handled client-side
+      
       player.alive = false;
       
       // Add dead points to game state
@@ -553,7 +587,6 @@ io.on('connection', (socket) => {
   });
 });
 
-
 // Clean up dead points periodically
 setInterval(() => {
   if (gameState.deadPoints.length > 5000) {
@@ -581,20 +614,22 @@ setInterval(() => {
 
 // Generate leaderboard data
 function generateLeaderboard() {
-  const players = Array.from(gameState.players.values())
+  const alivePlayers = Array.from(gameState.players.values())
     .filter(player => player.alive)
     .sort((a, b) => b.score - a.score)
-    .map((player, index) => ({
-      id: player.id,
-      name: player.isBot ? `Guest ${player.id.replace('bot-', '')}` : player.id,
-      score: Math.round(player.score * 10) / 10, // Round to 1 decimal place
-      rank: index + 1,
-      isBot: player.isBot || false,
-      isCurrentPlayer: false // Will be set on client side
-    }));
-  
-  return players;
+    .slice(0, 10);
+
+  return alivePlayers.map((player, index) => ({
+    id: player.id,
+    name: player.userName || (player.isBot ? `Guest ${player.id.replace('bot-', '')}` : `Guest ${player.id}`),
+    score: player.score,
+    rank: index + 1,
+    isBot: player.isBot || false,
+    realUserId: player.realUserId || null
+  }));
 }
+
+// Score persistence removed from server - now handled client-side with Zustand
 
 // Send periodic game state updates
 setInterval(() => {

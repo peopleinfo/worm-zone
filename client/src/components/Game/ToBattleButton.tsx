@@ -115,14 +115,14 @@ export const ToBattleButton = () => {
         </div>
       )}
       
-      {isConnected && (
+      {/* {isConnected && (
         <div className="connection-status">
           ✅ Connected - Players: {playerCount}/{MIN_PLAYERS_FOR_BATTLE} minimum
           {socketClient.getPlayerId() && (
             <span className="player-id"> (ID: {socketClient.getPlayerId()})</span>
           )}
         </div>
-      )}
+      )} */}
     </div>
   );
 };

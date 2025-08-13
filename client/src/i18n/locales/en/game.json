@@ -41,6 +41,7 @@
   },
   "leaderboard": {
     "title": "Leaderboard",
+    "topPlayers": "Top Players",
     "position": "#{{rank}}",
     "you": "You",
     "bot": "Bot"

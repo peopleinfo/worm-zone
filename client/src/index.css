@@ -728,7 +728,8 @@ canvas:not(#gameCanvas) {
   top: 20px;
   right: 20px;
   display: flex;
-  gap: 12px;
+  gap: 10px;
+  flex-direction: column;
   z-index: 100;
 }
 
@@ -954,6 +955,120 @@ canvas:not(#gameCanvas) {
 
 .modal-content::-webkit-scrollbar-thumb:hover {
   background: rgba(76, 175, 80, 0.5);
+}
+
+/* Top Players Modal Styles */
+.top-players-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.top-players-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.players-header {
+  display: grid;
+  grid-template-columns: 40px 1fr 80px;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #4CAF50;
+  margin-bottom: 8px;
+}
+
+.rank-header,
+.name-header,
+.score-header {
+  text-align: left;
+}
+
+.score-header {
+  text-align: right;
+}
+
+.players-scroll-container {
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(76, 175, 80, 0.3) transparent;
+}
+
+.players-scroll-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.players-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.players-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(76, 175, 80, 0.3);
+  border-radius: 2px;
+}
+
+.player-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 80px;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  border: 1px solid transparent;
+}
+
+.player-row:hover {
+  background: rgba(76, 175, 80, 0.05);
+}
+
+.player-row.current-player {
+  background: rgba(76, 175, 80, 0.15);
+  border-color: rgba(76, 175, 80, 0.3);
+  font-weight: 600;
+}
+
+.player-rank {
+  color: #4CAF50;
+  font-weight: 600;
+  text-align: left;
+}
+
+.player-name {
+  color: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-score {
+  color: #4CAF50;
+  font-weight: 600;
+  text-align: right;
+}
+
+.you-indicator {
+  color: #66BB6A;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.current-player-section {
+  border-top: 1px solid rgba(76, 175, 80, 0.2);
+  padding-top: 12px;
+}
+
+.divider {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 16px;
+  margin-bottom: 8px;
+  font-weight: bold;
 }
 
 /* Settings Sections */

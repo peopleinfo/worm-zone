@@ -6,12 +6,15 @@ export const GameOverModal = React.memo(
   () => {
     // Use selective subscriptions to minimize re-renders
     const isGameOver = useGameStore((state) => state.isGameOver);
-    const score = useGameStore((state) => state.score);
+    const score = useGameStore((state) => state.finalScore);
     const rank = useGameStore((state) => state.rank);
-    const highestScore = useGameStore((state) => state.highestScore);
+    const getCurrentUserHighestScore = useGameStore((state) => state.getCurrentUserHighestScore);
     const setGameOver = useGameStore((state) => state.setGameState);
 
     const resetGame = useGameStore((state) => state.resetGame);
+
+    // Get user-specific highest score
+    const userHighestScore = getCurrentUserHighestScore();
 
     const handleClose = () => {
       setGameOver({ isGameOver: false });
@@ -42,13 +45,13 @@ export const GameOverModal = React.memo(
             </div>
             <div className="stat-item">
               <span className="stat-label">Highest Score:</span>
-              <span className="stat-value highlight">{highestScore}</span>
+              <span className="stat-value highlight">{userHighestScore}</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Current Rank:</span>
               <span className="stat-value">#{rank}</span>
             </div>
-            {score === highestScore && score > 0 && (
+            {score > userHighestScore && score > 0 && (
               <div className="new-record">🎉 You got new highest score! 🎉</div>
             )}
           </div>

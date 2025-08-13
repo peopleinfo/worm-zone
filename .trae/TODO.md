@@ -1,7 +1,6 @@
 # TODO:
 
-- [x] 1: Create tab state management in SettingsModal component (priority: High)
-- [x] 2: Add tab buttons for Language and Sound on the same line (priority: High)
-- [x] 3: Implement conditional rendering for active tab content (priority: High)
-- [x] 4: Add CSS styles for tab interface and language selector components (priority: High)
-- [x] 5: Test the tabbed interface functionality (priority: Medium)
+- [x] 1: Modify GameOverModal handleRestart to not call resetGame() immediately (priority: High)
+- [x] 2: Add respawn request functionality to socket client (priority: High)
+- [x] 3: Update game store to handle respawn without immediate score reset (priority: Medium)
+- [x] 4: Test the score persistence until server respawn (priority: Low)

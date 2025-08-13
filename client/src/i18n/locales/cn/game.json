@@ -41,7 +41,8 @@
   },
   "leaderboard": {
     "title": "排行榜",
-    "position": "第{{rank}}名",
+    "topPlayers": "顶级玩家",
+    "position": "#{{rank}}",
     "you": "你",
     "bot": "机器人"
   }

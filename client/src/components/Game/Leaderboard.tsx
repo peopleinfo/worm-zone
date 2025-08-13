@@ -57,7 +57,7 @@ export const Leaderboard: React.FC = React.memo(() => {
               </span>
               <div className="player-score">
                 <span className="score-icon">👤</span>
-                <span className="score-value">{player.score.toLocaleString()}</span>
+                <span className="score-value">{Math.round(player.score).toLocaleString()}</span>
               </div>
             </div>
           );

@@ -41,6 +41,7 @@
   },
   "leaderboard": {
     "title": "បញ្ជីអ្នកនាំមុខ",
+    "topPlayers": "អ្នកលេងកំពូល",
     "position": "#{{rank}}",
     "you": "អ្នក",
     "bot": "បូត"

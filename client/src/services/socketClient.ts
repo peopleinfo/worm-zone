@@ -3,6 +3,7 @@ import { Snake } from '../game/Snake';
 import { Food } from '../game/Food';
 import { Point } from '../game/Point';
 import { useGameStore } from '../stores/gameStore';
+import { useAuthStore } from '../stores/authStore';
 
 interface ServerPlayer {
   id: string;
@@ -46,6 +47,7 @@ class SocketClient {
           console.log('Connected to server');
           this.isConnected = true;
           this.setupEventListeners();
+          this.initializeGame();
           resolve();
         });
 
@@ -66,6 +68,22 @@ class SocketClient {
     });
   }
 
+  // Initialize game with user data
+  private initializeGame(): void {
+    if (!this.socket || !this.isConnected) return;
+    
+    // Get user data from auth store
+    const authState = useAuthStore.getState();
+    const userData = {
+      userInfo: authState.userInfo,
+      contactInfo: authState.contactInfo,
+      isLoggedIn: authState.isLoggedIn
+    };
+    
+    console.log('Sending game init with user data:', userData);
+    this.socket.emit('gameInit', userData);
+  }
+
   private setupEventListeners(): void {
     if (!this.socket) return;
 
@@ -79,7 +97,10 @@ class SocketClient {
       
       const store = useGameStore.getState();
       
-      // Set current player ID
+      // Initialize user score tracking with auth integration
+      store.initializeUserScore();
+      
+      // Set current player ID (may be overridden by initializeUserScore if user is authenticated)
       store.setCurrentPlayerId(data.playerId);
       
       // Convert server players to client snakes
@@ -147,11 +168,14 @@ class SocketClient {
 
     // Score update
     this.socket.on('scoreUpdate', (data: { playerId: string; score: number }) => {
+      console.log('🎯 scoreUpdate received:', data);
       if (data.playerId === this.playerId) {
         const store = useGameStore.getState();
+        console.log('🎯 Current player scoreUpdate - before:', store.score, 'after:', data.score);
         store.setGameState({ score: data.score });
-        // Update highest score if current score is higher
-        store.updateHighestScore(data.score);
+        // Update user-specific score using auth-aware method
+        store.updateCurrentUserScore(data.score);
+        console.log('🎯 Score updated in store:', store.score);
       }
     });
 
@@ -160,12 +184,19 @@ class SocketClient {
       const store = useGameStore.getState();
       
       if (data.playerId === this.playerId) {
-        // Current player died - update highest score before ending game
-        store.updateHighestScore(store.score);
+        // Find the current player in the leaderboard
+        const currentPlayer = store.leaderboard.find(p => p.isCurrentPlayer);
+        // Use the leaderboard score if available, otherwise fallback to store.score
+        const finalScore = currentPlayer ? currentPlayer.score : store.score;
+        
+        console.log('💀 Current player died - store score:', store.score, 'leaderboard score:', currentPlayer?.score, 'final score:', finalScore);
+        // Current player died - update user-specific score before ending game
+        store.updateCurrentUserScore(finalScore);
         
         // Find current player's rank from leaderboard
         const currentRank = store.leaderboard.find(p => p.isCurrentPlayer)?.rank || store.rank;
-        store.endGame(store.score, currentRank);
+        console.log('💀 Calling endGame with score:', finalScore, 'rank:', currentRank);
+        store.endGame(finalScore, currentRank);
       } else {
         // Other player died
         const updatedSnakes = store.otherSnakes.filter(snake => snake.id !== data.playerId);
@@ -224,6 +255,13 @@ class SocketClient {
     // Leaderboard updates
     this.socket.on('leaderboardUpdate', (data: any) => {
       const store = useGameStore.getState();
+      
+      // Don't process leaderboard updates if the game is over
+      if (store.isGameOver) {
+        console.log('🚫 Ignoring leaderboard update - game is over');
+        return;
+      }
+      
       const leaderboard = data.leaderboard.map((player: any) => ({
         ...player,
         isCurrentPlayer: player.id === store.currentPlayerId
@@ -233,12 +271,14 @@ class SocketClient {
       // Update current player's rank from leaderboard
       const currentPlayer = leaderboard.find((p: any) => p.isCurrentPlayer);
       if (currentPlayer) {
+        console.log('📊 leaderboardUpdate - current player score:', currentPlayer.score, 'rank:', currentPlayer.rank);
         store.setGameState({ 
           rank: currentPlayer.rank,
           score: currentPlayer.score
         });
-        // Update highest score
-        store.updateHighestScore(currentPlayer.score);
+        // Update user-specific score using auth-aware method
+        store.updateCurrentUserScore(currentPlayer.score);
+        console.log('📊 Updated store score from leaderboard:', store.score);
       }
     });
 
@@ -334,6 +374,28 @@ class SocketClient {
       });
     } catch (error) {
       console.error('Error sending dead point eaten event:', error);
+      if (!this.socket?.connected) {
+        this.isConnected = false;
+      }
+    }
+  }
+
+  // Leave the current game room
+  leaveRoom(): void {
+    if (!this.socket || !this.isConnected || !this.playerId) {
+      console.warn('Cannot leave room: socket not connected or no player ID');
+      return;
+    }
+    
+    try {
+      console.log('🚪 Leaving game room for player:', this.playerId);
+      this.socket.emit('leaveRoom', {
+        playerId: this.playerId
+      });
+      console.log('✅ Successfully sent leaveRoom event');
+    } catch (error) {
+      console.error('❌ Error leaving room:', error);
+      // Don't disconnect on error, just log it
       if (!this.socket?.connected) {
         this.isConnected = false;
       }

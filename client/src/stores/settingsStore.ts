@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { SupportedLanguage } from '../i18n';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { SupportedLanguage } from "../i18n";
 
 export interface SoundSettings {
   master: number;
@@ -12,17 +12,21 @@ export interface SoundSettings {
 interface SettingsState {
   // UI State
   isSettingsModalOpen: boolean;
-  
+  isTopPlayersModalOpen: boolean;
+
   // Language
   language: SupportedLanguage;
-  
+
   // Sound Settings
   sound: SoundSettings;
-  
+
   // Actions
   openSettingsModal: () => void;
   closeSettingsModal: () => void;
   toggleSettingsModal: () => void;
+  openTopPlayersModal: () => void;
+  closeTopPlayersModal: () => void;
+  toggleTopPlayersModal: () => void;
   setLanguage: (language: SupportedLanguage) => void;
   updateSoundSettings: (settings: Partial<SoundSettings>) => void;
   resetSettings: () => void;
@@ -30,7 +34,8 @@ interface SettingsState {
 
 const defaultSettings = {
   isSettingsModalOpen: false,
-  language: 'en' as SupportedLanguage,
+  isTopPlayersModalOpen: false,
+  language: "en" as SupportedLanguage,
   sound: {
     master: 0.8,
     music: 0.6,
@@ -39,34 +44,46 @@ const defaultSettings = {
   },
 };
 
-export const useSettingsStore = create<SettingsState>()(persist(
-  (set) => ({
-    ...defaultSettings,
-    openSettingsModal: () => set({ isSettingsModalOpen: true }),
-    closeSettingsModal: () => set({ isSettingsModalOpen: false }),
-    toggleSettingsModal: () => set((state) => ({ 
-      isSettingsModalOpen: !state.isSettingsModalOpen 
-    })),
-    
-    setLanguage: (lang) => {
-      const language = lang.slice(0, 2) as SupportedLanguage;
-      set({ language });
-      // Update i18n language
-      import('../i18n').then(({ default: i18n }) => {
-        i18n.changeLanguage(language);
-      });
-    },
-    
-    updateSoundSettings: (settings) => set((state) => ({
-      sound: { ...state.sound, ...settings }
-    })),
-    resetSettings: () => set(defaultSettings),
-  }),
-  {
-    name: 'snake-zone-settings',
-    partialize: (state) => ({
-      language: state.language,
-      sound: state.sound,
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set) => ({
+      ...defaultSettings,
+      openSettingsModal: () => set({ isSettingsModalOpen: true }),
+      closeSettingsModal: () => set({ isSettingsModalOpen: false }),
+      toggleSettingsModal: () =>
+        set((state) => ({
+          isSettingsModalOpen: !state.isSettingsModalOpen,
+        })),
+
+      openTopPlayersModal: () => set({ isTopPlayersModalOpen: true }),
+      closeTopPlayersModal: () => set({ isTopPlayersModalOpen: false }),
+      toggleTopPlayersModal: () =>
+        set((state) => ({
+          isTopPlayersModalOpen: !state.isTopPlayersModalOpen,
+        })),
+
+      setLanguage: (lang) => {
+        const normalizeLang = lang.slice(0, 2) as SupportedLanguage;
+        const language = normalizeLang.startsWith("zh") ? "cn" : normalizeLang;
+        set({ language });
+        // Update i18n language
+        import("../i18n").then(({ default: i18n }) => {
+          i18n.changeLanguage(language);
+        });
+      },
+
+      updateSoundSettings: (settings) =>
+        set((state) => ({
+          sound: { ...state.sound, ...settings },
+        })),
+      resetSettings: () => set(defaultSettings),
     }),
-  }
-));
+    {
+      name: "snake-zone-settings",
+      partialize: (state) => ({
+        language: state.language,
+        sound: state.sound,
+      }),
+    }
+  )
+);
