@@ -1,11 +1,9 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { supportedLanguages, type SupportedLanguage } from '../../i18n';
 
 export const LanguageSelector: React.FC = () => {
-  const { t } = useTranslation('common');
   const { language, setLanguage } = useSettingsStore();
 
   const handleLanguageChange = (langCode: SupportedLanguage) => {

@@ -48,7 +48,8 @@ export const useSettingsStore = create<SettingsState>()(persist(
       isSettingsModalOpen: !state.isSettingsModalOpen 
     })),
     
-    setLanguage: (language) => {
+    setLanguage: (lang) => {
+      const language = lang.slice(0, 2) as SupportedLanguage;
       set({ language });
       // Update i18n language
       import('../i18n').then(({ default: i18n }) => {

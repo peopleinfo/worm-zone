@@ -131,6 +131,18 @@ class AuthService {
       throw error;
     }
   }
+  /**
+   * Gets language
+   */
+  async getLanguage() {
+    try {
+      const res = await window.mos.getLanguage();
+      return res.lang;
+    } catch (error) {
+      console.error("Get language failed:", error);
+      throw error;
+    }
+  }
 }
 
 // Create a singleton instance
@@ -140,6 +152,7 @@ export const authService = new AuthService();
 declare global {
   interface Window {
     mos: {
+      getLanguage: () => Promise<{ lang: string }>;
       getWindowInfo: any;
       login: (appKey: string) => Promise<LoginResponse>;
       getUserInfo: (scope: string) => Promise<UserInfo>;
