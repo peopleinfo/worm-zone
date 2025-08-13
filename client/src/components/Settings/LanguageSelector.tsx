@@ -14,8 +14,6 @@ export const LanguageSelector: React.FC = () => {
 
   return (
     <div className="language-selector">
-      <h3 className="section-title">{t('settings.language')}</h3>
-      
       <div className="language-options">
         {supportedLanguages.map((lang) => (
           <button

@@ -1,5 +1,7 @@
 # TODO:
 
-- [x] adjust_bot_speed: Adjust bot speed from 0.9 to 1.1 to make them more competitive with human players (speed: 1) (priority: High)
-- [x] increase_map_zoom: Change map zoom level from 3 to 4 in GameEngine.ts for better field of view (priority: High)
-- [x] test_gameplay_balance: Test the game with new bot speed and zoom settings to ensure balanced gameplay (priority: Medium)
+- [x] 1: Create tab state management in SettingsModal component (priority: High)
+- [x] 2: Add tab buttons for Language and Sound on the same line (priority: High)
+- [x] 3: Implement conditional rendering for active tab content (priority: High)
+- [x] 4: Add CSS styles for tab interface and language selector components (priority: High)
+- [x] 5: Test the tabbed interface functionality (priority: Medium)
