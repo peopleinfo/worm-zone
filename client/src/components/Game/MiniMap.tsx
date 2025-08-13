@@ -137,7 +137,7 @@ export const MiniMap: React.FC<MiniMapProps> = ({ className = '' }) => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [mySnake, otherSnakes, foods, deadPoints, isPlaying]);
+  }, [mySnake, otherSnakes, isPlaying]);
 
   // Don't render if not playing
   if (!isPlaying) {
