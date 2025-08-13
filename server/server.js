@@ -560,6 +560,29 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle voluntary room leaving
+  socket.on('leaveRoom', (data) => {
+    console.log('Player leaving room:', data.playerId, 'socket:', socket.id);
+    
+    // Find and remove player (only human players, keep bots)
+    const player = gameState.players.get(data.playerId);
+    if (player && player.socketId === socket.id && !player.isBot) {
+      gameState.players.delete(data.playerId);
+      io.emit('playerDisconnected', data.playerId);
+      socket.broadcast.emit('playerLeft', {
+        playerId: data.playerId
+      });
+      
+      // Broadcast updated leaderboard after player leaves
+      const leaderboard = generateLeaderboard();
+      io.emit('leaderboardUpdate', {
+        leaderboard: leaderboard
+      });
+      
+      console.log('Player', data.playerId, 'successfully left the room');
+    }
+  });
+
   // Handle disconnect
   socket.on('disconnect', () => {
     console.log('Player disconnected:', socket.id);

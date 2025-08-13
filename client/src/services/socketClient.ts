@@ -141,6 +141,13 @@ class SocketClient {
     // Player moved
     this.socket.on('playerMoved', (data: any) => {
       const store = useGameStore.getState();
+      
+      // Don't process player movements if the game is over
+      if (store.isGameOver) {
+        console.log('🚫 Ignoring playerMoved - game is over');
+        return;
+      }
+      
       const updatedSnakes = store.otherSnakes.map(snake => {
         if (snake.id === data.playerId) {
           snake.points = data.points.map((p: any) => new Point(p.x, p.y, p.radius, p.color));
@@ -155,6 +162,13 @@ class SocketClient {
     // Food regenerated
     this.socket.on('foodRegenerated', (food: any) => {
       const store = useGameStore.getState();
+      
+      // Don't process food regeneration if the game is over
+      if (store.isGameOver) {
+        console.log('🚫 Ignoring foodRegenerated - game is over');
+        return;
+      }
+      
       const updatedFoods = store.foods.map(f => {
         if (f.id === food.id) {
           f.x = food.x;
@@ -171,6 +185,13 @@ class SocketClient {
       console.log('🎯 scoreUpdate received:', data);
       if (data.playerId === this.playerId) {
         const store = useGameStore.getState();
+        
+        // Don't process score updates if the game is over
+        if (store.isGameOver) {
+          console.log('🚫 Ignoring scoreUpdate - game is over');
+          return;
+        }
+        
         console.log('🎯 Current player scoreUpdate - before:', store.score, 'after:', data.score);
         store.setGameState({ score: data.score });
         // Update user-specific score using auth-aware method
@@ -240,6 +261,13 @@ class SocketClient {
     // Game stats
     this.socket.on('gameStats', (data) => {
       const store = useGameStore.getState();
+      
+      // Don't process game stats if the game is over
+      if (store.isGameOver) {
+        console.log('🚫 Ignoring gameStats - game is over');
+        return;
+      }
+      
       store.setGameState({ playerCount: data.playerCount });
       
       // Update leaderboard if provided
@@ -285,6 +313,13 @@ class SocketClient {
     // Dead points removed (server broadcast)
     this.socket.on('deadPointsRemoved', (data: { deadPoints: Point[] }) => {
       const store = useGameStore.getState();
+      
+      // Don't process dead points removal if the game is over
+      if (store.isGameOver) {
+        console.log('🚫 Ignoring deadPointsRemoved - game is over');
+        return;
+      }
+      
       // Remove dead points from local state to maintain synchronization
       store.removeDeadPoints(data.deadPoints);
     });
@@ -393,12 +428,16 @@ class SocketClient {
         playerId: this.playerId
       });
       console.log('✅ Successfully sent leaveRoom event');
+      
+      // Disconnect socket completely after a short delay
+      setTimeout(() => {
+        console.log('🔌 Disconnecting socket completely');
+        this.disconnect();
+      }, 100);
     } catch (error) {
       console.error('❌ Error leaving room:', error);
-      // Don't disconnect on error, just log it
-      if (!this.socket?.connected) {
-        this.isConnected = false;
-      }
+      // Disconnect even on error to ensure clean state
+      this.disconnect();
     }
   }
 
