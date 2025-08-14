@@ -45,5 +45,8 @@
     "position": "#{{rank}}",
     "you": "You",
     "bot": "Bot"
+  },
+  "navigation": {
+    "close": "Close"
   }
 }

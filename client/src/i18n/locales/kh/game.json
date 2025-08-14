@@ -45,5 +45,8 @@
     "position": "#{{rank}}",
     "you": "អ្នក",
     "bot": "បូត"
+  },
+  "navigation": {
+    "close": "បិទ"
   }
 }

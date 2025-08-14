@@ -45,5 +45,8 @@
     "position": "#{{rank}}",
     "you": "你",
     "bot": "机器人"
+  },
+  "navigation": {
+    "close": "关闭"
   }
 }

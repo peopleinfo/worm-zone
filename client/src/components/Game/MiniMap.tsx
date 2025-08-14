@@ -13,8 +13,6 @@ export const MiniMap: React.FC<MiniMapProps> = ({ className = '' }) => {
   const {
     mySnake,
     otherSnakes,
-    foods,
-    deadPoints,
     isPlaying
   } = useGameStore();
 
