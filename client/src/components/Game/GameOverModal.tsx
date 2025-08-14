@@ -55,7 +55,7 @@ export const GameOverModal = React.memo(
               <div className="new-record">🎉 You got new highest score! 🎉</div>
             )}
           </div>
-          <div className="modal-actions">
+          {/* <div className="modal-actions">
             <button
               className="restart-button"
               onClick={handleRestart}
@@ -64,7 +64,7 @@ export const GameOverModal = React.memo(
               <RotateCcw size={20} />
               Restart Game
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     );

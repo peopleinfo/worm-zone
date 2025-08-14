@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { socketClient } from '../../services/socketClient';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { HowToPlayModal } from './HowToPlayModal';
+import { HelpCircle } from 'lucide-react';
 
 // Configuration constants
 const MIN_PLAYERS_FOR_BATTLE = 10;
@@ -9,6 +11,7 @@ const MIN_PLAYERS_FOR_BATTLE = 10;
 export const ToBattleButton = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const { closeSettingsModal } = useSettingsStore();
   const { 
     startCountdown, 
@@ -92,6 +95,15 @@ export const ToBattleButton = () => {
         {getButtonText()}
       </button>
       
+      {/* How to Play Link */}
+      <button 
+        onClick={() => setIsHowToPlayOpen(true)}
+        className="how-to-play-link"
+      >
+        <HelpCircle size={18} />
+        How to Play
+      </button>
+      
       {isCountingDown && countdownValue && (
         <div className="countdown-overlay">
           <div className="countdown-number">{countdownValue}</div>
@@ -104,6 +116,12 @@ export const ToBattleButton = () => {
           Error: Connection failed
         </div>
       )}
+      
+      {/* How to Play Modal */}
+      <HowToPlayModal 
+        isOpen={isHowToPlayOpen}
+        onClose={() => setIsHowToPlayOpen(false)}
+      />
       
       {/* {isConnected && (
         <div className="connection-status">
