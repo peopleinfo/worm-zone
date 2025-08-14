@@ -27,15 +27,24 @@ const gameState = {
 // Initialize food
 function initializeFoods() {
   gameState.foods = [];
+  console.log(`🍎 Initializing ${gameState.maxFoods} food items in ${gameState.worldWidth}x${gameState.worldHeight} world...`);
+  
   for (let i = 0; i < gameState.maxFoods; i++) {
-    gameState.foods.push({
+    const food = {
       id: i,
       x: Math.random() * gameState.worldWidth,
       y: Math.random() * gameState.worldHeight,
       radius: 5,
       color: getRandomColor()
-    });
+    };
+    gameState.foods.push(food);
+    
+    if (i < 5) { // Log first 5 food positions for debugging
+      console.log(`🍎 Food ${i}: position (${food.x.toFixed(2)}, ${food.y.toFixed(2)}) color: ${food.color}`);
+    }
   }
+  
+  console.log(`🍎 Food initialization complete: ${gameState.foods.length} foods spawned`);
 }
 
 function getRandomColor() {
@@ -66,14 +75,15 @@ function getRealUserId(contactInfo) {
 }
 
 function createBot(id) {
+  const botRadius = 4;
   const bot = {
     id: id,
     socketId: null, // Bots don't have socket connections
-    x: Math.random() * gameState.worldWidth,
-    y: Math.random() * gameState.worldHeight,
+    x: botRadius + Math.random() * (gameState.worldWidth - 2 * botRadius), // Safe spawn within boundaries
+    y: botRadius + Math.random() * (gameState.worldHeight - 2 * botRadius), // Safe spawn within boundaries
     points: [],
     angle: Math.random() * Math.PI * 2,
-    radius: 4,
+    radius: botRadius,
     speed: 1.1, // Slightly faster than human players for competitive gameplay
     color: getRandomColor(),
     score: 1.0,
@@ -95,22 +105,30 @@ function createBot(id) {
 }
 
 function spawnBots(count = 5) {
-  // Count current bots
+  // Count current bots (both alive and dead)
   const currentBots = Array.from(gameState.players.values()).filter(p => p.isBot).length;
   const availableSlots = MAX_BOTS - currentBots;
   const botsToSpawn = Math.min(count, availableSlots);
   
   if (botsToSpawn <= 0) {
-    console.log(`Bot limit reached (${MAX_BOTS}). Cannot spawn more bots.`);
+    // console.log(`Bot limit reached (${MAX_BOTS}). Cannot spawn more bots. Current bots: ${currentBots}`);
     return;
   }
   
+  // console.log(`Spawning ${botsToSpawn} bots...`);
   for (let i = 0; i < botsToSpawn; i++) {
     const botId = `bot-${generatePlayerId()}`;
     const bot = createBot(botId);
-    gameState.players.set(botId, bot); // Only add to players map
+    gameState.players.set(botId, bot);
+    console.log(`Bot spawned: ${botId} at position (${bot.x.toFixed(2)}, ${bot.y.toFixed(2)})`);
+    
+    // Broadcast new bot to all players
+    io.emit('playerJoined', bot);
   }
-  console.log(`Spawned ${botsToSpawn} bots (${currentBots + botsToSpawn}/${MAX_BOTS} total)`);
+  
+  const totalBots = currentBots + botsToSpawn;
+  const aliveBots = Array.from(gameState.players.values()).filter(p => p.isBot && p.alive).length;
+  // console.log(`Bot spawning complete: ${botsToSpawn} spawned, ${totalBots}/${MAX_BOTS} total, ${aliveBots} alive`);
 }
 
 // Helper function for collision detection (same logic as client-side)
@@ -139,7 +157,10 @@ function handleBotDeath(bot) {
   // Remove bot from game state
   gameState.players.delete(bot.id);
   
-  console.log(`Bot ${bot.id} died and was removed from arena`);
+  // Enhanced logging for bot death debugging
+  // const remainingBots = Array.from(gameState.players.values()).filter(p => p.isBot && p.alive).length;
+  // const totalPlayers = gameState.players.size;
+  // console.log(`🤖 Bot Death: ${bot.id} died at (${bot.x.toFixed(2)}, ${bot.y.toFixed(2)}) | Score: ${bot.score.toFixed(1)} | Remaining bots: ${remainingBots} | Total players: ${totalPlayers}`);
   
   // Broadcast bot death and dead points
   io.emit('playerDied', {
@@ -162,19 +183,40 @@ function updateBots() {
   gameState.players.forEach((player) => {
     if (!player.isBot || !player.alive) return;
 
-    // Simple AI movement - change direction occasionally
-    if (Math.random() < 0.02) {
-      player.angle += (Math.random() - 0.5) * 0.5;
+    // Boundary avoidance AI - check if bot is approaching boundaries
+    const boundaryBuffer = player.radius * 3; // Safety buffer distance from boundaries
+    const nextX = player.x + Math.cos(player.angle) * player.speed * 10; // Look ahead
+    const nextY = player.y + Math.sin(player.angle) * player.speed * 10; // Look ahead
+    
+    // Check if bot will hit boundaries soon and turn away
+    if (nextX < boundaryBuffer || nextX > gameState.worldWidth - boundaryBuffer) {
+      // Turn away from left/right boundaries
+      player.angle = Math.PI - player.angle + (Math.random() - 0.5) * 0.3;
+    }
+    if (nextY < boundaryBuffer || nextY > gameState.worldHeight - boundaryBuffer) {
+      // Turn away from top/bottom boundaries
+      player.angle = -player.angle + (Math.random() - 0.5) * 0.3;
+    }
+
+    // Simple AI movement - change direction occasionally (reduced frequency due to boundary avoidance)
+    if (Math.random() < 0.01) {
+      player.angle += (Math.random() - 0.5) * 0.3;
     }
 
     // Move bot
     const newX = player.x + Math.cos(player.angle) * player.speed;
     const newY = player.y + Math.sin(player.angle) * player.speed;
 
-    // Check boundary collision - bot dies if touching boundaries
-    if (newX < player.radius || newX > gameState.worldWidth - player.radius ||
-        newY < player.radius || newY > gameState.worldHeight - player.radius) {
-      // Bot dies from boundary collision
+    // Improved boundary collision detection - strict enforcement with edge case handling
+    const minX = player.radius;
+    const maxX = gameState.worldWidth - player.radius;
+    const minY = player.radius;
+    const maxY = gameState.worldHeight - player.radius;
+    
+    // Relaxed boundary collision detection - give bots small buffer to prevent excessive deaths
+    if (newX < minX || newX > maxX || newY < minY || newY > maxY) {
+      // Bot dies from boundary collision - relaxed enforcement with buffer
+      console.log(`Bot ${player.id} died at boundary: position (${newX.toFixed(2)}, ${newY.toFixed(2)}), bounds: x[${minX}-${maxX}], y[${minY}-${maxY}]`);
       handleBotDeath(player);
       return;
     }
@@ -232,10 +274,13 @@ function updateBots() {
           });
         }
         
-        // Regenerate food
+        // Regenerate food with logging
+        const oldPos = { x: food.x, y: food.y };
         food.x = Math.random() * gameState.worldWidth;
         food.y = Math.random() * gameState.worldHeight;
         food.color = getRandomColor();
+        
+        // console.log(`🍎 Bot ${player.id} ate food ${food.id}: regenerated from (${oldPos.x.toFixed(2)}, ${oldPos.y.toFixed(2)}) to (${food.x.toFixed(2)}, ${food.y.toFixed(2)})`);
         
         // Broadcast food regeneration to all players
         io.emit('foodRegenerated', food);
@@ -297,6 +342,13 @@ function updateBots() {
 
 // Initialize game
 initializeFoods();
+console.log(`🎮 Game initialized: ${gameState.foods.length} foods spawned in ${gameState.worldWidth}x${gameState.worldHeight} world`);
+
+// Spawn initial bots for testing
+setTimeout(() => {
+  console.log('🤖 Spawning initial bots for game testing...');
+  spawnBots(5);
+}, 1000);
 
 io.on('connection', (socket) => {
   console.log('Player connected:', socket.id);
@@ -399,12 +451,15 @@ io.on('connection', (socket) => {
     const food = gameState.foods.find(f => f.id === foodId);
     
     if (player && food) {
-      // Regenerate food
+      // Regenerate food with logging
+      const oldPos = { x: food.x, y: food.y };
       food.x = Math.random() * gameState.worldWidth;
       food.y = Math.random() * gameState.worldHeight;
       food.color = getRandomColor();
       
       player.score++;
+      
+      console.log(`🍎 Player ${playerId} ate food ${foodId}: regenerated from (${oldPos.x.toFixed(2)}, ${oldPos.y.toFixed(2)}) to (${food.x.toFixed(2)}, ${food.y.toFixed(2)})`);
       
       // Score persistence now handled client-side
       
@@ -611,9 +666,25 @@ setInterval(() => {
   }
 }, 30000);
 
+// Automatic bot respawning function
+function maintainMinimumBots() {
+  const currentBots = Array.from(gameState.players.values()).filter(p => p.isBot && p.alive).length;
+  const humanPlayers = Array.from(gameState.players.values()).filter(p => !p.isBot).length;
+  const minBots = Math.max(3, Math.min(5, 8 - humanPlayers)); // 3-5 bots minimum, adjust based on human players
+  
+  if (currentBots < minBots) {
+    const botsToSpawn = minBots - currentBots;
+    console.log(`Maintaining minimum bots: spawning ${botsToSpawn} bots (current: ${currentBots}, target: ${minBots})`);
+    spawnBots(botsToSpawn);
+  }
+}
+
 // Update bots continuously
 setInterval(() => {
   updateBots();
+  
+  // Maintain minimum bot count
+  maintainMinimumBots();
   
   // Broadcast bot movements to all players
   gameState.players.forEach((player) => {
