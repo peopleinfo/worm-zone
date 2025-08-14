@@ -131,7 +131,7 @@ class SocketClient {
 
     // Player joined
     this.socket.on('playerJoined', (player: ServerPlayer) => {
-      console.log('Player joined:', player);
+      // console.log('Player joined:', player);
       const store = useGameStore.getState();
       const newSnake = this.convertServerPlayerToSnake(player);
       store.updateOtherSnakes([...store.otherSnakes, newSnake]);
@@ -182,7 +182,7 @@ class SocketClient {
 
     // Score update
     this.socket.on('scoreUpdate', (data: { playerId: string; score: number }) => {
-      console.log('🎯 scoreUpdate received:', data);
+      // console.log('🎯 scoreUpdate received:', data);
       if (data.playerId === this.playerId) {
         const store = useGameStore.getState();
         
@@ -286,7 +286,7 @@ class SocketClient {
       
       // Don't process leaderboard updates if the game is over
       if (store.isGameOver) {
-        console.log('🚫 Ignoring leaderboard update - game is over');
+        // console.log('🚫 Ignoring leaderboard update - game is over');
         return;
       }
       
@@ -299,14 +299,14 @@ class SocketClient {
       // Update current player's rank from leaderboard
       const currentPlayer = leaderboard.find((p: any) => p.isCurrentPlayer);
       if (currentPlayer) {
-        console.log('📊 leaderboardUpdate - current player score:', currentPlayer.score, 'rank:', currentPlayer.rank);
+        // console.log('📊 leaderboardUpdate - current player score:', currentPlayer.score, 'rank:', currentPlayer.rank);
         store.setGameState({ 
           rank: currentPlayer.rank,
           score: currentPlayer.score
         });
         // Update user-specific score using auth-aware method
         store.updateCurrentUserScore(currentPlayer.score);
-        console.log('📊 Updated store score from leaderboard:', store.score);
+        // console.log('📊 Updated store score from leaderboard:', store.score);
       }
     });
 
@@ -423,15 +423,15 @@ class SocketClient {
     }
     
     try {
-      console.log('🚪 Leaving game room for player:', this.playerId);
+      // console.log('🚪 Leaving game room for player:', this.playerId);
       this.socket.emit('leaveRoom', {
         playerId: this.playerId
       });
-      console.log('✅ Successfully sent leaveRoom event');
+      // console.log('✅ Successfully sent leaveRoom event');
       
       // Disconnect socket completely after a short delay
       setTimeout(() => {
-        console.log('🔌 Disconnecting socket completely');
+        // console.log('🔌 Disconnecting socket completely');
         this.disconnect();
       }, 100);
     } catch (error) {

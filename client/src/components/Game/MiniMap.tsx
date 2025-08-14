@@ -17,8 +17,8 @@ export const MiniMap: React.FC<MiniMapProps> = ({ className = '' }) => {
   } = useGameStore();
 
   // Mini map dimensions
-  const MINI_MAP_WIDTH = 150;
-  const MINI_MAP_HEIGHT = 120;
+  const MINI_MAP_WIDTH = 200;  
+  const MINI_MAP_HEIGHT = 150;
   
   // World dimensions (from GameEngine)
   const WORLD_WIDTH = 2000;
