@@ -748,7 +748,7 @@ canvas:not(#gameCanvas) {
 .top-right-buttons {
   position: absolute;
   top: 20px;
-  right: 20px;
+  right: 16px;
   display: flex;
   gap: 10px;
   z-index: 100;
