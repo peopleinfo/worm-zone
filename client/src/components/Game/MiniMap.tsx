@@ -42,63 +42,27 @@ export const MiniMap: React.FC<MiniMapProps> = ({ className = '' }) => {
     ctx.strokeStyle = '#4CAF50';
     ctx.lineWidth = 1;
     ctx.strokeRect(0, 0, MINI_MAP_WIDTH, MINI_MAP_HEIGHT);
-    // Draw other snakes
+    // Draw other snakes as white dots
     otherSnakes.forEach(snake => {
       if (!snake.isAlive || !snake.points || snake.points.length === 0) return;
       
-      ctx.strokeStyle = snake.color || '#FF5722';
-      ctx.lineWidth = Math.max(1, snake.points[0]?.radius * scaleX * 0.5 || 1);
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      
-      ctx.beginPath();
-      snake.points.forEach((point, index) => {
-        const x = point.x * scaleX;
-        const y = point.y * scaleY;
-        
-        if (index === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-      });
-      ctx.stroke();
-      
-      // Draw head as a larger dot
+      // Draw only head as a white dot
       if (snake.points.length > 0) {
         const head = snake.points[0];
         const headX = head.x * scaleX;
         const headY = head.y * scaleY;
-        const headRadius = Math.max(1.5, head.radius * scaleX * 0.7);
+        const headRadius = Math.max(2, head.radius * scaleX * 0.8);
         
-        ctx.fillStyle = snake.color || '#FF5722';
+        ctx.fillStyle = 'white';
         ctx.beginPath();
         ctx.arc(headX, headY, headRadius, 0, Math.PI * 2);
         ctx.fill();
       }
     });
     
-    // Draw my snake (highlight it)
+    // Draw my snake as a green dot
     if (mySnake && mySnake.isAlive && mySnake.points && mySnake.points.length > 0) {
-      ctx.strokeStyle = '#4CAF50';
-      ctx.lineWidth = Math.max(1.5, mySnake.points[0]?.radius * scaleX * 0.6 || 1.5);
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      
-      ctx.beginPath();
-      mySnake.points.forEach((point, index) => {
-        const x = point.x * scaleX;
-        const y = point.y * scaleY;
-        
-        if (index === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-      });
-      ctx.stroke();
-      
-      // Draw my snake's head with a glow effect
+      // Draw my snake's head as a green dot with glow effect
       if (mySnake.points.length > 0) {
         const head = mySnake.points[0];
         const headX = head.x * scaleX;
