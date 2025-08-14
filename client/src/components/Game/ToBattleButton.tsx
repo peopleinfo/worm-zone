@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { socketClient } from '../../services/socketClient';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -9,21 +9,14 @@ const MIN_PLAYERS_FOR_BATTLE = 10;
 export const ToBattleButton = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
   const { closeSettingsModal } = useSettingsStore();
   const { 
     startCountdown, 
     stopCountdown, 
     isCountingDown, 
     countdownValue,
-    playerCount,
     isPlaying 
   } = useGameStore();
-
-  useEffect(() => {
-    // Check initial connection status
-    setIsConnected(socketClient.isSocketConnected());
-  }, []);
 
   const handleToBattle = async () => {
     if (isConnecting || isCountingDown) return;
@@ -42,8 +35,6 @@ export const ToBattleButton = () => {
       
       // Auto-connect to multiplayer server
       await socketClient.connect();
-      setIsConnected(true);
-      
       // Wait for minimum players (including bots)
       await waitForMinimumPlayers();
       
@@ -51,7 +42,6 @@ export const ToBattleButton = () => {
       await startCountdown();
     } catch (error) {
       setConnectionError(error instanceof Error ? error.message : 'Failed to connect to server');
-      setIsConnected(false);
       stopCountdown();
     } finally {
       setIsConnecting(false);

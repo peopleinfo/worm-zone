@@ -4,8 +4,11 @@ import { authService } from "../services/authService";
 import { useSettingsStore } from "./settingsStore";
 
 interface UserInfo {
-  name: string;
+  firstName: string;
+  lastName: string;
   headPortrait: string;
+  descriptor: string;
+  authorized: number;
 }
 
 interface ContactInfo {
@@ -43,7 +46,6 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       ...defaultAuthState,
-
       login: async () => {
         set({ isLoading: true });
         try {
@@ -55,17 +57,14 @@ export const useAuthStore = create<AuthState>()(
           });
 
           // Get user info and contact info concurrently after successful login
-          const [userInfo, contactInfo, language] = await Promise.all([
+          const [userInfo, contactInfo] = await Promise.all([
             authService.getUserInfo(),
             authService.getUserContactInfo(),
-            authService.getLanguage(),
           ]);
-
           set({
             userInfo,
             contactInfo,
           });
-          useSettingsStore.getState().setLanguage(language as any);
         } catch (error) {
           console.error("Login failed:", error);
           set({ isLoading: false });
@@ -88,6 +87,9 @@ export const useAuthStore = create<AuthState>()(
 
       initializeAuth: async () => {
         const state = get();
+
+        const language = await authService.getLanguage();
+        useSettingsStore.getState().setLanguage(language as any);
 
         // If already logged in with persisted data, don't call service again
         if (state.isLoggedIn && state.token) {

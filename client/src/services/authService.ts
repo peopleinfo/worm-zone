@@ -4,8 +4,11 @@ interface LoginResponse {
 }
 
 interface UserInfo {
-  name: string;
+  firstName: string;
+  lastName: string;
   headPortrait: string;
+  descriptor: string;
+  authorized: number;
 }
 
 interface ContactInfoResponse {

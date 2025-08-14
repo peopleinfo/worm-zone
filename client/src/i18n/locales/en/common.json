@@ -37,6 +37,15 @@
     "kh": "Khmer",
     "cn": "Chinese"
   },
+  "profile": {
+    "title": "Profile",
+    "avatar": "Avatar",
+    "guest": "Guest Player",
+    "gameStats": "Game Statistics",
+    "bestScore": "Best Score",
+    "overallHighScore": "Overall High Score",
+    "currentRank": "Current Rank"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

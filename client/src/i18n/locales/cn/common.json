@@ -37,6 +37,15 @@
     "kh": "高棉语",
     "cn": "中文"
   },
+  "profile": {
+    "title": "个人资料",
+    "avatar": "头像",
+    "guest": "游客玩家",
+    "gameStats": "游戏统计",
+    "bestScore": "最佳分数",
+    "overallHighScore": "全局最高分",
+    "currentRank": "当前排名"
+  },
   "common": {
     "loading": "加载中...",
     "error": "错误",

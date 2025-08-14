@@ -13,6 +13,7 @@ interface SettingsState {
   // UI State
   isSettingsModalOpen: boolean;
   isTopPlayersModalOpen: boolean;
+  isProfileModalOpen: boolean;
 
   // Language
   language: SupportedLanguage;
@@ -27,6 +28,9 @@ interface SettingsState {
   openTopPlayersModal: () => void;
   closeTopPlayersModal: () => void;
   toggleTopPlayersModal: () => void;
+  openProfileModal: () => void;
+  closeProfileModal: () => void;
+  toggleProfileModal: () => void;
   setLanguage: (language: SupportedLanguage) => void;
   updateSoundSettings: (settings: Partial<SoundSettings>) => void;
   resetSettings: () => void;
@@ -35,6 +39,7 @@ interface SettingsState {
 const defaultSettings = {
   isSettingsModalOpen: false,
   isTopPlayersModalOpen: false,
+  isProfileModalOpen: false,
   language: "en" as SupportedLanguage,
   sound: {
     master: 0.8,
@@ -60,6 +65,13 @@ export const useSettingsStore = create<SettingsState>()(
       toggleTopPlayersModal: () =>
         set((state) => ({
           isTopPlayersModalOpen: !state.isTopPlayersModalOpen,
+        })),
+
+      openProfileModal: () => set({ isProfileModalOpen: true }),
+      closeProfileModal: () => set({ isProfileModalOpen: false }),
+      toggleProfileModal: () =>
+        set((state) => ({
+          isProfileModalOpen: !state.isProfileModalOpen,
         })),
 
       setLanguage: (lang) => {

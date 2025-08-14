@@ -36,8 +36,8 @@ export const TopPlayersModal: React.FC = () => {
         let playerName = 'Anonymous';
         
         // Get player name - prioritize current user's name from auth
-        if (userId === realUserId && userInfo?.name) {
-          playerName = userInfo.name;
+        if (userId === realUserId && userInfo?.firstName) {
+          playerName = userInfo.firstName;
         } else if (userId === realUserId && contactInfo?.phone) {
           // Fallback to phone number for current user
           playerName = `${contactInfo.dialCode || ''}${contactInfo.phone}`.replace(/^\+/, '');
