@@ -76,7 +76,7 @@ class SocketClient {
     const authState = useAuthStore.getState();
     const userData = {
       userInfo: authState.userInfo,
-      contactInfo: authState.contactInfo,
+      openId: authState.openId,
       isLoggedIn: authState.isLoggedIn
     };
     

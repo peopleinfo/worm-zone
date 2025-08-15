@@ -14,12 +14,7 @@ interface UserInfo {
   authResult?: boolean;
 }
 
-interface ContactInfoResponse {
-  authorized: number;
-  dialCode: string;
-  phone: string;
-  email: string | null;
-}
+
 
 class AuthService {
   /**
@@ -122,19 +117,7 @@ class AuthService {
       throw error;
     }
   }
-  /**
-   * Gets user contact information from the sdk
-   */
-  async getUserContactInfo() {
-    try {
-      const contactInfo = await window.mos.getUserContactInfo("contact_info");
-      console.log("contactInfo", contactInfo);
-      return contactInfo || {};
-    } catch (error) {
-      console.error("Get user contact info failed:", error);
-      throw error;
-    }
-  }
+
   /**
    * Gets language
    */
@@ -161,7 +144,7 @@ declare global {
       getWindowInfo: any;
       login: (appKey: string) => Promise<LoginResponse>;
       getUserInfo: (scope: string) => Promise<UserInfo>;
-      getUserContactInfo: (scope: string) => Promise<ContactInfoResponse>;
+
     };
   }
 }

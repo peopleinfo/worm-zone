@@ -12,19 +12,11 @@ interface UserInfo {
   authorized: number;
 }
 
-interface ContactInfo {
-  authorized: number;
-  dialCode: string;
-  phone: string;
-  email: string | null;
-}
-
 interface AuthState {
   // Auth data
   token: string | null;
   openId: string | null;
   userInfo: UserInfo | null;
-  contactInfo: ContactInfo | null;
   isLoggedIn: boolean;
   isLoading: boolean;
   isLoadingInit: boolean;
@@ -33,7 +25,6 @@ interface AuthState {
   login: () => Promise<void>;
   logout: () => void;
   setUserInfo: (userInfo: UserInfo) => void;
-  setContactInfo: (contactInfo: ContactInfo) => void;
   initializeAuth: () => Promise<void>;
   // getUserProfile: () => Promise<void>;
   getRank: () => Promise<void>;
@@ -43,7 +34,6 @@ const defaultAuthState = {
   token: null,
   openId: null,
   userInfo: null,
-  contactInfo: null,
   isLoggedIn: false,
   isLoading: false,
   isLoadingInit: true,
@@ -78,9 +68,7 @@ export const useAuthStore = create<AuthState>()(
         set({ userInfo });
       },
 
-      setContactInfo: (contactInfo) => {
-        set({ contactInfo });
-      },
+
       initializeAuth: async () => {
         const state = get();
         set({ isLoadingInit: true });
@@ -136,7 +124,6 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         openId: state.openId,
         userInfo: state.userInfo,
-        contactInfo: state.contactInfo,
         isLoggedIn: state.isLoggedIn,
       }),
     }

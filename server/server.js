@@ -57,21 +57,9 @@ function generatePlayerId() {
   return Math.random().toString(36).substr(2, 9);
 }
 
-// Get real user ID from contact info
-function getRealUserId(contactInfo) {
-  if (!contactInfo) return null;
-  
-  // Use phone if available (dialCode + phone)
-  if (contactInfo.phone && contactInfo.dialCode) {
-    return contactInfo.dialCode + contactInfo.phone;
-  }
-  
-  // Use email if available
-  if (contactInfo.email) {
-    return contactInfo.email;
-  }
-  
-  return null;
+// Get real user ID from openId
+function getRealUserId(openId) {
+  return openId || null;
 }
 
 function createBot(id) {
@@ -358,7 +346,7 @@ io.on('connection', (socket) => {
     console.log('Game init with user data:', userData);
     
     // Extract real user ID and name
-    const realUserId = getRealUserId(userData?.contactInfo);
+    const realUserId = getRealUserId(userData?.openId);
     const userName = userData?.userInfo?.name || userData?.userInfo?.firstName;
     const playerId = realUserId || generatePlayerId();
     

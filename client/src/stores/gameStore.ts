@@ -192,21 +192,9 @@ export const useGameStore = create<GameStore>()(
 
       getRealUserId: () => {
         const authState = useAuthStore.getState();
-        const { contactInfo } = authState;
+        const { openId } = authState;
 
-        if (!contactInfo) return null;
-
-        // Use phone if available (dialCode + phone)
-        if (contactInfo.phone && contactInfo.dialCode) {
-          return contactInfo.dialCode + contactInfo.phone;
-        }
-
-        // Use email if available
-        if (contactInfo.email) {
-          return contactInfo.email;
-        }
-
-        return null;
+        return openId || null;
       },
 
       setIsHowToPlayOpen: (isOpen) => set({ isHowToPlayOpen: isOpen }),

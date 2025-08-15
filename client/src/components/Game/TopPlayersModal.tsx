@@ -23,7 +23,6 @@ export const TopPlayersModal: React.FC = () => {
   const currentPlayerId = useGameStore((state) => state.currentPlayerId);
   const getRealUserId = useGameStore((state) => state.getRealUserId);
   const userInfo = useAuthStore((state) => state.userInfo);
-  const contactInfo = useAuthStore((state) => state.contactInfo);
 
   // Convert userScores object to sorted leaderboard array
   const getUserScoresLeaderboard = (): UserScorePlayer[] => {
@@ -38,12 +37,6 @@ export const TopPlayersModal: React.FC = () => {
         // Get player name - prioritize current user's name from auth
         if (userId === realUserId && userInfo?.firstName) {
           playerName = userInfo.firstName;
-        } else if (userId === realUserId && contactInfo?.phone) {
-          // Fallback to phone number for current user
-          playerName = `${contactInfo.dialCode || ''}${contactInfo.phone}`.replace(/^\+/, '');
-        } else if (userId === realUserId && contactInfo?.email) {
-          // Fallback to email for current user
-          playerName = contactInfo.email;
         } else {
           // For other users, use a generic name or the userId
           playerName = `Player ${userId.slice(-4)}`;
