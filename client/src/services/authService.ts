@@ -11,7 +11,7 @@ interface UserInfo {
   headPortrait: string;
   descriptor: string;
   authorized: number;
-  authResult?: boolean
+  authResult?: boolean;
 }
 
 interface ContactInfoResponse {
@@ -22,31 +22,32 @@ interface ContactInfoResponse {
 }
 
 class AuthService {
-  private appKey: string = import.meta.env.VITE_MOS_APP_KEY;
   /**
    * Logs in using the MOS SDK
    */
-  async login(): Promise<string> {
+  async login(): Promise<any> {
     try {
       // Check if MOS SDK is available
       if (typeof window.mos === "undefined") {
         throw new Error("MOS SDK not loaded");
       }
       // Call MOS SDK to get login credentials
-      const mosResponse: LoginResponse = await window.mos.login(this.appKey);
+      const mosResponse: LoginResponse = await window.mos.login(
+        import.meta.env.VITE_MOS_APP_KEY
+      );
       const code = mosResponse?.code;
       const res = await request.post<{ token: string }>(
-        '/login/snakeZone/miniAppLogin',
+        "/login/snakeZone/miniAppLogin",
         { code },
         { requiresAuth: false }
       );
-      
+
       const token = res?.token;
       if (!token) {
         throw new Error("Backend returned empty token");
       }
       // Save token to memory and localStorage
-      return token;
+      return res;
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -58,7 +59,7 @@ class AuthService {
   async getUserInfo(): Promise<UserInfo> {
     try {
       const userProfile = await this.getUserProfile();
-      if(userProfile) return userProfile
+      if (userProfile) return userProfile;
       const userInfoResponse = await window.mos.getUserInfo("user_info");
       return userInfoResponse || {};
     } catch (error) {
@@ -71,7 +72,7 @@ class AuthService {
    */
   async saveUserInfo(userInfo: Partial<any>): Promise<any> {
     try {
-      return await request.post('/user/snakeZone/saveUserInfo', userInfo);
+      return await request.post("/user/snakeZone/saveUserInfo", userInfo);
     } catch (error) {
       console.error("Save user info to backend failed:", error);
       throw error;
@@ -82,7 +83,7 @@ class AuthService {
    */
   async getScore(): Promise<any> {
     try {
-      return await request.get('/progress/snakeZone/getScore');
+      return await request.get("/progress/snakeZone/getScore");
     } catch (error) {
       console.error("Get score failed:", error);
       throw error;
@@ -93,7 +94,7 @@ class AuthService {
    */
   async updateScore(score: number): Promise<any> {
     try {
-      return await request.put('/progress/snakeZone/setScore', { score });
+      return await request.put("/progress/snakeZone/setScore", { score });
     } catch (error) {
       console.error("Update progress failed:", error);
       throw error;
@@ -104,7 +105,7 @@ class AuthService {
    */
   async getRank(): Promise<any> {
     try {
-      return await request.post('/rank/snakeZone');
+      return await request.post("/rank/snakeZone");
     } catch (error) {
       console.error("Post game rank failed:", error);
       throw error;
@@ -115,7 +116,7 @@ class AuthService {
    */
   async getUserProfile(): Promise<any> {
     try {
-      return await request.post('/user/snakeZone/getUserInfo');
+      return await request.post("/user/snakeZone/getUserInfo");
     } catch (error) {
       console.error("Get user info from backend failed:", error);
       throw error;

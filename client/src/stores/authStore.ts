@@ -22,6 +22,7 @@ interface ContactInfo {
 interface AuthState {
   // Auth data
   token: string | null;
+  openId: string | null;
   userInfo: UserInfo | null;
   contactInfo: ContactInfo | null;
   isLoggedIn: boolean;
@@ -40,6 +41,7 @@ interface AuthState {
 
 const defaultAuthState = {
   token: null,
+  openId: null,
   userInfo: null,
   contactInfo: null,
   isLoggedIn: false,
@@ -54,9 +56,10 @@ export const useAuthStore = create<AuthState>()(
       login: async () => {
         set({ isLoading: true });
         try {
-          const token = await authService.login();
+          const { token, openId } = (await authService.login()) || {};
           set({
             token,
+            openId,
             isLoggedIn: true,
             isLoading: false,
           });
@@ -131,6 +134,7 @@ export const useAuthStore = create<AuthState>()(
       name: "snake-zone-auth",
       partialize: (state) => ({
         token: state.token,
+        openId: state.openId,
         userInfo: state.userInfo,
         contactInfo: state.contactInfo,
         isLoggedIn: state.isLoggedIn,
