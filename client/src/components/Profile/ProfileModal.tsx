@@ -13,7 +13,7 @@ export const ProfileModal: React.FC = () => {
   const highestScore = useGameStore(state => state.highestScore);
   const leaderboard = useGameStore(state => state.leaderboard);
   const currentPlayerId = useGameStore(state => state.currentPlayerId);
-  
+
   // Get current user's rank from leaderboard
   const getCurrentUserRank = () => {
     if (!currentPlayerId) return null;
@@ -92,21 +92,9 @@ export const ProfileModal: React.FC = () => {
                   </div>
                   <div className="stat-content">
                     <div className="stat-label">{t("profile.rank")}</div>
-                    <div className="stat-value">{t("profile.currentRank")} N/A</div>
+                    <div className="stat-value">{t("profile.currentRank")} {currentRank}</div>
                   </div>
                 </div>
-
-                {currentRank && (
-                  <div className="stat-item">
-                    <div className="stat-icon">
-                      <User size={20} />
-                    </div>
-                    <div className="stat-content">
-                      <div className="stat-label">{t("profile.currentRank")}</div>
-                      <div className="stat-value">#{currentRank}</div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
