@@ -34,7 +34,7 @@ interface AuthState {
   setUserInfo: (userInfo: UserInfo) => void;
   setContactInfo: (contactInfo: ContactInfo) => void;
   initializeAuth: () => Promise<void>;
-  getUserProfile: () => Promise<void>;
+  // getUserProfile: () => Promise<void>;
   getRank: () => Promise<void>;
 }
 
@@ -44,7 +44,7 @@ const defaultAuthState = {
   contactInfo: null,
   isLoggedIn: false,
   isLoading: false,
-  isLoadingInit: false,
+  isLoadingInit: true,
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -52,7 +52,6 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       ...defaultAuthState,
       login: async () => {
-        const state = get();
         set({ isLoading: true });
         try {
           const token = await authService.login();
@@ -60,21 +59,6 @@ export const useAuthStore = create<AuthState>()(
             token,
             isLoggedIn: true,
             isLoading: false,
-          });
-
-          // If already logged in with persisted data, don't call service again
-          if (state.isLoggedIn && state.token) {
-            console.log("already persist user info");
-            return;
-          }
-          // Get user info and contact info concurrently after successful login
-          const [userInfo, contactInfo] = await Promise.all([
-            authService.getUserInfo(),
-            authService.getUserContactInfo(),
-          ]);
-          set({
-            userInfo,
-            contactInfo,
           });
         } catch (error) {
           console.error("Login failed:", error);
@@ -102,12 +86,18 @@ export const useAuthStore = create<AuthState>()(
           useSettingsStore.getState().setLanguage(language as any);
           try {
             await state.login();
-            await authService.saveUserInfo({
-              authResult: state.userInfo?.authorized,
-              firstName: state.userInfo?.firstName,
-              headPortrait: state.userInfo?.headPortrait,
-              lastName: state.userInfo?.lastName,
+            const userInfo = await authService.getUserInfo();
+            set({
+              userInfo,
             });
+            if (!userInfo.authResult) {
+              await authService.saveUserInfo({
+                authResult: userInfo?.authorized,
+                firstName: userInfo?.firstName,
+                headPortrait: userInfo?.headPortrait,
+                lastName: userInfo?.lastName,
+              });
+            }
             console.log("Auto login successful, token:", state.token);
           } catch (error) {
             console.log("Auto login failed, continuing as guest:", error);
@@ -118,18 +108,18 @@ export const useAuthStore = create<AuthState>()(
           });
         }
       },
-      getUserProfile: async () => {
-        try {
-          const userProfile = await authService.getUserProfile();
-          console.log("userProfile", userProfile);
-        } catch (error) {
-          console.error("Get user profile failed:", error);
-          throw error;
-        }
-      },
+      // getUserProfile: async () => {
+      //   try {
+      //     const userProfile = await authService.getUserProfile();
+      //     console.log("userProfile", userProfile);
+      //   } catch (error) {
+      //     console.error("Get user profile failed:", error);
+      //     throw error;
+      //   }
+      // },
       getRank: async () => {
         try {
-          const userProfile = await authService.getRank()
+          const userProfile = await authService.getRank();
           console.log("userProfile", userProfile);
         } catch (error) {
           console.error("Get user profile failed:", error);
@@ -139,7 +129,6 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "snake-zone-auth",
-      version: 1,
       partialize: (state) => ({
         token: state.token,
         userInfo: state.userInfo,

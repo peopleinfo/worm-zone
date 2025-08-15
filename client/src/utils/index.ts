@@ -6,3 +6,7 @@
 export const sleep = (ms: number): Promise<void> => {
     return new Promise(resolve => setTimeout(resolve, ms));
 };
+
+// Export request utility
+export { request, ApiError } from './request';
+export type { RequestConfig, ApiResponse } from './request';
