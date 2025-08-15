@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { useGameStore } from '../../stores/gameStore';
-import { socketClient } from '../../services/socketClient';
-import { useSettingsStore } from '../../stores/settingsStore';
-import { HelpCircle } from 'lucide-react';
+import { useState } from "react";
+import { useGameStore } from "../../stores/gameStore";
+import { socketClient } from "../../services/socketClient";
+import { useSettingsStore } from "../../stores/settingsStore";
+import { HelpCircle } from "lucide-react";
 
 // Configuration constants
 const MIN_PLAYERS_FOR_BATTLE = 10;
@@ -12,12 +12,12 @@ export const ToBattleButton = () => {
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const { closeSettingsModal } = useSettingsStore();
-  const startCountdown = useGameStore(state => state.startCountdown);
-  const stopCountdown = useGameStore(state => state.stopCountdown);
-  const isCountingDown = useGameStore(state => state.isCountingDown);
-  const countdownValue = useGameStore(state => state.countdownValue);
-  const isPlaying = useGameStore(state => state.isPlaying);
-  const toggleHowToPlay = useGameStore(state => state.toggleHowToPlay);
+  const startCountdown = useGameStore((state) => state.startCountdown);
+  const stopCountdown = useGameStore((state) => state.stopCountdown);
+  const isCountingDown = useGameStore((state) => state.isCountingDown);
+  const countdownValue = useGameStore((state) => state.countdownValue);
+  const isPlaying = useGameStore((state) => state.isPlaying);
+  const toggleHowToPlay = useGameStore((state) => state.toggleHowToPlay);
 
   const handleToBattle = async () => {
     if (isConnecting || isCountingDown) return;
@@ -31,18 +31,20 @@ export const ToBattleButton = () => {
       if (socketClient.isSocketConnected()) {
         socketClient.disconnect();
         // Wait a bit for cleanup
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      
+
       // Auto-connect to multiplayer server
       await socketClient.connect();
       // Wait for minimum players (including bots)
       await waitForMinimumPlayers();
-      
+
       // Start countdown after ensuring minimum players
       await startCountdown();
     } catch (error) {
-      setConnectionError(error instanceof Error ? error.message : 'Failed to connect to server');
+      setConnectionError(
+        error instanceof Error ? error.message : "Failed to connect to server"
+      );
       stopCountdown();
     } finally {
       setIsConnecting(false);
@@ -68,10 +70,11 @@ export const ToBattleButton = () => {
   };
 
   const getButtonText = () => {
-    if (isConnecting) return 'Connecting...';
-    if (isCountingDown && countdownValue) return `Starting in ${countdownValue}...`;
+    if (isConnecting) return "Connecting...";
+    if (isCountingDown && countdownValue)
+      return `Starting in ${countdownValue}...`;
     // if (isConnected && playerCount < MIN_PLAYERS_FOR_BATTLE) return `Waiting for players (${playerCount}/${MIN_PLAYERS_FOR_BATTLE})`;
-    return 'To Battle!';
+    return "To Battle!";
   };
 
   const isButtonDisabled = () => {
@@ -85,46 +88,28 @@ export const ToBattleButton = () => {
 
   return (
     <div className="to-battle-container">
-      <button 
+      <button
         onClick={handleToBattle}
         disabled={isButtonDisabled()}
         className="to-battle-btn"
       >
         {getButtonText()}
       </button>
-      
+
       {/* How to Play Link */}
-      <button 
-        onClick={toggleHowToPlay}
-        className="how-to-play-link"
-      >
+      <button onClick={toggleHowToPlay} className="how-to-play-link">
         <HelpCircle size={18} />
         How to Play
       </button>
-      
+      {connectionError && (
+        <div className="connection-error">Error: Connection failed</div>
+      )}
       {isCountingDown && countdownValue && (
         <div className="countdown-overlay">
           <div className="countdown-number">{countdownValue}</div>
           <div className="countdown-text">Get Ready!</div>
         </div>
       )}
-      
-      {connectionError && (
-        <div className="connection-error">
-          Error: Connection failed
-        </div>
-      )}
-      
-      {/* How to Play Modal */}
-      
-      {/* {isConnected && (
-        <div className="connection-status">
-          ✅ Connected - Players: {playerCount}/{MIN_PLAYERS_FOR_BATTLE} minimum
-          {socketClient.getPlayerId() && (
-            <span className="player-id"> (ID: {socketClient.getPlayerId()})</span>
-          )}
-        </div>
-      )} */}
     </div>
   );
 };
