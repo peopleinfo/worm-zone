@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { authService } from "../services/authService";
 import { useSettingsStore } from "./settingsStore";
+import { sleep } from "../utils";
 
 interface UserInfo {
   firstName: string;
@@ -25,6 +26,7 @@ interface AuthState {
   contactInfo: ContactInfo | null;
   isLoggedIn: boolean;
   isLoading: boolean;
+  isLoadingInit: boolean;
 
   // Actions
   login: () => Promise<void>;
@@ -32,6 +34,8 @@ interface AuthState {
   setUserInfo: (userInfo: UserInfo) => void;
   setContactInfo: (contactInfo: ContactInfo) => void;
   initializeAuth: () => Promise<void>;
+  getUserProfile: () => Promise<void>;
+  getRank: () => Promise<void>;
 }
 
 const defaultAuthState = {
@@ -40,6 +44,7 @@ const defaultAuthState = {
   contactInfo: null,
   isLoggedIn: false,
   isLoading: false,
+  isLoadingInit: false,
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -47,6 +52,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       ...defaultAuthState,
       login: async () => {
+        const state = get();
         set({ isLoading: true });
         try {
           const token = await authService.login();
@@ -56,6 +62,11 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
           });
 
+          // If already logged in with persisted data, don't call service again
+          if (state.isLoggedIn && state.token) {
+            console.log("already persist user info");
+            return;
+          }
           // Get user info and contact info concurrently after successful login
           const [userInfo, contactInfo] = await Promise.all([
             authService.getUserInfo(),
@@ -73,7 +84,6 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        authService.logout();
         set(defaultAuthState);
       },
 
@@ -84,29 +94,52 @@ export const useAuthStore = create<AuthState>()(
       setContactInfo: (contactInfo) => {
         set({ contactInfo });
       },
-
       initializeAuth: async () => {
         const state = get();
-
-        const language = await authService.getLanguage();
-        useSettingsStore.getState().setLanguage(language as any);
-
-        // If already logged in with persisted data, don't call service again
-        if (state.isLoggedIn && state.token) {
-          console.log("Auth data already persisted, skipping service calls");
-          return;
-        }
-
+        set({ isLoadingInit: true });
         try {
-          await state.login();
-          console.log("Auto login successful, token:", state.token);
+          const language = await authService.getLanguage();
+          useSettingsStore.getState().setLanguage(language as any);
+          try {
+            await state.login();
+            await authService.saveUserInfo({
+              authResult: state.userInfo?.authorized,
+              firstName: state.userInfo?.firstName,
+              headPortrait: state.userInfo?.headPortrait,
+              lastName: state.userInfo?.lastName,
+            });
+            console.log("Auto login successful, token:", state.token);
+          } catch (error) {
+            console.log("Auto login failed, continuing as guest:", error);
+          }
+        } finally {
+          sleep(800).then(() => {
+            set({ isLoadingInit: false });
+          });
+        }
+      },
+      getUserProfile: async () => {
+        try {
+          const userProfile = await authService.getUserProfile();
+          console.log("userProfile", userProfile);
         } catch (error) {
-          console.log("Auto login failed, continuing as guest:", error);
+          console.error("Get user profile failed:", error);
+          throw error;
+        }
+      },
+      getRank: async () => {
+        try {
+          const userProfile = await authService.getRank()
+          console.log("userProfile", userProfile);
+        } catch (error) {
+          console.error("Get user profile failed:", error);
+          throw error;
         }
       },
     }),
     {
       name: "snake-zone-auth",
+      version: 1,
       partialize: (state) => ({
         token: state.token,
         userInfo: state.userInfo,

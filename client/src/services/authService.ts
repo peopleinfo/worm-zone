@@ -1,3 +1,5 @@
+import { useAuthStore } from "../stores/authStore";
+
 // MOS SDK Authentication Service
 interface LoginResponse {
   code: string;
@@ -19,58 +21,42 @@ interface ContactInfoResponse {
 }
 
 class AuthService {
-  private token: string | null = null;
   private appKey: string = import.meta.env.VITE_MOS_APP_KEY;
-  // private backendUrl: string = import.meta.env.VITE_MOS_API_URL;
-
-  constructor() {
-    // Restore token from localStorage
-    this.token = localStorage.getItem("token");
+  private backendUrl: string = import.meta.env.VITE_MOS_API_URL;
+  private getToken(): string | null {
+    return useAuthStore.getState().token;
   }
 
   /**
    * Logs in using the MOS SDK
    */
   async login(): Promise<string> {
-    console.log("service login");
     try {
       // Check if MOS SDK is available
       if (typeof window.mos === "undefined") {
         throw new Error("MOS SDK not loaded");
       }
-
       // Call MOS SDK to get login credentials
       const mosResponse: LoginResponse = await window.mos.login(this.appKey);
       const code = mosResponse?.code;
-      console.log("mosResponse", mosResponse);
+      
+      const response = await fetch(`${this.backendUrl}/login/snakeZone/miniAppLogin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
+      });
 
-      if (!code) {
-        throw new Error("Failed to get login credentials");
+      if (!response.ok) {
+        throw new Error(`Login request failed: ${response.status}`);
       }
 
-      // Send login request to backend
-      // const response = await fetch(`${this.backendUrl}/login/miniAppLogin`, {
-
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ code }),
-      // });
-
-      // if (!response.ok) {
-      //   throw new Error(`Login request failed: ${response.status}`);
-      // }
-
-      // const backendResponse = await response.json();
-      // const token = backendResponse.data;
-
-      // if (!token) {
-      //   throw new Error('Backend returned empty token');
-      // }
-      // todo: update to API
-      const token = "123456";
-
+      const backendResponse = await response.json();
+      const token = backendResponse.data?.token;
+      if (!token) {
+        throw new Error('Backend returned empty token');
+      }
       // Save token to memory and localStorage
       return token;
     } catch (error) {
@@ -79,34 +65,6 @@ class AuthService {
     }
   }
 
-  /**
-   * Gets the current token
-   */
-  getToken(): string | null {
-    return this.token;
-  }
-
-  /**
-   * Checks if the user is logged in
-   */
-  isLoggedIn(): boolean {
-    return !!this.token;
-  }
-
-  /**
-   * Logs out the user
-   */
-  logout(): void {
-    this.token = null;
-    localStorage.removeItem("token");
-  }
-
-  /**
-   * Sets the app key
-   */
-  setAppKey(appKey: string): void {
-    this.appKey = appKey;
-  }
   /**
    * Gets user information from the sdk
    */
@@ -118,6 +76,78 @@ class AuthService {
       return userInfoResponse || {};
     } catch (error) {
       console.error("Get user info failed:", error);
+      throw error;
+    }
+  }
+  /**
+   * Saves user information to the backend
+   */
+  async saveUserInfo(userInfo: Partial<any>): Promise<any> {
+    try {
+      const response = await fetch(`${this.backendUrl}/user/snakeZone/saveUserInfo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.getToken()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userInfo)
+      });
+      if (!response.ok) {
+        throw new Error(`Save user info request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.data || {};
+    } catch (error) {
+      console.error("Save user info to backend failed:", error);
+      throw error;
+    }
+  }
+  /**
+   * Posts game rank data to the backend
+   */
+  async getRank(): Promise<any> {
+    try {
+      const response = await fetch(`${this.backendUrl}/rank/snakeZone`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.getToken()}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Post game rank request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.data || {};
+    } catch (error) {
+      console.error("Post game rank failed:", error);
+      throw error;
+    }
+  }
+  /**
+   * Gets user information from the backend
+   */
+  async getUserProfile(): Promise<any> {
+    try {
+      const response = await fetch(`${this.backendUrl}/user/snakeZone/getUserInfo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.getToken()}`,
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Get user info request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.data || {};
+    } catch (error) {
+      console.error("Get user info from backend failed:", error);
       throw error;
     }
   }
@@ -140,6 +170,7 @@ class AuthService {
   async getLanguage() {
     try {
       const res = await window.mos.getLanguage();
+      console.log("res lang", res);	
       return res.lang;
     } catch (error) {
       console.error("Get language failed:", error);
@@ -150,6 +181,7 @@ class AuthService {
 
 // Create a singleton instance
 export const authService = new AuthService();
+
 
 // Add type declarations for MOS SDK
 declare global {

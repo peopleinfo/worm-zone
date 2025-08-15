@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { X, User, Trophy, Target } from "lucide-react";
 import { useSettingsStore } from "../../stores/settingsStore";
@@ -7,18 +7,25 @@ import { useGameStore } from "../../stores/gameStore";
 
 export const ProfileModal: React.FC = () => {
   const { t } = useTranslation("common");
-  const isProfileModalOpen = useSettingsStore(state => state.isProfileModalOpen);
-  const closeProfileModal = useSettingsStore(state => state.closeProfileModal);
-  const userInfo = useAuthStore(state => state.userInfo);
-  const highestScore = useGameStore(state => state.highestScore);
-  const leaderboard = useGameStore(state => state.leaderboard);
-  const currentPlayerId = useGameStore(state => state.currentPlayerId);
+  const isProfileModalOpen = useSettingsStore(
+    (state) => state.isProfileModalOpen
+  );
+  const closeProfileModal = useSettingsStore(
+    (state) => state.closeProfileModal
+  );
+  const userInfo = useAuthStore((state) => state.userInfo);
+  const highestScore = useGameStore((state) => state.highestScore);
+  const leaderboard = useGameStore((state) => state.leaderboard);
+  const currentPlayerId = useGameStore((state) => state.currentPlayerId);
+  const getUserProfile = useAuthStore((state) => state.getUserProfile);
+  const getRank = useAuthStore((state) => state.getRank);
 
   // Get current user's rank from leaderboard
   const getCurrentUserRank = () => {
     if (!currentPlayerId) return null;
-    const currentPlayer = leaderboard.find(player => 
-      player.id === currentPlayerId || player.realUserId === currentPlayerId
+    const currentPlayer = leaderboard.find(
+      (player) =>
+        player.id === currentPlayerId || player.realUserId === currentPlayerId
     );
     return currentPlayer?.rank || null;
   };
@@ -30,6 +37,13 @@ export const ProfileModal: React.FC = () => {
       closeProfileModal();
     }
   };
+
+  useEffect(() => {
+    if (isProfileModalOpen) {
+      getUserProfile();
+      getRank();
+    }
+  }, [isProfileModalOpen]);
 
   if (!isProfileModalOpen) return null;
 
@@ -69,7 +83,7 @@ export const ProfileModal: React.FC = () => {
             {/* Profile Info */}
             <div className="profile-info">
               <div className="profile-name">
-                {userInfo?.firstName ? userInfo.firstName : 'N/A'}
+                {userInfo?.firstName ? userInfo.firstName : "N/A"}
               </div>
             </div>
 
@@ -92,7 +106,9 @@ export const ProfileModal: React.FC = () => {
                   </div>
                   <div className="stat-content">
                     <div className="stat-label">{t("profile.rank")}</div>
-                    <div className="stat-value">{t("profile.currentRank")} {currentRank}</div>
+                    <div className="stat-value">
+                      {t("profile.currentRank")} {currentRank}
+                    </div>
                   </div>
                 </div>
               </div>
