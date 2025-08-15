@@ -5,7 +5,7 @@ import { GameEngine } from '../../game/GameEngine';
 export const GameCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameEngineRef = useRef<GameEngine | null>(null);
-  const { isPlaying } = useGameStore();
+  const isPlaying = useGameStore(state => state.isPlaying);
   
   useEffect(() => {
     if (canvasRef.current && !gameEngineRef.current) {

@@ -8,7 +8,7 @@ import { useGameStore } from "../../stores/gameStore";
 export const GameLayout: React.FC = () => {
   // Initialize keyboard controls
   useKeyboardControls();
-  const { isPlaying } = useGameStore();
+  const isPlaying = useGameStore((state) => state.isPlaying);
 
   return (
     <div className="game-layout">

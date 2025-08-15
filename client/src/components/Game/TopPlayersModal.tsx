@@ -16,14 +16,14 @@ interface UserScorePlayer {
 
 export const TopPlayersModal: React.FC = () => {
   const { t } = useTranslation("game");
-  const {
-    isTopPlayersModalOpen,
-    closeTopPlayersModal,
-  } = useSettingsStore();
+  const isTopPlayersModalOpen = useSettingsStore((state) => state.isTopPlayersModalOpen);
+  const closeTopPlayersModal = useSettingsStore((state) => state.closeTopPlayersModal);
+  
   const userScores = useGameStore((state) => state.userScores);
   const currentPlayerId = useGameStore((state) => state.currentPlayerId);
   const getRealUserId = useGameStore((state) => state.getRealUserId);
-  const { userInfo, contactInfo } = useAuthStore();
+  const userInfo = useAuthStore((state) => state.userInfo);
+  const contactInfo = useAuthStore((state) => state.contactInfo);
 
   // Convert userScores object to sorted leaderboard array
   const getUserScoresLeaderboard = (): UserScorePlayer[] => {

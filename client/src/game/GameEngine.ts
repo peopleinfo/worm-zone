@@ -3,6 +3,7 @@ import { Food } from './Food';
 import { Point } from './Point';
 import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
+import { MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH } from '../config/gameConfig';
 
 export class GameEngine {
   private canvas: HTMLCanvasElement;
@@ -12,12 +13,10 @@ export class GameEngine {
   private lastSocketUpdate: number = 0;
   private aiSnakes: Snake[] = [];
   private foods: Food[] = [];
-  private zoom: number = 4;
-  // Single-player variables removed - now using server-managed multiplayer only
-  
+  private zoom: number = MAP_ZOOM_LEVEL;
   // World coordinate system - consistent boundaries for collision and rendering
-  private readonly WORLD_WIDTH: number = 2000;
-  private readonly WORLD_HEIGHT: number = 1500;
+  private readonly WORLD_WIDTH: number = WORLD_WIDTH;
+  private readonly WORLD_HEIGHT: number = WORLD_HEIGHT;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -293,8 +292,6 @@ export class GameEngine {
     
     // Reinitialize game
     this.initializeGame();
-    
-    console.log('[GAME ENGINE] Game reset completed');
   }
 
   // Cleanup method for proper resource management
@@ -316,6 +313,4 @@ export class GameEngine {
     // Clear canvas
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
-
-  // Mode switching removed - game is now multiplayer-only
 }

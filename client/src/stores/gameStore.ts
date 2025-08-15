@@ -247,22 +247,22 @@ export const useGameStore = create<GameStore>()(persist(
     }),
     
     endGame: (finalScore, finalRank) => set(() => {
-      console.log('🏁 endGame called with finalScore:', finalScore, 'finalRank:', finalRank);
+      // console.log('🏁 endGame called with finalScore:', finalScore, 'finalRank:', finalRank);
       
       // Update user score using the new method
       if (finalScore > 0) {
         const gameState = get();
-        console.log('🏁 Updating user score with finalScore:', finalScore);
+        // console.log('🏁 Updating user score with finalScore:', finalScore);
         gameState.updateCurrentUserScore(finalScore);
       } else {
-        console.log('🏁 finalScore is 0 or negative, not updating user score');
+        // console.log('🏁 finalScore is 0 or negative, not updating user score');
       }
       
       // Leave the socket room after preserving the final game state
       try {
         // Import socketClient dynamically to avoid circular dependency
         import('../services/socketClient').then(({ socketClient }) => {
-          console.log('🚪 Leaving socket room after game end');
+          // console.log('🚪 Leaving socket room after game end');
           socketClient.leaveRoom();
         }).catch(error => {
           console.error('❌ Failed to leave room:', error);
@@ -271,7 +271,7 @@ export const useGameStore = create<GameStore>()(persist(
         console.error('❌ Error importing socketClient:', error);
       }
       
-      console.log('🏁 Setting game state - score:', finalScore, 'rank:', finalRank);
+      // console.log('🏁 Setting game state - score:', finalScore, 'rank:', finalRank);
       return {
         isPlaying: false,
         isGameOver: true,

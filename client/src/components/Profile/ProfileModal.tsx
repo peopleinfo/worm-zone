@@ -7,10 +7,13 @@ import { useGameStore } from "../../stores/gameStore";
 
 export const ProfileModal: React.FC = () => {
   const { t } = useTranslation("common");
-  const { isProfileModalOpen, closeProfileModal } = useSettingsStore();
-  const { userInfo } = useAuthStore();
-  const { highestScore, leaderboard, currentPlayerId } = useGameStore();
-
+  const isProfileModalOpen = useSettingsStore(state => state.isProfileModalOpen);
+  const closeProfileModal = useSettingsStore(state => state.closeProfileModal);
+  const userInfo = useAuthStore(state => state.userInfo);
+  const highestScore = useGameStore(state => state.highestScore);
+  const leaderboard = useGameStore(state => state.leaderboard);
+  const currentPlayerId = useGameStore(state => state.currentPlayerId);
+  
   // Get current user's rank from leaderboard
   const getCurrentUserRank = () => {
     if (!currentPlayerId) return null;

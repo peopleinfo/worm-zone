@@ -19,12 +19,20 @@ export const GameUI: React.FC = React.memo(() => {
   const toggleHowToPlay = useGameStore((state) => state.toggleHowToPlay);
 
   const { t } = useTranslation();
-  const {
-    openSettingsModal,
-    isSettingsModalOpen,
-    openTopPlayersModal,
-    openProfileModal,
-  } = useSettingsStore();
+  
+  const openSettingsModal = useSettingsStore(
+    (state) => state.openSettingsModal
+  );
+
+  const isSettingsModalOpen = useSettingsStore(
+    (state) => state.isSettingsModalOpen
+  );
+
+  const openTopPlayersModal = useSettingsStore(
+    (state) => state.openTopPlayersModal
+  );
+
+  const openProfileModal = useSettingsStore((state) => state.openProfileModal);
   const isGameOver = useGameStore((state) => state.isGameOver);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 

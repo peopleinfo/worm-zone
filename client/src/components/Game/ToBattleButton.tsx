@@ -12,14 +12,12 @@ export const ToBattleButton = () => {
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const { closeSettingsModal } = useSettingsStore();
-  const { 
-    startCountdown, 
-    stopCountdown, 
-    isCountingDown, 
-    countdownValue,
-    isPlaying,
-    toggleHowToPlay
-  } = useGameStore();
+  const startCountdown = useGameStore(state => state.startCountdown);
+  const stopCountdown = useGameStore(state => state.stopCountdown);
+  const isCountingDown = useGameStore(state => state.isCountingDown);
+  const countdownValue = useGameStore(state => state.countdownValue);
+  const isPlaying = useGameStore(state => state.isPlaying);
+  const toggleHowToPlay = useGameStore(state => state.toggleHowToPlay);
 
   const handleToBattle = async () => {
     if (isConnecting || isCountingDown) return;

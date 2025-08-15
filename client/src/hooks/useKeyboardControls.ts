@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useGameStore } from '../stores/gameStore';
 
 export const useKeyboardControls = () => {
-  const { updateControls } = useGameStore();
+  const updateControls = useGameStore(state => state.updateControls);
   
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
