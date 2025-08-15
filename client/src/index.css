@@ -1,6 +1,6 @@
 :root {
-  --color-primary: #4CAF50;
-  --color-primary-light: #66BB6A;
+  --color-primary: #4caf50;
+  --color-primary-light: #66bb6a;
   --color-primary-dark: #2e7d32;
   --color-secondary: #f44336;
   --color-secondary-light: #ff6b6b;
@@ -29,7 +29,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   font-family: Arial, sans-serif;
@@ -478,7 +479,7 @@ canvas:not(#gameCanvas) {
   padding: 5px;
   background: var(--color-primary-transparent-1);
   border-radius: 3px;
-  border: 1px solid #4CAF50;
+  border: 1px solid #4caf50;
 }
 
 .player-id {
@@ -491,13 +492,14 @@ canvas:not(#gameCanvas) {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
   background: var(--color-overlay-dark);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2000;
+  background: rgba(var(--color-dark-rgb), 0.95);
+  border: 3px solid var(--color-primary);
+  border-radius: 15px;
 }
 
 .modal-content {
@@ -508,7 +510,7 @@ canvas:not(#gameCanvas) {
   padding: 30px;
   text-align: center;
   color: var(--color-light);
-  min-width: 300px;
+  min-width: 320px;
   position: relative;
 }
 
@@ -540,7 +542,7 @@ canvas:not(#gameCanvas) {
   color: var(--color-primary);
   font-size: 28px;
   margin-bottom: 20px;
-  text-shadow: 0 0 10px #4CAF50;
+  text-shadow: 0 0 10px #4caf50;
 }
 
 .final-stats {
@@ -555,7 +557,7 @@ canvas:not(#gameCanvas) {
 
 .restart-button {
   padding: 12px 24px;
-  border: 2px solid #4CAF50;
+  border: 2px solid #4caf50;
   background: transparent;
   color: var(--color-primary);
   border-radius: 8px;
@@ -634,7 +636,7 @@ canvas:not(#gameCanvas) {
   top: 20px;
   right: 20px;
   background: var(--color-overlay-dark);
-  border: 2px solid #4CAF50;
+  border: 2px solid #4caf50;
   border-radius: 10px;
   padding: 15px;
   color: var(--color-light);
@@ -654,7 +656,7 @@ canvas:not(#gameCanvas) {
   text-align: center;
   color: var(--color-light);
   background: rgba(0, 0, 0, 0.8);
-  border: 2px solid #4CAF50;
+  border: 2px solid #4caf50;
   border-radius: 15px;
   padding: 30px;
   pointer-events: auto;
@@ -664,7 +666,7 @@ canvas:not(#gameCanvas) {
   color: var(--color-primary);
   font-size: 32px;
   margin-bottom: 20px;
-  text-shadow: 0 0 10px #4CAF50;
+  text-shadow: 0 0 10px #4caf50;
 }
 
 .start-message p {
@@ -732,7 +734,7 @@ canvas:not(#gameCanvas) {
 
 .to-battle-container .connection-status {
   background: var(--color-primary-transparent-2);
-  border: 2px solid #4CAF50;
+  border: 2px solid #4caf50;
   border-radius: 10px;
   padding: 10px 15px;
   color: var(--color-primary);
@@ -762,7 +764,7 @@ canvas:not(#gameCanvas) {
     padding: 10px 25px;
     min-width: 160px;
   }
-  
+
   .to-battle-container {
     padding: 15px;
     gap: 10px;
@@ -782,7 +784,7 @@ canvas:not(#gameCanvas) {
 /* Settings Button Styles */
 .settings-button {
   background: rgba(0, 0, 0, 0.8);
-  border: 2px solid #4CAF50;
+  border: 2px solid #4caf50;
   border-radius: 50%;
   color: var(--color-primary);
   cursor: pointer;
@@ -850,8 +852,7 @@ canvas:not(#gameCanvas) {
   max-width: 400px;
   max-height: 40vh;
   overflow: hidden;
-  box-shadow: 
-    0 25px 50px -12px var(--color-overlay-dark),
+  box-shadow: 0 25px 50px -12px var(--color-overlay-dark),
     0 0 0 1px var(--color-primary-transparent-1),
     inset 0 1px 0 rgba(var(--color-light-rgb), 0.1);
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -859,13 +860,18 @@ canvas:not(#gameCanvas) {
 }
 
 .settings-modal::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(var(--color-primary-rgb), 0.5), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--color-primary-rgb), 0.5),
+    transparent
+  );
 }
 
 @keyframes fadeIn {
@@ -898,7 +904,8 @@ canvas:not(#gameCanvas) {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 0 var(--color-primary-transparent-4);
   }
   50% {
@@ -922,18 +929,27 @@ canvas:not(#gameCanvas) {
   align-items: center;
   padding: 10px 14px;
   border-bottom: 1px solid var(--color-primary-transparent-2);
-  background: linear-gradient(135deg, var(--color-primary-transparent-5) 0%, var(--color-primary-transparent-6) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-transparent-5) 0%,
+    var(--color-primary-transparent-6) 100%
+  );
   position: relative;
 }
 
 .modal-header::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 28px;
   right: 28px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--color-primary-transparent-3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-primary-transparent-3),
+    transparent
+  );
 }
 
 .modal-title {
@@ -943,7 +959,11 @@ canvas:not(#gameCanvas) {
   margin: 0;
   text-shadow: 0 0 20px var(--color-primary-transparent-3);
   letter-spacing: -0.5px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-light) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1148,13 +1168,17 @@ canvas:not(#gameCanvas) {
 }
 
 .section-title::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
   width: 40px;
   height: 2px;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+  background: linear-gradient(
+    90deg,
+    var(--color-primary),
+    var(--color-primary-light)
+  );
   border-radius: 1px;
 }
 
@@ -1226,11 +1250,14 @@ canvas:not(#gameCanvas) {
   -webkit-appearance: none;
   width: 22px;
   height: 22px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-light) 100%
+  );
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 
-    0 0 0 3px var(--color-primary-transparent-2),
+  box-shadow: 0 0 0 3px var(--color-primary-transparent-2),
     0 4px 12px var(--color-primary-transparent-4),
     inset 0 1px 0 rgba(var(--color-light-rgb), 0.2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1239,10 +1266,13 @@ canvas:not(#gameCanvas) {
 
 .volume-slider::-webkit-slider-thumb:hover,
 .sensitivity-slider::-webkit-slider-thumb:hover {
-  background: linear-gradient(135deg, var(--color-primary-light) 0%, #81C784 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-light) 0%,
+    #81c784 100%
+  );
   transform: scale(1.3);
-  box-shadow: 
-    0 0 0 4px var(--color-primary-transparent-3),
+  box-shadow: 0 0 0 4px var(--color-primary-transparent-3),
     0 6px 20px rgba(var(--color-primary-rgb), 0.6),
     inset 0 1px 0 rgba(var(--color-light-rgb), 0.3);
 }
@@ -1292,19 +1322,24 @@ canvas:not(#gameCanvas) {
 }
 
 .toggle-button::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, var(--color-primary-transparent-1), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-primary-transparent-1),
+    transparent
+  );
   transition: left 0.5s ease;
 }
 
 .toggle-button:hover {
   border-color: rgba(var(--color-primary-rgb), 0.6);
-  color: #4CAF50;
+  color: #4caf50;
   background: var(--color-primary-transparent-1);
   transform: translateY(-2px);
   box-shadow: 0 8px 25px var(--color-primary-transparent-2);
@@ -1315,12 +1350,15 @@ canvas:not(#gameCanvas) {
 }
 
 .toggle-button.active {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-light) 100%
+  );
   border-color: var(--color-primary);
   color: var(--color-dark);
   font-weight: 600;
-  box-shadow: 
-    0 0 0 2px var(--color-primary-transparent-3),
+  box-shadow: 0 0 0 2px var(--color-primary-transparent-3),
     0 8px 25px var(--color-primary-transparent-4);
 }
 
@@ -1359,13 +1397,18 @@ canvas:not(#gameCanvas) {
 }
 
 .tab-button::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, var(--color-primary-transparent-1), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-primary-transparent-1),
+    transparent
+  );
   transition: left 0.5s ease;
 }
 
@@ -1380,16 +1423,23 @@ canvas:not(#gameCanvas) {
 }
 
 .tab-button.active {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-light) 100%
+  );
   color: var(--color-dark);
   font-weight: 600;
-  box-shadow: 
-    0 0 0 2px var(--color-primary-transparent-3),
+  box-shadow: 0 0 0 2px var(--color-primary-transparent-3),
     0 4px 12px var(--color-primary-transparent-3);
 }
 
 .tab-button.active:hover {
-  background: linear-gradient(135deg, var(--color-primary-light) 0%, #81C784 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-light) 0%,
+    #81c784 100%
+  );
   transform: translateY(-1px);
 }
 
@@ -1441,13 +1491,18 @@ canvas:not(#gameCanvas) {
 }
 
 .language-option::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, var(--color-primary-transparent-1), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-primary-transparent-1),
+    transparent
+  );
   transition: left 0.5s ease;
 }
 
@@ -1463,11 +1518,14 @@ canvas:not(#gameCanvas) {
 }
 
 .language-option.active {
-  background: linear-gradient(135deg, var(--color-primary-transparent-2) 0%, rgba(102, 187, 106, 0.2) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-transparent-2) 0%,
+    rgba(102, 187, 106, 0.2) 100%
+  );
   border-color: var(--color-primary);
-  color: #4CAF50;
-  box-shadow: 
-    0 0 0 2px var(--color-primary-transparent-3),
+  color: #4caf50;
+  box-shadow: 0 0 0 2px var(--color-primary-transparent-3),
     0 6px 20px var(--color-primary-transparent-2);
 }
 
@@ -1513,7 +1571,7 @@ canvas:not(#gameCanvas) {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #4CAF50;
+  background: #4caf50;
   color: #000;
   animation: checkIn 0.3s ease-out;
 }
@@ -1535,16 +1593,16 @@ canvas:not(#gameCanvas) {
     gap: 4px;
     padding: 2px;
   }
-  
+
   .tab-button {
     padding: 10px 12px;
     font-size: 13px;
   }
-  
+
   .language-option {
     padding: 10px 12px;
   }
-  
+
   .language-name {
     font-size: 15px;
   }
@@ -1581,8 +1639,7 @@ canvas:not(#gameCanvas) {
   border-color: var(--color-primary);
   background: rgba(var(--color-dark-rgb), 0.6);
   color: var(--color-light);
-  box-shadow: 
-    0 0 0 2px var(--color-primary-transparent-2),
+  box-shadow: 0 0 0 2px var(--color-primary-transparent-2),
     0 8px 25px var(--color-primary-transparent-8);
   transform: translateY(-2px);
 }
@@ -1596,7 +1653,7 @@ canvas:not(#gameCanvas) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: px;
   padding: 6px;
 }
 
@@ -1645,14 +1702,18 @@ canvas:not(#gameCanvas) {
   align-items: center;
   padding: 12px 18px;
   border-bottom: 0;
-  background: linear-gradient(135deg, var(--color-primary-transparent-1) 0%, rgba(102, 187, 106, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-transparent-1) 0%,
+    rgba(102, 187, 106, 0.1) 100%
+  );
 }
 
 .how-to-play-modal .modal-header h2 {
   margin: 0;
   font-size: 18px;
   font-weight: bold;
-  color: #4CAF50;
+  color: #4caf50;
   text-shadow: 0 2px 10px var(--color-primary-transparent-3);
 }
 
@@ -1688,7 +1749,7 @@ canvas:not(#gameCanvas) {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  color: #4CAF50;
+  color: #4caf50;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1702,7 +1763,7 @@ canvas:not(#gameCanvas) {
   height: 28px;
   background: var(--color-primary-transparent-2);
   border-radius: 50%;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .rule-section ul {
@@ -1720,10 +1781,10 @@ canvas:not(#gameCanvas) {
 }
 
 .rule-section li::before {
-  content: '▶';
+  content: "▶";
   position: absolute;
   left: -20px;
-  color: #4CAF50;
+  color: #4caf50;
   font-size: 12px;
 }
 
@@ -1732,11 +1793,19 @@ canvas:not(#gameCanvas) {
   border-top: 2px solid var(--color-primary-transparent-3);
   display: flex;
   justify-content: center;
-  background: linear-gradient(135deg, var(--color-primary-transparent-7) 0%, rgba(102, 187, 106, 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-transparent-7) 0%,
+    rgba(102, 187, 106, 0.05) 100%
+  );
 }
 
 .close-modal-btn {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-dark) 100%
+  );
   border: 2px solid var(--color-primary-dark);
   border-radius: 15px;
   color: var(--color-light);
@@ -1749,7 +1818,11 @@ canvas:not(#gameCanvas) {
 }
 
 .close-modal-btn:hover {
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary-darker) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-dark) 0%,
+    var(--color-primary-darker) 100%
+  );
   transform: translateY(-2px);
   box-shadow: 0 6px 20px var(--color-primary-transparent-4);
 }
@@ -1761,7 +1834,7 @@ canvas:not(#gameCanvas) {
 
 /* How to Play Link Styles */
 .how-to-play-link {
-  color: #4CAF50;
+  color: #4caf50;
   text-decoration: none;
   font-size: 16px;
   font-weight: 500;
@@ -1808,7 +1881,7 @@ canvas:not(#gameCanvas) {
 .profile-avatar-placeholder:hover {
   background: rgba(76, 175, 80, 0.2);
   border-color: var(--color-primary);
-  color: #4CAF50;
+  color: #4caf50;
   transform: scale(1.05);
 }
 
@@ -1848,7 +1921,7 @@ canvas:not(#gameCanvas) {
 .stats-title {
   font-size: 18px;
   font-weight: 600;
-  color: #4CAF50;
+  color: #4caf50;
   text-align: center;
   margin-bottom: 10px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -1889,7 +1962,7 @@ canvas:not(#gameCanvas) {
   height: 36px;
   background: rgba(76, 175, 80, 0.2);
   border-radius: 8px;
-  color: #4CAF50;
+  color: #4caf50;
   transition: all 0.3s ease;
 }
 

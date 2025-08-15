@@ -16,7 +16,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
     <div className="settings-modal-overlay" onClick={onClose}>
       <div className="how-to-play-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>How to Play - Worm Zone</h2>
+          <h2>How to Play - Snake Zone</h2>
           <button className="close-button" onClick={onClose}>
             <X size={24} />
           </button>
