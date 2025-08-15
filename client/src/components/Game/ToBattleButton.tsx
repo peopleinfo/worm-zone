@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { socketClient } from '../../services/socketClient';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { HowToPlayModal } from './HowToPlayModal';
 import { HelpCircle } from 'lucide-react';
 
 // Configuration constants
@@ -11,14 +10,15 @@ const MIN_PLAYERS_FOR_BATTLE = 10;
 export const ToBattleButton = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
+
   const { closeSettingsModal } = useSettingsStore();
   const { 
     startCountdown, 
     stopCountdown, 
     isCountingDown, 
     countdownValue,
-    isPlaying 
+    isPlaying,
+    toggleHowToPlay
   } = useGameStore();
 
   const handleToBattle = async () => {
@@ -97,7 +97,7 @@ export const ToBattleButton = () => {
       
       {/* How to Play Link */}
       <button 
-        onClick={() => setIsHowToPlayOpen(true)}
+        onClick={toggleHowToPlay}
         className="how-to-play-link"
       >
         <HelpCircle size={18} />
@@ -118,10 +118,6 @@ export const ToBattleButton = () => {
       )}
       
       {/* How to Play Modal */}
-      <HowToPlayModal 
-        isOpen={isHowToPlayOpen}
-        onClose={() => setIsHowToPlayOpen(false)}
-      />
       
       {/* {isConnected && (
         <div className="connection-status">

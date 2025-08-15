@@ -63,6 +63,9 @@ interface GameStore extends GameState {
   endGame: (finalScore: number, finalRank: number) => void;
   startCountdown: () => Promise<void>;
   stopCountdown: () => void;
+  isHowToPlayOpen: boolean;
+  setIsHowToPlayOpen: (isOpen: boolean) => void;
+  toggleHowToPlay: () => void;
 }
 
 const initialState = {
@@ -95,6 +98,7 @@ const initialState = {
   
   isCountingDown: false,
   countdownValue: null,
+  isHowToPlayOpen: false,
 };
 
 export const useGameStore = create<GameStore>()(persist(
@@ -190,6 +194,9 @@ export const useGameStore = create<GameStore>()(persist(
       return null;
     },
     
+    setIsHowToPlayOpen: (isOpen) => set({ isHowToPlayOpen: isOpen }),
+    toggleHowToPlay: () => set((state) => ({ isHowToPlayOpen: !state.isHowToPlayOpen })),
+
     initializeUserScore: () => {
       const state = get();
       const realUserId = state.getRealUserId();

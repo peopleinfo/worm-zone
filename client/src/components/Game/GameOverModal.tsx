@@ -1,5 +1,5 @@
 import React from "react";
-import { X, RotateCcw } from "lucide-react";
+import { X } from "lucide-react";
 import { useGameStore } from "../../stores/gameStore";
 
 export const GameOverModal = React.memo(
@@ -11,18 +11,11 @@ export const GameOverModal = React.memo(
     const getCurrentUserHighestScore = useGameStore((state) => state.getCurrentUserHighestScore);
     const setGameOver = useGameStore((state) => state.setGameState);
 
-    const resetGame = useGameStore((state) => state.resetGame);
-
     // Get user-specific highest score
     const userHighestScore = getCurrentUserHighestScore();
 
     const handleClose = () => {
       setGameOver({ isGameOver: false });
-    };
-
-    const handleRestart = () => {
-      setGameOver({ isGameOver: false });
-      resetGame();
     };
 
     if (!isGameOver) return null;

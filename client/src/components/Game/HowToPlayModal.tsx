@@ -1,12 +1,15 @@
-import React from 'react';
-import { X, Gamepad2, Users, Trophy, RotateCcw } from 'lucide-react';
+import React from "react";
+import { X, Gamepad2, Users, Trophy, RotateCcw } from "lucide-react";
 
 interface HowToPlayModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose }) => {
+export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -18,38 +21,43 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose 
             <X size={24} />
           </button>
         </div>
-        
+
         <div className="modal-content">
           <div className="rule-section">
-            <div className="rule-icon">
-              <Gamepad2 size={24} />
+            <div style={{ display: "flex", gap: 4 }}>
+              <div className="rule-icon">
+                <Gamepad2 size={24} />
+              </div>
+              <h3>Game Objective & Controls</h3>
             </div>
-            <h3>Game Objective & Controls</h3>
             <ul>
               <li>Control your worm to eat food and grow longer</li>
               <li>Use touch controls or arrow keys to move</li>
-              <li>Avoid hitting other worms or the walls</li>How to playR
+              <li>Avoid hitting other worms or the walls</li>
               <li>Become the longest worm to dominate the arena!</li>
             </ul>
           </div>
 
           <div className="rule-section">
-            <div className="rule-icon">
-              <Users size={24} />
+            <div style={{ display: "flex", gap: 4 }}>
+              <div className="rule-icon">
+                <Users size={24} />
+              </div>
+              <h3>Multiplayer Rules</h3>
             </div>
-            <h3>Multiplayer Rules</h3>
             <ul>
               <li>Play with friends in the same room</li>
-              <li>Real-time multiplayer action with up to 10 players</li>
               <li>Auto-connect to available rooms</li>
             </ul>
           </div>
 
           <div className="rule-section">
+            <div style={{ display: "flex", gap: 4 }}>
             <div className="rule-icon">
               <Trophy size={24} />
             </div>
             <h3>Scoring System</h3>
+            </div>
             <ul>
               <li>Eat food to increase your score and length</li>
               <li>Larger worms give more points when eliminated</li>

@@ -11,9 +11,13 @@ import { TopPlayersModal } from "./TopPlayersModal";
 import { ProfileModal } from "../Profile/ProfileModal";
 import { GameOverModal } from "./GameOverModal";
 import { useAuthStore } from "../../stores/authStore";
+import { HowToPlayModal } from "./HowToPlayModal";
 
 export const GameUI: React.FC = React.memo(() => {
   const isPlaying = useGameStore((state) => state.isPlaying);
+  const isHowToPlayOpen = useGameStore((state) => state.isHowToPlayOpen);
+  const toggleHowToPlay = useGameStore((state) => state.toggleHowToPlay);
+
   const { t } = useTranslation();
   const {
     openSettingsModal,
@@ -26,6 +30,7 @@ export const GameUI: React.FC = React.memo(() => {
 
   return (
     <>
+      <HowToPlayModal isOpen={isHowToPlayOpen} onClose={toggleHowToPlay} />
       <GameOverModal />
       <TopPlayersModal />
       {isLoggedIn && <ProfileModal />}
