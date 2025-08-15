@@ -67,10 +67,12 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
           </div>
 
           <div className="rule-section">
-            <div className="rule-icon">
-              <RotateCcw size={24} />
+            <div style={{ display: "flex", gap: 4 }}>
+              <div className="rule-icon">
+                <RotateCcw size={24} />
+              </div>
+              <h3>Death & Restart</h3>
             </div>
-            <h3>Death & Restart</h3>
             <ul>
               <li>Game ends when you hit another worm or wall</li>
               <li>View your score and highest score in the game over modal</li>

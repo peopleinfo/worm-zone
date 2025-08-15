@@ -1,3 +1,28 @@
+:root {
+  --color-primary: #4CAF50;
+  --color-primary-light: #66BB6A;
+  --color-primary-dark: #2e7d32;
+  --color-secondary: #f44336;
+  --color-secondary-light: #ff6b6b;
+  --color-dark: #000;
+  --color-dark-rgb: 0, 0, 0;
+  --color-light: #fff;
+  --color-gray: #ccc;
+  --color-overlay-dark: rgba(var(--color-dark-rgb), 0.8);
+  --color-overlay-dark-light: rgba(var(--color-dark-rgb), 0.7);
+  --color-primary-transparent-1: rgba(76, 175, 80, 0.1);
+  --color-primary-transparent-2: rgba(76, 175, 80, 0.2);
+  --color-primary-transparent-3: rgba(76, 175, 80, 0.3);
+  --color-primary-transparent-4: rgba(76, 175, 80, 0.4);
+  --color-primary-transparent-5: rgba(76, 175, 80, 0.08);
+  --color-primary-transparent-6: rgba(76, 175, 80, 0.04);
+  --color-primary-transparent-7: rgba(76, 175, 80, 0.05);
+  --color-primary-transparent-8: rgba(76, 175, 80, 0.15);
+  --color-primary-transparent-9: rgba(76, 175, 80, 0.2);
+  --color-secondary-transparent-1: rgba(244, 67, 54, 0.1);
+  --color-secondary-transparent-2: rgba(244, 67, 54, 0.2);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -8,7 +33,7 @@ html, body {
   width: 100%;
   height: 100%;
   font-family: Arial, sans-serif;
-  background: #000;
+  background: var(--color-dark);
   overflow: hidden;
   position: fixed;
   top: 0;
@@ -32,7 +57,7 @@ html, body {
   margin-top: -50vw;
   margin-left: -50vh;
   overflow: hidden;
-  background: #000;
+  background: var(--color-dark);
   /* Hardware acceleration for smoother performance */
   will-change: transform;
   backface-visibility: hidden;
@@ -44,8 +69,7 @@ html, body {
   width: 100%;
   height: 100%;
   position: relative;
-  text-align: center;
-  background: #000;
+  background: var(--color-dark);
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -62,7 +86,7 @@ html, body {
   bottom: 0;
   display: flex;
   flex-direction: column;
-  background: #000;
+  background: var(--color-dark);
   margin: 0;
   padding: 0;
 }
@@ -155,9 +179,9 @@ canvas:not(#gameCanvas) {
   z-index: 1001 !important;
   width: 150px;
   height: 150px;
-  /* border: 2px solid #4CAF50; */
+  /* border: 2px solid var(--color-primary); */
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--color-overlay-dark);
   padding: 5px;
   box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
 }
@@ -175,10 +199,10 @@ canvas:not(#gameCanvas) {
   top: 20px;
   left: 20px;
   z-index: 1000;
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--color-overlay-dark);
   border-radius: 10px;
   padding: 15px;
-  border: 2px solid #4CAF50;
+  border: 2px solid var(--color-primary);
 }
 
 /* Multiplayer Connection Styles */
@@ -196,9 +220,9 @@ canvas:not(#gameCanvas) {
 
 .mode-btn {
   padding: 8px 16px;
-  border: 2px solid #4CAF50;
+  border: 2px solid var(--color-primary);
   background: transparent;
-  color: #4CAF50;
+  color: var(--color-primary);
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
@@ -207,12 +231,12 @@ canvas:not(#gameCanvas) {
 }
 
 .mode-btn:hover {
-  background: rgba(76, 175, 80, 0.2);
+  background: var(--color-primary-transparent-2);
 }
 
 .mode-btn.active {
-  background: #4CAF50;
-  color: #000;
+  background: var(--color-primary);
+  color: var(--color-dark);
 }
 
 .mode-btn:disabled {
@@ -233,17 +257,17 @@ canvas:not(#gameCanvas) {
 
 .server-url-input {
   padding: 8px 12px;
-  border: 2px solid #4CAF50;
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
+  border: 2px solid var(--color-primary);
+  background: var(--color-overlay-dark-light);
+  color: var(--color-light);
   border-radius: 5px;
   font-size: 14px;
 }
 
 .server-url-input:focus {
   outline: none;
-  border-color: #66BB6A;
-  background: rgba(0, 0, 0, 0.9);
+  border-color: var(--color-primary-light);
+  background: rgba(var(--color-dark-rgb), 0.9);
 }
 
 .server-url-input:disabled {
@@ -253,9 +277,9 @@ canvas:not(#gameCanvas) {
 
 .connect-btn {
   padding: 10px 20px;
-  border: 2px solid #4CAF50;
+  border: 2px solid var(--color-primary);
   background: transparent;
-  color: #4CAF50;
+  color: var(--color-primary);
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
@@ -264,7 +288,7 @@ canvas:not(#gameCanvas) {
 }
 
 .connect-btn:hover {
-  background: rgba(76, 175, 80, 0.2);
+  background: var(--color-primary-transparent-2);
 }
 
 .connect-btn.connected {
@@ -273,7 +297,7 @@ canvas:not(#gameCanvas) {
 }
 
 .connect-btn.connected:hover {
-  background: rgba(244, 67, 54, 0.2);
+  background: var(--color-secondary-transparent-2);
 }
 
 /* Countdown Overlay Styles */
@@ -283,7 +307,7 @@ canvas:not(#gameCanvas) {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--color-overlay-dark);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -295,7 +319,7 @@ canvas:not(#gameCanvas) {
 .countdown-number {
   font-size: 8rem;
   font-weight: bold;
-  color: #4CAF50;
+  color: var(--color-primary);
   text-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
   animation: countdownPulse 1s ease-in-out;
   margin-bottom: 1rem;
@@ -340,7 +364,7 @@ canvas:not(#gameCanvas) {
   left: 0px;
   border-radius: 10px;
   padding: 2px;
-  color: #fff;
+  color: var(--color-light);
   font-size: 12px;
   min-width: 180px;
   max-width: 230px;
@@ -356,12 +380,12 @@ canvas:not(#gameCanvas) {
 }
 
 .leaderboard-icon {
-  color: #4CAF50;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
 .leaderboard-title {
-  color: #4CAF50;
+  color: var(--color-primary);
   font-weight: bold;
   font-size: 13px;
 }
@@ -383,16 +407,16 @@ canvas:not(#gameCanvas) {
 }
 
 .leaderboard-item:hover {
-  background: rgba(76, 175, 80, 0.1);
+  background: var(--color-primary-transparent-1);
 }
 
 .leaderboard-item.current-player {
-  background: rgba(76, 175, 80, 0.2);
+  background: var(--color-primary-transparent-2);
   /* border: 1px solid rgba(76, 175, 80, 0.5); */
 }
 
 .player-rank {
-  color: #4CAF50;
+  color: var(--color-primary);
   font-weight: bold;
   min-width: 20px;
   font-size: 13px;
@@ -400,7 +424,7 @@ canvas:not(#gameCanvas) {
 
 .player-name {
   flex: 1;
-  color: #fff;
+  color: var(--color-light);
   font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -409,29 +433,29 @@ canvas:not(#gameCanvas) {
 
 .current-player-name {
   font-weight: bold;
-  color: #4CAF50;
+  color: var(--color-primary);
 }
 
 .bot-player .player-name {
-  color: #ccc;
+  color: var(--color-gray);
 }
 
 .player-score {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #4CAF50;
+  color: var(--color-primary);
   font-weight: bold;
   font-size: 12px;
 }
 
 .score-icon {
-  color: #4CAF50;
+  color: var(--color-primary);
   opacity: 0.8;
 }
 
 .score-value {
-  color: #4CAF50;
+  color: var(--color-primary);
 }
 
 .connect-btn:disabled {
@@ -443,22 +467,22 @@ canvas:not(#gameCanvas) {
   color: #f44336;
   font-size: 12px;
   padding: 5px;
-  background: rgba(244, 67, 54, 0.1);
+  background: var(--color-secondary-transparent-1);
   border-radius: 3px;
   border: 1px solid #f44336;
 }
 
 .connection-status {
-  color: #4CAF50;
+  color: var(--color-primary);
   font-size: 12px;
   padding: 5px;
-  background: rgba(76, 175, 80, 0.1);
+  background: var(--color-primary-transparent-1);
   border-radius: 3px;
   border: 1px solid #4CAF50;
 }
 
 .player-id {
-  color: #ccc;
+  color: var(--color-gray);
   font-size: 11px;
 }
 
@@ -469,7 +493,7 @@ canvas:not(#gameCanvas) {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--color-overlay-dark);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -477,12 +501,13 @@ canvas:not(#gameCanvas) {
 }
 
 .modal-content {
-  background: rgba(0, 0, 0, 0.9);
-  border: 3px solid #4CAF50;
+  background: rgba(var(--color-dark-rgb), 0.9);
+  /* border: 3px solid var(--color-primary); */
+  border-top: 0;
   border-radius: 15px;
   padding: 30px;
   text-align: center;
-  color: #fff;
+  color: var(--color-light);
   min-width: 300px;
   position: relative;
 }
@@ -491,10 +516,10 @@ canvas:not(#gameCanvas) {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: rgba(76, 175, 80, 0.1);
-  border: 1px solid rgba(76, 175, 80, 0.3);
+  background: var(--color-primary-transparent-1);
+  border: 1px solid var(--color-primary-transparent-3);
   border-radius: 8px;
-  color: #4CAF50;
+  color: var(--color-primary);
   cursor: pointer;
   padding: 4px;
   transition: all 0.3s ease;
@@ -505,14 +530,14 @@ canvas:not(#gameCanvas) {
 }
 
 .game-over-modal .close-button:hover {
-  background: rgba(76, 175, 80, 0.2);
-  border-color: #66BB6A;
-  color: #66BB6A;
+  background: var(--color-primary-transparent-2);
+  border-color: var(--color-primary-light);
+  color: var(--color-primary-light);
   transform: scale(1.1);
 }
 
 .modal-content h2 {
-  color: #4CAF50;
+  color: var(--color-primary);
   font-size: 28px;
   margin-bottom: 20px;
   text-shadow: 0 0 10px #4CAF50;
@@ -525,14 +550,14 @@ canvas:not(#gameCanvas) {
 .final-stats p {
   font-size: 18px;
   margin: 10px 0;
-  color: #fff;
+  color: var(--color-light);
 }
 
 .restart-button {
   padding: 12px 24px;
   border: 2px solid #4CAF50;
   background: transparent;
-  color: #4CAF50;
+  color: var(--color-primary);
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
@@ -542,8 +567,8 @@ canvas:not(#gameCanvas) {
 }
 
 .restart-button:hover {
-  background: #4CAF50;
-  color: #000;
+  background: var(--color-primary);
+  color: var(--color-dark);
   transform: scale(1.05);
 }
 
@@ -608,11 +633,11 @@ canvas:not(#gameCanvas) {
   position: absolute;
   top: 20px;
   right: 20px;
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--color-overlay-dark);
   border: 2px solid #4CAF50;
   border-radius: 10px;
   padding: 15px;
-  color: #fff;
+  color: var(--color-light);
   font-size: 14px;
   pointer-events: auto;
 }
@@ -627,7 +652,7 @@ canvas:not(#gameCanvas) {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: #fff;
+  color: var(--color-light);
   background: rgba(0, 0, 0, 0.8);
   border: 2px solid #4CAF50;
   border-radius: 15px;
@@ -636,7 +661,7 @@ canvas:not(#gameCanvas) {
 }
 
 .start-message h2 {
-  color: #4CAF50;
+  color: var(--color-primary);
   font-size: 32px;
   margin-bottom: 20px;
   text-shadow: 0 0 10px #4CAF50;
@@ -658,31 +683,31 @@ canvas:not(#gameCanvas) {
 }
 
 .to-battle-btn {
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-  border: 3px solid #2e7d32;
+  background: linear-gradient(135deg, var(--color-primary) 0%, #45a049 100%);
+  border: 3px solid var(--color-primary-dark);
   border-radius: 25px;
-  color: white;
+  color: var(--color-light);
   font-size: 24px;
   font-weight: bold;
   padding: 15px 40px;
   cursor: pointer;
   transition: all 0.3s ease;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 6px 20px var(--color-primary-transparent-4);
   min-width: 200px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .to-battle-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
+  background: linear-gradient(135deg, #45a049 0%, var(--color-primary) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.6);
+  box-shadow: 0 8px 25px rgba(var(--color-primary-rgb), 0.6);
 }
 
 .to-battle-btn:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 4px 15px var(--color-primary-transparent-4);
 }
 
 .to-battle-btn:disabled {
@@ -695,22 +720,22 @@ canvas:not(#gameCanvas) {
 }
 
 .to-battle-container .connection-error {
-  background: rgba(244, 67, 54, 0.2);
-  border: 2px solid #f44336;
+  background: var(--color-secondary-transparent-2);
+  border: 2px solid var(--color-secondary);
   border-radius: 10px;
   padding: 10px 15px;
-  color: #ff6b6b;
+  color: var(--color-secondary-light);
   font-weight: bold;
   text-align: center;
   max-width: 300px;
 }
 
 .to-battle-container .connection-status {
-  background: rgba(76, 175, 80, 0.2);
+  background: var(--color-primary-transparent-2);
   border: 2px solid #4CAF50;
   border-radius: 10px;
   padding: 10px 15px;
-  color: #4CAF50;
+  color: var(--color-primary);
   font-weight: bold;
   text-align: center;
   max-width: 300px;
@@ -759,7 +784,7 @@ canvas:not(#gameCanvas) {
   background: rgba(0, 0, 0, 0.8);
   border: 2px solid #4CAF50;
   border-radius: 50%;
-  color: #4CAF50;
+  color: var(--color-primary);
   cursor: pointer;
   padding: 12px;
   transition: all 0.3s ease;
@@ -770,9 +795,9 @@ canvas:not(#gameCanvas) {
 }
 
 .settings-button:hover {
-  background: rgba(76, 175, 80, 0.2);
-  border-color: #66BB6A;
-  color: #66BB6A;
+  background: var(--color-primary-transparent-2);
+  border-color: var(--color-primary-light);
+  color: var(--color-primary-light);
   transform: scale(1.1);
 }
 
@@ -805,7 +830,7 @@ canvas:not(#gameCanvas) {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--color-overlay-dark-light);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   display: flex;
@@ -819,16 +844,16 @@ canvas:not(#gameCanvas) {
   background: rgba(15, 15, 15, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(76, 175, 80, 0.3);
+  border: 1px solid var(--color-primary-transparent-3);
   border-radius: 16px;
-  width: 70%;
+  width: 100%;
   max-width: 400px;
   max-height: 40vh;
   overflow: hidden;
   box-shadow: 
-    0 25px 50px -12px rgba(0, 0, 0, 0.8),
-    0 0 0 1px rgba(76, 175, 80, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 25px 50px -12px var(--color-overlay-dark),
+    0 0 0 1px var(--color-primary-transparent-1),
+    inset 0 1px 0 rgba(var(--color-light-rgb), 0.1);
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
@@ -840,7 +865,7 @@ canvas:not(#gameCanvas) {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(var(--color-primary-rgb), 0.5), transparent);
 }
 
 @keyframes fadeIn {
@@ -874,10 +899,10 @@ canvas:not(#gameCanvas) {
 
 @keyframes pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+    box-shadow: 0 0 0 0 var(--color-primary-transparent-4);
   }
   50% {
-    box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+    box-shadow: 0 0 0 10px rgba(var(--color-primary-rgb), 0);
   }
 }
 
@@ -896,8 +921,8 @@ canvas:not(#gameCanvas) {
   justify-content: space-between;
   align-items: center;
   padding: 10px 14px;
-  border-bottom: 1px solid rgba(76, 175, 80, 0.2);
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(76, 175, 80, 0.04) 100%);
+  border-bottom: 1px solid var(--color-primary-transparent-2);
+  background: linear-gradient(135deg, var(--color-primary-transparent-5) 0%, var(--color-primary-transparent-6) 100%);
   position: relative;
 }
 
@@ -908,27 +933,27 @@ canvas:not(#gameCanvas) {
   left: 28px;
   right: 28px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, var(--color-primary-transparent-3), transparent);
 }
 
 .modal-title {
-  color: #4CAF50;
+  color: var(--color-primary);
   font-size: 20px;
   font-weight: 700;
   margin: 0;
-  text-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+  text-shadow: 0 0 20px var(--color-primary-transparent-3);
   letter-spacing: -0.5px;
-  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .close-button {
-  background: rgba(76, 175, 80, 0.1);
-  border: 1px solid rgba(76, 175, 80, 0.3);
+  background: var(--color-primary-transparent-1);
+  border: 1px solid var(--color-primary-transparent-3);
   border-radius: 8px;
-  color: #4CAF50;
+  color: var(--color-primary);
   cursor: pointer;
   padding: 8px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -940,11 +965,11 @@ canvas:not(#gameCanvas) {
 }
 
 .close-button:hover {
-  background: rgba(76, 175, 80, 0.2);
-  border-color: #66BB6A;
-  color: #66BB6A;
+  background: var(--color-primary-transparent-2);
+  border-color: var(--color-primary-light);
+  color: var(--color-primary-light);
   transform: scale(1.05) rotate(90deg);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 4px 12px var(--color-primary-transparent-3);
 }
 
 .close-button:active {
@@ -957,7 +982,7 @@ canvas:not(#gameCanvas) {
   max-height: calc(80vh - 80px);
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(76, 175, 80, 0.5) transparent;
+  scrollbar-color: rgba(var(--color-primary-rgb), 0.5) transparent;
 }
 
 .modal-content::-webkit-scrollbar {
@@ -969,13 +994,13 @@ canvas:not(#gameCanvas) {
 }
 
 .modal-content::-webkit-scrollbar-thumb {
-  background: rgba(76, 175, 80, 0.3);
+  background: var(--color-primary-transparent-3);
   border-radius: 3px;
   transition: background 0.3s ease;
 }
 
 .modal-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(76, 175, 80, 0.5);
+  background: rgba(var(--color-primary-rgb), 0.5);
 }
 
 /* Top Players Modal Styles */
@@ -995,11 +1020,11 @@ canvas:not(#gameCanvas) {
   grid-template-columns: 40px 1fr 80px;
   gap: 12px;
   padding: 8px 12px;
-  background: rgba(76, 175, 80, 0.1);
+  background: var(--color-primary-transparent-1);
   border-radius: 8px;
   font-weight: 600;
   font-size: 14px;
-  color: #4CAF50;
+  color: var(--color-primary);
   margin-bottom: 8px;
 }
 
@@ -1017,7 +1042,7 @@ canvas:not(#gameCanvas) {
   max-height: 200px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(76, 175, 80, 0.3) transparent;
+  scrollbar-color: var(--color-primary-transparent-3) transparent;
 }
 
 .players-scroll-container::-webkit-scrollbar {
@@ -1029,7 +1054,7 @@ canvas:not(#gameCanvas) {
 }
 
 .players-scroll-container::-webkit-scrollbar-thumb {
-  background: rgba(76, 175, 80, 0.3);
+  background: var(--color-primary-transparent-3);
   border-radius: 2px;
 }
 
@@ -1045,48 +1070,48 @@ canvas:not(#gameCanvas) {
 }
 
 .player-row:hover {
-  background: rgba(76, 175, 80, 0.05);
+  background: var(--color-primary-transparent-7);
 }
 
 .player-row.current-player {
-  background: rgba(76, 175, 80, 0.15);
-  border-color: rgba(76, 175, 80, 0.3);
+  background: var(--color-primary-transparent-8);
+  border-color: var(--color-primary-transparent-3);
   font-weight: 600;
 }
 
 .player-rank {
-  color: #4CAF50;
+  color: var(--color-primary);
   font-weight: 600;
   text-align: left;
 }
 
 .player-name {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--color-light-rgb), 0.9);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .player-score {
-  color: #4CAF50;
+  color: var(--color-primary);
   font-weight: 600;
   text-align: right;
 }
 
 .you-indicator {
-  color: #66BB6A;
+  color: var(--color-primary-light);
   font-weight: 500;
   font-size: 12px;
 }
 
 .current-player-section {
-  border-top: 1px solid rgba(76, 175, 80, 0.2);
+  border-top: 1px solid var(--color-primary-transparent-2);
   padding-top: 12px;
 }
 
 .divider {
   text-align: center;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(var(--color-light-rgb), 0.5);
   font-size: 16px;
   margin-bottom: 8px;
   font-weight: bold;
@@ -1096,15 +1121,15 @@ canvas:not(#gameCanvas) {
 .settings-section {
   margin-bottom: 20px;
   padding: 12px;
-  background: rgba(76, 175, 80, 0.03);
+  background: rgba(var(--color-primary-rgb), 0.03);
   border-radius: 12px;
-  border: 1px solid rgba(76, 175, 80, 0.1);
+  border: 1px solid var(--color-primary-transparent-1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .settings-section:hover {
-  background: rgba(76, 175, 80, 0.05);
-  border-color: rgba(76, 175, 80, 0.2);
+  background: var(--color-primary-transparent-7);
+  border-color: var(--color-primary-transparent-2);
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
@@ -1113,12 +1138,12 @@ canvas:not(#gameCanvas) {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #4CAF50;
+  color: var(--color-primary);
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(76, 175, 80, 0.2);
+  border-bottom: 1px solid var(--color-primary-transparent-2);
   position: relative;
 }
 
@@ -1129,7 +1154,7 @@ canvas:not(#gameCanvas) {
   left: 0;
   width: 40px;
   height: 2px;
-  background: linear-gradient(90deg, #4CAF50, #66BB6A);
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
   border-radius: 1px;
 }
 
@@ -1148,7 +1173,7 @@ canvas:not(#gameCanvas) {
 }
 
 .setting-item label {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--color-light-rgb), 0.9);
   font-size: 16px;
   font-weight: 500;
   letter-spacing: 0.3px;
@@ -1156,7 +1181,7 @@ canvas:not(#gameCanvas) {
 }
 
 .setting-item:hover label {
-  color: rgba(255, 255, 255, 1);
+  color: rgba(var(--color-light-rgb), 1);
 }
 
 /* Slider Styles */
@@ -1166,14 +1191,14 @@ canvas:not(#gameCanvas) {
   gap: 12px;
   padding: 6px;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--color-dark-rgb), 0.2);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slider-container:hover {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(var(--color-dark-rgb), 0.3);
   transform: scale(1.02);
 }
 
@@ -1201,25 +1226,25 @@ canvas:not(#gameCanvas) {
   -webkit-appearance: none;
   width: 22px;
   height: 22px;
-  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 
-    0 0 0 3px rgba(76, 175, 80, 0.2),
-    0 4px 12px rgba(76, 175, 80, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 0 0 3px var(--color-primary-transparent-2),
+    0 4px 12px var(--color-primary-transparent-4),
+    inset 0 1px 0 rgba(var(--color-light-rgb), 0.2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
 .volume-slider::-webkit-slider-thumb:hover,
 .sensitivity-slider::-webkit-slider-thumb:hover {
-  background: linear-gradient(135deg, #66BB6A 0%, #81C784 100%);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, #81C784 100%);
   transform: scale(1.3);
   box-shadow: 
-    0 0 0 4px rgba(76, 175, 80, 0.3),
-    0 6px 20px rgba(76, 175, 80, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 0 0 4px var(--color-primary-transparent-3),
+    0 6px 20px rgba(var(--color-primary-rgb), 0.6),
+    inset 0 1px 0 rgba(var(--color-light-rgb), 0.3);
 }
 
 .volume-slider::-webkit-slider-thumb:active,
@@ -1228,21 +1253,21 @@ canvas:not(#gameCanvas) {
 }
 
 .slider-value {
-  color: #4CAF50;
+  color: var(--color-primary);
   font-size: 15px;
   font-weight: 600;
   min-width: 45px;
   text-align: center;
   padding: 4px 8px;
-  background: rgba(76, 175, 80, 0.1);
+  background: var(--color-primary-transparent-1);
   border-radius: 8px;
-  border: 1px solid rgba(76, 175, 80, 0.2);
+  border: 1px solid var(--color-primary-transparent-2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slider-value:hover {
-  background: rgba(76, 175, 80, 0.15);
-  border-color: rgba(76, 175, 80, 0.3);
+  background: var(--color-primary-transparent-8);
+  border-color: var(--color-primary-transparent-3);
   transform: scale(1.05);
 }
 
@@ -1251,10 +1276,10 @@ canvas:not(#gameCanvas) {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(102, 102, 102, 0.4);
+  background: rgba(var(--color-dark-rgb), 0.3);
+  border: 1px solid rgba(var(--color-gray-rgb), 0.4);
   border-radius: 16px;
-  color: rgba(204, 204, 204, 0.9);
+  color: rgba(var(--color-gray-rgb), 0.9);
   cursor: pointer;
   padding: 12px 20px;
   font-size: 15px;
@@ -1273,16 +1298,16 @@ canvas:not(#gameCanvas) {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, var(--color-primary-transparent-1), transparent);
   transition: left 0.5s ease;
 }
 
 .toggle-button:hover {
-  border-color: rgba(76, 175, 80, 0.6);
+  border-color: rgba(var(--color-primary-rgb), 0.6);
   color: #4CAF50;
-  background: rgba(76, 175, 80, 0.1);
+  background: var(--color-primary-transparent-1);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.2);
+  box-shadow: 0 8px 25px var(--color-primary-transparent-2);
 }
 
 .toggle-button:hover::before {
@@ -1290,13 +1315,13 @@ canvas:not(#gameCanvas) {
 }
 
 .toggle-button.active {
-  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
-  border-color: #4CAF50;
-  color: #000;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  border-color: var(--color-primary);
+  color: var(--color-dark);
   font-weight: 600;
   box-shadow: 
-    0 0 0 2px rgba(76, 175, 80, 0.3),
-    0 8px 25px rgba(76, 175, 80, 0.4);
+    0 0 0 2px var(--color-primary-transparent-3),
+    0 8px 25px var(--color-primary-transparent-4);
 }
 
 .toggle-button:active {
@@ -1309,9 +1334,9 @@ canvas:not(#gameCanvas) {
   gap: 8px;
   margin-bottom: 20px;
   padding: 4px;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--color-dark-rgb), 0.2);
   border-radius: 12px;
-  border: 1px solid rgba(76, 175, 80, 0.1);
+  border: 1px solid var(--color-primary-transparent-1);
 }
 
 .tab-button {
@@ -1324,7 +1349,7 @@ canvas:not(#gameCanvas) {
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(var(--color-light-rgb), 0.6);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -1340,13 +1365,13 @@ canvas:not(#gameCanvas) {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, var(--color-primary-transparent-1), transparent);
   transition: left 0.5s ease;
 }
 
 .tab-button:hover {
-  color: rgba(255, 255, 255, 0.8);
-  background: rgba(76, 175, 80, 0.1);
+  color: rgba(var(--color-light-rgb), 0.8);
+  background: var(--color-primary-transparent-1);
   transform: translateY(-1px);
 }
 
@@ -1355,16 +1380,16 @@ canvas:not(#gameCanvas) {
 }
 
 .tab-button.active {
-  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
-  color: #000;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  color: var(--color-dark);
   font-weight: 600;
   box-shadow: 
-    0 0 0 2px rgba(76, 175, 80, 0.3),
-    0 4px 12px rgba(76, 175, 80, 0.3);
+    0 0 0 2px var(--color-primary-transparent-3),
+    0 4px 12px var(--color-primary-transparent-3);
 }
 
 .tab-button.active:hover {
-  background: linear-gradient(135deg, #66BB6A 0%, #81C784 100%);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, #81C784 100%);
   transform: translateY(-1px);
 }
 
@@ -1403,10 +1428,10 @@ canvas:not(#gameCanvas) {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--color-dark-rgb), 0.2);
   border: 1px solid rgba(102, 102, 102, 0.3);
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--color-light-rgb), 0.9);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
@@ -1422,15 +1447,15 @@ canvas:not(#gameCanvas) {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, var(--color-primary-transparent-1), transparent);
   transition: left 0.5s ease;
 }
 
 .language-option:hover {
-  border-color: rgba(76, 175, 80, 0.5);
-  background: rgba(76, 175, 80, 0.1);
+  border-color: rgba(var(--color-primary-rgb), 0.5);
+  background: var(--color-primary-transparent-1);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.2);
+  box-shadow: 0 6px 20px var(--color-primary-transparent-2);
 }
 
 .language-option:hover::before {
@@ -1438,12 +1463,12 @@ canvas:not(#gameCanvas) {
 }
 
 .language-option.active {
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(102, 187, 106, 0.2) 100%);
-  border-color: #4CAF50;
+  background: linear-gradient(135deg, var(--color-primary-transparent-2) 0%, rgba(102, 187, 106, 0.2) 100%);
+  border-color: var(--color-primary);
   color: #4CAF50;
   box-shadow: 
-    0 0 0 2px rgba(76, 175, 80, 0.3),
-    0 6px 20px rgba(76, 175, 80, 0.2);
+    0 0 0 2px var(--color-primary-transparent-3),
+    0 6px 20px var(--color-primary-transparent-2);
 }
 
 .language-flag {
@@ -1453,7 +1478,7 @@ canvas:not(#gameCanvas) {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--color-light-rgb), 0.1);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
 }
@@ -1527,10 +1552,10 @@ canvas:not(#gameCanvas) {
 
 /* Username Input */
 .username-input {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(var(--color-dark-rgb), 0.4);
   border: 1px solid rgba(102, 102, 102, 0.4);
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--color-light-rgb), 0.9);
   padding: 12px 16px;
   font-size: 15px;
   width: 220px;
@@ -1542,28 +1567,28 @@ canvas:not(#gameCanvas) {
 }
 
 .username-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(var(--color-light-rgb), 0.5);
   transition: color 0.3s ease;
 }
 
 .username-input:hover {
-  border-color: rgba(76, 175, 80, 0.4);
-  background: rgba(0, 0, 0, 0.5);
+  border-color: var(--color-primary-transparent-4);
+  background: rgba(var(--color-dark-rgb), 0.5);
 }
 
 .username-input:focus {
   outline: none;
-  border-color: #4CAF50;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
+  border-color: var(--color-primary);
+  background: rgba(var(--color-dark-rgb), 0.6);
+  color: var(--color-light);
   box-shadow: 
-    0 0 0 2px rgba(76, 175, 80, 0.2),
-    0 8px 25px rgba(76, 175, 80, 0.15);
+    0 0 0 2px var(--color-primary-transparent-2),
+    0 8px 25px var(--color-primary-transparent-8);
   transform: translateY(-2px);
 }
 
 .username-input:focus::placeholder {
-  color: rgba(76, 175, 80, 0.6);
+  color: rgba(var(--color-primary-rgb), 0.6);
 }
 
 /* Profile Modal Styles */
@@ -1571,7 +1596,7 @@ canvas:not(#gameCanvas) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   padding: 6px;
 }
 
@@ -1582,36 +1607,36 @@ canvas:not(#gameCanvas) {
 }
 
 .profile-avatar {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid rgba(76, 175, 80, 0.3);
-  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.2);
+  border: 3px solid var(--color-primary-transparent-3);
+  box-shadow: 0 4px 20px var(--color-primary-transparent-2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .profile-avatar:hover {
   transform: scale(1.05);
-  border-color: #4CAF50;
-  box-shadow: 0 6px 25px rgba(76, 175, 80, 0.3);
+  border-color: var(--color-primary);
+  box-shadow: 0 6px 25px var(--color-primary-transparent-3);
 }
 
 /* How to Play Modal Styles */
 .how-to-play-modal {
-  background: rgba(0, 0, 0, 0.95);
-  border: 3px solid #4CAF50;
+  background: rgba(var(--color-dark-rgb), 0.95);
+  border: 3px solid var(--color-primary);
   border-radius: 20px;
   padding: 0;
   color: #fff;
   max-width: 500px;
-  width: 90vw;
+  width: 100vw;
   max-height: 40vh;
   overflow-y: auto;
   position: relative;
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  box-shadow: 0 20px 60px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 20px 60px var(--color-primary-transparent-3);
 }
 
 .how-to-play-modal .modal-header {
@@ -1620,7 +1645,7 @@ canvas:not(#gameCanvas) {
   align-items: center;
   padding: 12px 18px;
   border-bottom: 0;
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(102, 187, 106, 0.1) 100%);
+  background: linear-gradient(135deg, var(--color-primary-transparent-1) 0%, rgba(102, 187, 106, 0.1) 100%);
 }
 
 .how-to-play-modal .modal-header h2 {
@@ -1628,7 +1653,7 @@ canvas:not(#gameCanvas) {
   font-size: 18px;
   font-weight: bold;
   color: #4CAF50;
-  text-shadow: 0 2px 10px rgba(76, 175, 80, 0.3);
+  text-shadow: 0 2px 10px var(--color-primary-transparent-3);
 }
 
 .how-to-play-modal .modal-content {
@@ -1643,19 +1668,20 @@ canvas:not(#gameCanvas) {
 .rule-section {
   display: flex;
   flex-direction: column;
+  text-align: left;
   gap: 8px;
   padding: 12px;
-  background: rgba(76, 175, 80, 0.05);
-  border: 1px solid rgba(76, 175, 80, 0.2);
+  background: var(--color-primary-transparent-7);
+  border: 1px solid var(--color-primary-transparent-2);
   border-radius: 10px;
   transition: all 0.3s ease;
 }
 
 .rule-section:hover {
-  background: rgba(76, 175, 80, 0.1);
-  border-color: rgba(76, 175, 80, 0.4);
+  background: var(--color-primary-transparent-1);
+  border-color: var(--color-primary-transparent-4);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.15);
+  box-shadow: 0 8px 25px var(--color-primary-transparent-8);
 }
 
 .rule-section h3 {
@@ -1674,7 +1700,7 @@ canvas:not(#gameCanvas) {
   justify-content: center;
   width: 28px;
   height: 28px;
-  background: rgba(76, 175, 80, 0.2);
+  background: var(--color-primary-transparent-2);
   border-radius: 50%;
   color: #4CAF50;
 }
@@ -1688,7 +1714,7 @@ canvas:not(#gameCanvas) {
 .rule-section li {
   position: relative;
   padding: 3px 0;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--color-light-rgb), 0.9);
   line-height: 1.3;
   font-size: 13px;
 }
@@ -1703,34 +1729,34 @@ canvas:not(#gameCanvas) {
 
 .how-to-play-modal .modal-footer {
   padding: 12px 18px;
-  border-top: 2px solid rgba(76, 175, 80, 0.3);
+  border-top: 2px solid var(--color-primary-transparent-3);
   display: flex;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, rgba(102, 187, 106, 0.05) 100%);
+  background: linear-gradient(135deg, var(--color-primary-transparent-7) 0%, rgba(102, 187, 106, 0.05) 100%);
 }
 
 .close-modal-btn {
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-  border: 2px solid #2e7d32;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border: 2px solid var(--color-primary-dark);
   border-radius: 15px;
-  color: white;
+  color: var(--color-light);
   font-size: 16px;
   font-weight: bold;
   padding: 12px 30px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 4px 15px var(--color-primary-transparent-3);
 }
 
 .close-modal-btn:hover {
-  background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary-darker) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 6px 20px var(--color-primary-transparent-4);
 }
 
 .close-modal-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 2px 10px var(--color-primary-transparent-3);
 }
 
 /* How to Play Link Styles */
@@ -1740,9 +1766,9 @@ canvas:not(#gameCanvas) {
   font-size: 16px;
   font-weight: 500;
   padding: 8px 16px;
-  border: 2px solid rgba(76, 175, 80, 0.3);
+  border: 2px solid var(--color-primary-transparent-3);
   border-radius: 12px;
-  background: rgba(76, 175, 80, 0.1);
+  background: var(--color-primary-transparent-1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   display: inline-flex;
@@ -1753,35 +1779,35 @@ canvas:not(#gameCanvas) {
 }
 
 .how-to-play-link:hover {
-  background: rgba(76, 175, 80, 0.2);
-  border-color: #4CAF50;
+  background: var(--color-primary-transparent-2);
+  border-color: var(--color-primary);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.2);
+  box-shadow: 0 6px 20px var(--color-primary-transparent-2);
   text-decoration: none;
-  color: #66BB6A;
+  color: var(--color-primary-light);
 }
 
 .how-to-play-link:active {
   transform: translateY(0);
-  box-shadow: 0 2px 10px rgba(76, 175, 80, 0.2);
+  box-shadow: 0 2px 10px var(--color-primary-transparent-2);
 }
 
 .profile-avatar-placeholder {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: rgba(76, 175, 80, 0.1);
-  border: 3px solid rgba(76, 175, 80, 0.3);
+  background: var(--color-primary-transparent-1);
+  border: 3px solid var(--color-primary-transparent-3);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(76, 175, 80, 0.8);
+  color: rgba(var(--color-primary-rgb), 0.8);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .profile-avatar-placeholder:hover {
   background: rgba(76, 175, 80, 0.2);
-  border-color: #4CAF50;
+  border-color: var(--color-primary);
   color: #4CAF50;
   transform: scale(1.05);
 }
@@ -1803,14 +1829,14 @@ canvas:not(#gameCanvas) {
 
 .profile-status {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(var(--color-light-rgb), 0.7);
   font-weight: 400;
   padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(var(--color-dark-rgb), 0.3);
   border-radius: 20px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(var(--color-light-rgb), 0.1);
 }
 
 /* Profile Statistics Styles */
@@ -1840,8 +1866,8 @@ canvas:not(#gameCanvas) {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(76, 175, 80, 0.2);
+  background: rgba(var(--color-dark-rgb), 0.3);
+  border: 1px solid var(--color-primary-transparent-2);
   border-radius: 12px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -1849,10 +1875,10 @@ canvas:not(#gameCanvas) {
 }
 
 .stat-item:hover {
-  background: rgba(76, 175, 80, 0.1);
-  border-color: rgba(76, 175, 80, 0.4);
+  background: var(--color-primary-transparent-1);
+  border-color: var(--color-primary-transparent-4);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+  box-shadow: 0 4px 12px var(--color-primary-transparent-2);
 }
 
 .stat-icon {
@@ -1868,8 +1894,8 @@ canvas:not(#gameCanvas) {
 }
 
 .stat-item:hover .stat-icon {
-  background: rgba(76, 175, 80, 0.3);
-  color: #66BB6A;
+  background: var(--color-primary-transparent-3);
+  color: var(--color-primary-light);
   transform: scale(1.1);
 }
 
@@ -1882,7 +1908,7 @@ canvas:not(#gameCanvas) {
 
 .stat-label {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(var(--color-light-rgb), 0.7);
   font-weight: 400;
   letter-spacing: 0.3px;
 }
