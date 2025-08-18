@@ -26,6 +26,7 @@ interface GameStore extends GameState {
 
   // Leaderboard
   leaderboard: LeaderboardPlayer[];
+  fullLeaderboard: LeaderboardPlayer[];
   currentPlayerId: string | null;
 
   // Persistent stats
@@ -50,6 +51,7 @@ interface GameStore extends GameState {
   updateControls: (controls: Partial<Controls>) => void;
   updateSnakeAngle: (angle: number) => void;
   updateLeaderboard: (leaderboard: LeaderboardPlayer[]) => void;
+  updateFullLeaderboard: (fullLeaderboard: LeaderboardPlayer[]) => void;
   setCurrentPlayerId: (playerId: string) => void;
   updateHighestScore: (score: number) => void;
   getUserHighestScore: (userId: string) => number;
@@ -85,6 +87,7 @@ const initialState = {
   deadPoints: [],
 
   leaderboard: [],
+  fullLeaderboard: [],
   currentPlayerId: null,
   highestScore: 0,
   userScores: {},
@@ -156,6 +159,8 @@ export const useGameStore = create<GameStore>()(
         }),
 
       updateLeaderboard: (leaderboard) => set({ leaderboard }),
+
+      updateFullLeaderboard: (fullLeaderboard) => set({ fullLeaderboard }),
 
       setCurrentPlayerId: (playerId) => set({ currentPlayerId: playerId }),
 

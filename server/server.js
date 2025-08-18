@@ -8,7 +8,78 @@ const io = socketIo(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
+  },
+  transports: ['websocket', 'polling'],
+  allowEIO3: true
+});
+
+// Token validation utility
+function validateToken(token) {
+  if (!token) {
+    return { valid: false, reason: 'No token provided' };
   }
+  
+  // Basic token format validation
+  if (typeof token !== 'string' || token.length < 10) {
+    return { valid: false, reason: 'Invalid token format' };
+  }
+  
+  // For now, we'll accept any properly formatted token
+  // In production, you would validate against your auth service
+  return { valid: true, token };
+}
+
+// Socket authentication middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  const userData = socket.handshake.auth.userData;
+  
+  console.log('🔐 Socket authentication attempt:', {
+    socketId: socket.id,
+    hasToken: !!token,
+    hasUserData: !!userData,
+    isLoggedIn: userData?.isLoggedIn
+  });
+  
+  if (token) {
+    const validation = validateToken(token);
+    if (validation.valid) {
+      // Store authenticated user info in socket data
+      socket.data.isAuthenticated = true;
+      socket.data.token = token;
+      socket.data.userData = userData;
+      socket.data.openId = userData?.openId;
+      socket.data.userInfo = userData?.userInfo;
+      console.log('✅ Socket authenticated successfully:', socket.id);
+      
+      // Emit authentication success after connection
+      socket.on('connect', () => {
+        socket.emit('auth_success', {
+          authenticated: true,
+          openId: userData?.openId,
+          userInfo: userData?.userInfo
+        });
+      });
+    } else {
+      console.log('❌ Token validation failed:', validation.reason);
+      // Allow connection but mark as unauthenticated
+      socket.data.isAuthenticated = false;
+      
+      // Emit authentication error after connection
+      socket.on('connect', () => {
+        socket.emit('auth_error', {
+          error: 'Token validation failed',
+          reason: validation.reason
+        });
+      });
+    }
+  } else {
+    // Allow guest connections
+    socket.data.isAuthenticated = false;
+    console.log('👤 Guest connection allowed:', socket.id);
+  }
+  
+  next(); // Always allow connection, but track auth status
 });
 
 // Bot configuration
@@ -161,8 +232,10 @@ function handleBotDeath(bot) {
   
   // Update leaderboard after bot removal
   const leaderboard = generateLeaderboard();
+  const fullLeaderboard = generateFullLeaderboard();
   io.emit('leaderboardUpdate', {
-    leaderboard: leaderboard
+    leaderboard: leaderboard,
+    fullLeaderboard: fullLeaderboard
   });
 }
 
@@ -281,8 +354,10 @@ function updateBots() {
         
         // Broadcast updated leaderboard
         const leaderboard = generateLeaderboard();
+        const fullLeaderboard = generateFullLeaderboard();
         io.emit('leaderboardUpdate', {
-          leaderboard: leaderboard
+          leaderboard: leaderboard,
+          fullLeaderboard: fullLeaderboard
         });
         
         break; // Only eat one food per update cycle
@@ -318,8 +393,10 @@ function updateBots() {
         
         // Broadcast updated leaderboard
         const leaderboard = generateLeaderboard();
+        const fullLeaderboard = generateFullLeaderboard();
         io.emit('leaderboardUpdate', {
-          leaderboard: leaderboard
+          leaderboard: leaderboard,
+          fullLeaderboard: fullLeaderboard
         });
         
         break; // Only eat one dead point per update cycle
@@ -345,9 +422,27 @@ io.on('connection', (socket) => {
   socket.on('gameInit', (userData) => {
     console.log('Game init with user data:', userData);
     
+    // Use authenticated user data from socket.data if available
+    const isAuthenticated = socket.data.isAuthenticated;
+    const authenticatedUserData = socket.data.userData;
+    const authenticatedOpenId = socket.data.openId;
+    const authenticatedUserInfo = socket.data.userInfo;
+    
+    console.log('🎮 Game initialization:', {
+      socketId: socket.id,
+      isAuthenticated,
+      hasAuthData: !!authenticatedUserData,
+      fallbackData: !!userData
+    });
+    
+    // Prioritize authenticated data, fallback to provided userData
+    const finalUserData = isAuthenticated ? authenticatedUserData : userData;
+    const finalOpenId = isAuthenticated ? authenticatedOpenId : userData?.openId;
+    const finalUserInfo = isAuthenticated ? authenticatedUserInfo : userData?.userInfo;
+    
     // Extract real user ID and name
-    const realUserId = getRealUserId(userData?.openId);
-    const userName = userData?.userInfo?.name || userData?.userInfo?.firstName;
+    const realUserId = getRealUserId(finalOpenId);
+    const userName = finalUserInfo?.name || finalUserInfo?.firstName;
     const playerId = realUserId || generatePlayerId();
     
     const newPlayer = {
@@ -398,8 +493,10 @@ io.on('connection', (socket) => {
 
     // Send initial leaderboard to new player
     const initialLeaderboard = generateLeaderboard();
+    const initialFullLeaderboard = generateFullLeaderboard();
     socket.emit('leaderboardUpdate', {
-      leaderboard: initialLeaderboard
+      leaderboard: initialLeaderboard,
+      fullLeaderboard: initialFullLeaderboard
     });
 
     // Broadcast new player to all other players
@@ -407,8 +504,10 @@ io.on('connection', (socket) => {
     
     // Broadcast updated leaderboard to all players
     const updatedLeaderboard = generateLeaderboard();
+    const updatedFullLeaderboard = generateFullLeaderboard();
     io.emit('leaderboardUpdate', {
-      leaderboard: updatedLeaderboard
+      leaderboard: updatedLeaderboard,
+      fullLeaderboard: updatedFullLeaderboard
     });
   });
 
@@ -462,8 +561,10 @@ io.on('connection', (socket) => {
       
       // Broadcast updated leaderboard
       const leaderboard = generateLeaderboard();
+      const fullLeaderboard = generateFullLeaderboard();
       io.emit('leaderboardUpdate', {
-        leaderboard: leaderboard
+        leaderboard: leaderboard,
+        fullLeaderboard: fullLeaderboard
       });
     }
   });
@@ -502,8 +603,10 @@ io.on('connection', (socket) => {
       
       // Broadcast updated leaderboard
       const leaderboard = generateLeaderboard();
+      const fullLeaderboard = generateFullLeaderboard();
       io.emit('leaderboardUpdate', {
-        leaderboard: leaderboard
+        leaderboard: leaderboard,
+        fullLeaderboard: fullLeaderboard
       });
     }
   });
@@ -537,8 +640,10 @@ io.on('connection', (socket) => {
         
         // Update leaderboard after bot removal
         const leaderboard = generateLeaderboard();
+        const fullLeaderboard = generateFullLeaderboard();
         io.emit('leaderboardUpdate', {
-          leaderboard: leaderboard
+          leaderboard: leaderboard,
+          fullLeaderboard: fullLeaderboard
         });
       } else {
         // Respawn human player after 3 seconds
@@ -612,8 +717,10 @@ io.on('connection', (socket) => {
       
       // Broadcast updated leaderboard after player leaves
       const leaderboard = generateLeaderboard();
+      const fullLeaderboard = generateFullLeaderboard();
       io.emit('leaderboardUpdate', {
-        leaderboard: leaderboard
+        leaderboard: leaderboard,
+        fullLeaderboard: fullLeaderboard
       });
       
       console.log('Player', data.playerId, 'successfully left the room');
@@ -640,8 +747,10 @@ io.on('connection', (socket) => {
       
       // Broadcast updated leaderboard after player leaves
       const leaderboard = generateLeaderboard();
+      const fullLeaderboard = generateFullLeaderboard();
       io.emit('leaderboardUpdate', {
-        leaderboard: leaderboard
+        leaderboard: leaderboard,
+        fullLeaderboard: fullLeaderboard
       });
     }
   });
@@ -690,12 +799,33 @@ setInterval(() => {
 
 // Generate leaderboard data
 function generateLeaderboard() {
-  const alivePlayers = Array.from(gameState.players.values())
+  // Get all alive players sorted by score
+  const allAlivePlayers = Array.from(gameState.players.values())
     .filter(player => player.alive)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 10);
+    .sort((a, b) => b.score - a.score);
 
-  return alivePlayers.map((player, index) => ({
+  // Assign correct ranks to ALL players
+  const playersWithRanks = allAlivePlayers.map((player, index) => ({
+    id: player.id,
+    name: player.userName || (player.isBot ? `Guest ${player.id.replace('bot-', '')}` : `Guest ${player.id}`),
+    score: player.score,
+    rank: index + 1, // This is the actual rank in the full leaderboard
+    isBot: player.isBot || false,
+    realUserId: player.realUserId || null
+  }));
+
+  // Return top 10 players for the leaderboard display
+  // The client will handle showing current player if they're not in top 10
+  return playersWithRanks.slice(0, 10);
+}
+
+// Generate full leaderboard data (for finding current player's rank)
+function generateFullLeaderboard() {
+  const allAlivePlayers = Array.from(gameState.players.values())
+    .filter(player => player.alive)
+    .sort((a, b) => b.score - a.score);
+
+  return allAlivePlayers.map((player, index) => ({
     id: player.id,
     name: player.userName || (player.isBot ? `Guest ${player.id.replace('bot-', '')}` : `Guest ${player.id}`),
     score: player.score,
@@ -722,8 +852,10 @@ setInterval(() => {
 // Send leaderboard updates more frequently
 setInterval(() => {
   const leaderboard = generateLeaderboard();
+  const fullLeaderboard = generateFullLeaderboard();
   io.emit('leaderboardUpdate', {
-    leaderboard: leaderboard
+    leaderboard: leaderboard,
+    fullLeaderboard: fullLeaderboard
   });
 }, 1000);
 

@@ -4,25 +4,30 @@ import type { LeaderboardPlayer } from '../../stores/gameStore';
 
 export const Leaderboard: React.FC = React.memo(() => {
   const leaderboard = useGameStore((state) => state.leaderboard);
+  const fullLeaderboard = useGameStore((state) => state.fullLeaderboard);
   const currentPlayerId = useGameStore((state) => state.currentPlayerId);
   const isPlaying = useGameStore((state) => state.isPlaying);
 
   
   // Show top 10 players, but always include current player if not in top 10
   const getDisplayedPlayers = (): LeaderboardPlayer[] => {
-    const topPlayers = leaderboard.slice(0, 10);
-    const currentPlayer = leaderboard.find(player => player.id === currentPlayerId);
+    const topPlayers = leaderboard.slice(0, 9);
+    const currentPlayerInTop = topPlayers.find(p => p.id === currentPlayerId);
     
-    if (currentPlayer && !topPlayers.find(p => p.id === currentPlayerId)) {
-      // Add current player at the end if not in top 10
-      return [...topPlayers, currentPlayer];
+    if (!currentPlayerInTop && currentPlayerId) {
+      // Find current player in full leaderboard to get their actual rank
+      const currentPlayerInFull = fullLeaderboard.find(player => player.id === currentPlayerId);
+      if (currentPlayerInFull) {
+        // Add current player at the end with their actual rank from full leaderboard
+        return [...topPlayers, currentPlayerInFull];
+      }
     }
     
     return topPlayers;
   };
   
   const displayedPlayers = getDisplayedPlayers();
-  const totalPlayers = leaderboard.length;
+  const totalPlayers = fullLeaderboard.length > 0 ? fullLeaderboard.length : leaderboard.length;
   
   if (displayedPlayers.length === 0 || !isPlaying) {
     return null;

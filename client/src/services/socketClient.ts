@@ -37,14 +37,40 @@ class SocketClient {
 
   connect(serverUrl: string = import.meta.env.VITE_SOCKET_SERVER_URL): Promise<void> {
     return new Promise((resolve, reject) => {
+      if (this.socket?.connected) {
+        resolve();
+        return;
+      }
+
+      // Get current auth state for socket handshake
+      const authState = useAuthStore.getState();
+      const { token, openId, userInfo, isLoggedIn } = authState;
+      
+      console.log('🔌 Connecting to socket with auth:', {
+        hasToken: !!token,
+        isLoggedIn,
+        hasUserInfo: !!userInfo,
+        serverUrl: serverUrl
+      });
+
       try {
         this.socket = io(serverUrl, {
+          auth: {
+            token: token || null,
+            userData: {
+              openId,
+              userInfo,
+              isLoggedIn
+            }
+          },
           transports: ['websocket', 'polling'],
           timeout: 5000,
+          upgrade: false,
+          rememberUpgrade: false
         });
 
         this.socket.on('connect', () => {
-          console.log('Connected to server');
+          console.log('✅ Connected to server with socket ID:', this.socket?.id);
           this.isConnected = true;
           this.setupEventListeners();
           this.initializeGame();
@@ -52,14 +78,26 @@ class SocketClient {
         });
 
         this.socket.on('connect_error', (error) => {
-          console.error('Connection error:', error);
+          console.error('❌ Connection error:', error);
           this.isConnected = false;
           reject(error);
         });
 
-        this.socket.on('disconnect', () => {
-          console.log('Disconnected from server');
+        this.socket.on('disconnect', (reason) => {
+          console.log('🔌 Disconnected from server:', reason);
           this.isConnected = false;
+        });
+
+        // Handle authentication errors
+        this.socket.on('auth_error', (error) => {
+          console.error('🔐 Authentication error:', error);
+          // Could trigger a re-login flow here if needed
+          // For now, we'll continue as guest user
+        });
+
+        // Handle authentication success
+        this.socket.on('auth_success', (data) => {
+          console.log('🔐 Authentication successful:', data);
         });
 
       } catch (error) {
@@ -294,10 +332,28 @@ class SocketClient {
         ...player,
         isCurrentPlayer: player.id === store.currentPlayerId
       }));
-      store.updateLeaderboard(leaderboard);
       
-      // Update current player's rank from leaderboard
-      const currentPlayer = leaderboard.find((p: any) => p.isCurrentPlayer);
+      // Check if current player is in the top 10 leaderboard
+      let currentPlayer = leaderboard.find((p: any) => p.isCurrentPlayer);
+      
+      // If current player is not in top 10, find them in the full leaderboard
+      if (!currentPlayer && data.fullLeaderboard) {
+        const fullLeaderboardPlayer = data.fullLeaderboard.find((player: any) => player.id === store.currentPlayerId);
+        if (fullLeaderboardPlayer) {
+          currentPlayer = {
+            ...fullLeaderboardPlayer,
+            isCurrentPlayer: true
+          };
+        }
+      }
+      
+      // Store both leaderboards for the Leaderboard component to use
+      store.updateLeaderboard(leaderboard);
+      if (data.fullLeaderboard) {
+        store.updateFullLeaderboard(data.fullLeaderboard);
+      }
+      
+      // Update current player's rank and score
       if (currentPlayer) {
         // console.log('📊 leaderboardUpdate - current player score:', currentPlayer.score, 'rank:', currentPlayer.rank);
         store.setGameState({ 
