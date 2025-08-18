@@ -1,65 +1,27 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Trophy } from "lucide-react";
 import { useSettingsStore } from "../../stores/settingsStore";
-import { useGameStore } from "../../stores/gameStore";
 import { useAuthStore } from "../../stores/authStore";
-
-// Player interface for userScores-based leaderboard
-interface UserScorePlayer {
-  id: string;
-  name: string;
-  score: number;
-  rank: number;
-  isCurrentPlayer: boolean;
-}
 
 export const TopPlayersModal: React.FC = () => {
   const { t } = useTranslation("game");
-  const isTopPlayersModalOpen = useSettingsStore((state) => state.isTopPlayersModalOpen);
-  const closeTopPlayersModal = useSettingsStore((state) => state.closeTopPlayersModal);
-  
-  const userScores = useGameStore((state) => state.userScores);
-  const currentPlayerId = useGameStore((state) => state.currentPlayerId);
-  const getRealUserId = useGameStore((state) => state.getRealUserId);
-  const userInfo = useAuthStore((state) => state.userInfo);
+  const isTopPlayersModalOpen = useSettingsStore(
+    (state) => state.isTopPlayersModalOpen
+  );
+  const closeTopPlayersModal = useSettingsStore(
+    (state) => state.closeTopPlayersModal
+  );
 
-  // Convert userScores object to sorted leaderboard array
-  const getUserScoresLeaderboard = (): UserScorePlayer[] => {
-    const players: UserScorePlayer[] = [];
-    const realUserId = getRealUserId();
-    
-    // Convert userScores object to array
-    Object.entries(userScores).forEach(([userId, score]) => {
-      if (score > 0) { // Only include players with scores > 0
-        let playerName = 'Anonymous';
-        
-        // Get player name - prioritize current user's name from auth
-        if (userId === realUserId && userInfo?.firstName) {
-          playerName = userInfo.firstName;
-        } else {
-          // For other users, use a generic name or the userId
-          playerName = `Player ${userId.slice(-4)}`;
-        }
-        
-        players.push({
-          id: userId,
-          name: playerName,
-          score: score,
-          rank: 0, // Will be set after sorting
-          isCurrentPlayer: userId === currentPlayerId || userId === realUserId
-        });
-      }
-    });
-    
-    // Sort by score descending and assign ranks
-    players.sort((a, b) => b.score - a.score);
-    players.forEach((player, index) => {
-      player.rank = index + 1;
-    });
-    
-    return players;
-  };
+  const rank = useAuthStore((state) => state.rank);
+  const isLoadingRank = useAuthStore((state) => state.isLoadingRank);
+  const getRank = useAuthStore((state) => state.getRank);
+
+  useEffect(() => {
+    if (isTopPlayersModalOpen) {
+      getRank();
+    }
+  }, [isTopPlayersModalOpen, getRank]);
 
   // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -67,29 +29,6 @@ export const TopPlayersModal: React.FC = () => {
       closeTopPlayersModal();
     }
   };
-
-  // Get top 5 players for scrollable list
-  const getTopPlayers = (): UserScorePlayer[] => {
-    const allPlayers = getUserScoresLeaderboard();
-    const currentPlayer = allPlayers.find(player => player.isCurrentPlayer);
-    
-    // If current player is in top 5, show top 5
-    if (currentPlayer && currentPlayer.rank <= 5) {
-      return allPlayers.slice(0, 5);
-    }
-    
-    // Otherwise show top 5 excluding current player
-    return allPlayers.filter(player => !player.isCurrentPlayer).slice(0, 5);
-  };
-
-  // Get current player
-  const getCurrentPlayer = (): UserScorePlayer | null => {
-    const allPlayers = getUserScoresLeaderboard();
-    return allPlayers.find(player => player.isCurrentPlayer) || null;
-  };
-
-  const topPlayers = getTopPlayers();
-  const currentPlayer = getCurrentPlayer();
 
   if (!isTopPlayersModalOpen) return null;
 
@@ -99,7 +38,7 @@ export const TopPlayersModal: React.FC = () => {
         {/* Modal Header */}
         <div className="modal-header">
           <h2 className="modal-title">
-            <Trophy size={20} style={{ marginRight: '8px' }} />
+            <Trophy size={20} style={{ marginRight: "8px" }} />
             {t("leaderboard.topPlayers", "Top Players")}
           </h2>
           <button
@@ -114,44 +53,70 @@ export const TopPlayersModal: React.FC = () => {
         {/* Modal Content */}
         <div className="modal-content">
           <div className="top-players-content">
-            {/* Top Players List */}
-            <div className="top-players-list">
-              <div className="players-header">
-                <span className="rank-header">#</span>
-                <span className="name-header">Player</span>
-                <span className="score-header">Score</span>
+            {isLoadingRank ? (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
               </div>
-              
-              <div className="players-scroll-container">
-                {topPlayers.map((player) => (
-                  <div 
-                    key={player.id} 
-                    className={`player-row ${player.id === currentPlayerId ? 'current-player' : ''}`}
-                  >
-                    <span className="player-rank">#{player.rank}</span>
-                    <span className="player-name">
-                      {player.name}
-                      {player.id === currentPlayerId && (
-                        <span className="you-indicator"> ({t("leaderboard.you", "You")})</span>
-                      )}
-                    </span>
-                    <span className="player-score">{Math.round(player.score)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ) : (
+              <div className="leaderboard-container">
+                {/* Table Header */}
+                <div className="leaderboard-header">
+                  <div className="player-rank">#</div>
+                  <div className="player-name">Name</div>
+                  <div className="player-score">Score</div>
+                </div>
 
-            {/* Current Player (Fixed at Bottom) */}
-            {currentPlayer && currentPlayer.rank > 5 && (
-              <div className="current-player-section">
-                <div className="divider">...</div>
-                <div className="player-row current-player">
-                  <span className="player-rank">#{currentPlayer.rank}</span>
-                  <span className="player-name">
-                    {currentPlayer.name}
-                    <span className="you-indicator"> ({t("leaderboard.you", "You")})</span>
-                  </span>
-                  <span className="player-score">{Math.round(currentPlayer.score)}</span>
+                {/* Table Body */}
+                <div className="leaderboard-body">
+                  {rank?.topPlayers?.map((player, index) => {
+                    const isCurrentUser =
+                      rank?.currentUserRank?.id === player.id;
+                    return (
+                      <div
+                        key={player.id}
+                        className={`leaderboard-item ${
+                          isCurrentUser ? "current-player" : ""
+                        }`}
+                      >
+                        <div className="player-rank">{index + 1}</div>
+                        <div className="player-name" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          {player.name}
+                          <img
+                            style={{
+                              width: 24,
+                              height: 24,
+                            }}
+                            src={rank?.currentUserRank?.avatarUrl}
+                            alt={rank?.currentUserRank?.name}
+                          />
+                        </div>
+                        <div className="player-score">
+                          {player.score.toLocaleString()}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Current User Rank (if not in top players) */}
+                  {rank?.currentUserRank &&
+                    !rank.topPlayers.some(
+                      (player) => player.id === rank.currentUserRank?.id
+                    ) && (
+                      <>
+                        <div className="leaderboard-separator">...</div>
+                        <div className="leaderboard-item current-player">
+                          <div className="player-rank">
+                            {rank.currentUserRank.rank}
+                          </div>
+                          <div className="player-name">
+                            {rank.currentUserRank.name}
+                          </div>
+                          <div className="player-score">
+                            {rank.currentUserRank.score.toLocaleString()}
+                          </div>
+                        </div>
+                      </>
+                    )}
                 </div>
               </div>
             )}

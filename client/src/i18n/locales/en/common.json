@@ -52,5 +52,16 @@
     "success": "Success",
     "warning": "Warning",
     "info": "Information"
+  },
+  "permission": {
+    "title": "Permission Required",
+    "description": "We need access to your user information to provide a personalized gaming experience.",
+    "explanation": "This allows us to save your progress, display your profile, and connect you with friends.",
+    "retry": "Grant Permission",
+    "retrying": "Requesting...",
+    "benefits": "Benefits of granting permission:",
+    "benefit1": "Save your game progress",
+    "benefit2": "Personalized profile",
+    "benefit3": "Connect with friends"
   }
 }

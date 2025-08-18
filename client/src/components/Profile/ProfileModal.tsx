@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { X, User, Trophy, Target } from "lucide-react";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { useAuthStore } from "../../stores/authStore";
-import { useGameStore } from "../../stores/gameStore";
 
 export const ProfileModal: React.FC = () => {
   const { t } = useTranslation("common");
@@ -14,21 +13,12 @@ export const ProfileModal: React.FC = () => {
     (state) => state.closeProfileModal
   );
   const userInfo = useAuthStore((state) => state.userInfo);
-  const highestScore = useGameStore((state) => state.highestScore);
-  const leaderboard = useGameStore((state) => state.leaderboard);
-  const currentPlayerId = useGameStore((state) => state.currentPlayerId);
-
-  // Get current user's rank from leaderboard
-  const getCurrentUserRank = () => {
-    if (!currentPlayerId) return null;
-    const currentPlayer = leaderboard.find(
-      (player) =>
-        player.id === currentPlayerId || player.realUserId === currentPlayerId
-    );
-    return currentPlayer?.rank || null;
-  };
-
-  const currentRank = getCurrentUserRank();
+  const scores = useAuthStore((state) => state.scores);
+  const rank = useAuthStore((state) => state.rank);
+  const isLoadingScores = useAuthStore((state) => state.isLoadingScores);
+  const isLoadingRank = useAuthStore((state) => state.isLoadingRank);
+  const getScores = useAuthStore((state) => state.getScores);
+  const getRank = useAuthStore((state) => state.getRank);
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -38,10 +28,10 @@ export const ProfileModal: React.FC = () => {
 
   useEffect(() => {
     if (isProfileModalOpen) {
-      // getRank();
-      // authService.updateScore(110);
+      getScores();
+      getRank();
     }
-  }, [isProfileModalOpen]);
+  }, [isProfileModalOpen, getScores, getRank]);
 
   if (!isProfileModalOpen) return null;
 
@@ -94,7 +84,9 @@ export const ProfileModal: React.FC = () => {
                   </div>
                   <div className="stat-content">
                     <div className="stat-label">{t("profile.bestScore")}</div>
-                    <div className="stat-value">{highestScore}</div>
+                    <div className="stat-value">
+                      {isLoadingScores ? "Loading..." : (scores?.score || 0)}
+                    </div>
                   </div>
                 </div>
 
@@ -105,7 +97,9 @@ export const ProfileModal: React.FC = () => {
                   <div className="stat-content">
                     <div className="stat-label">{t("profile.rank")}</div>
                     <div className="stat-value">
-                      {t("profile.currentRank")} {currentRank}
+                      {isLoadingRank ? "Loading..." : 
+                        (rank?.currentUserRank?.rank ? `${t("profile.currentRank")} ${rank.currentUserRank.rank}` : "N/A")
+                      }
                     </div>
                   </div>
                 </div>

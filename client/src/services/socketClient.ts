@@ -135,10 +135,7 @@ class SocketClient {
       
       const store = useGameStore.getState();
       
-      // Initialize user score tracking with auth integration
-      store.initializeUserScore();
-      
-      // Set current player ID (may be overridden by initializeUserScore if user is authenticated)
+      // Set current player ID
       store.setCurrentPlayerId(data.playerId);
       
       // Convert server players to client snakes
@@ -232,8 +229,6 @@ class SocketClient {
         
         console.log('🎯 Current player scoreUpdate - before:', store.score, 'after:', data.score);
         store.setGameState({ score: data.score });
-        // Update user-specific score using auth-aware method
-        store.updateCurrentUserScore(data.score);
         console.log('🎯 Score updated in store:', store.score);
       }
     });
@@ -249,8 +244,6 @@ class SocketClient {
         const finalScore = currentPlayer ? currentPlayer.score : store.score;
         
         console.log('💀 Current player died - store score:', store.score, 'leaderboard score:', currentPlayer?.score, 'final score:', finalScore);
-        // Current player died - update user-specific score before ending game
-        store.updateCurrentUserScore(finalScore);
         
         // Find current player's rank from leaderboard
         const currentRank = store.leaderboard.find(p => p.isCurrentPlayer)?.rank || store.rank;
@@ -360,8 +353,6 @@ class SocketClient {
           rank: currentPlayer.rank,
           score: currentPlayer.score
         });
-        // Update user-specific score using auth-aware method
-        store.updateCurrentUserScore(currentPlayer.score);
         // console.log('📊 Updated store score from leaderboard:', store.score);
       }
     });

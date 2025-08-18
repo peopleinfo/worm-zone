@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { useGameStore } from "../../stores/gameStore";
+import { useAuthStore } from "../../stores/authStore";
 import { socketClient } from "../../services/socketClient";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { HelpCircle } from "lucide-react";
@@ -8,8 +8,12 @@ import { HelpCircle } from "lucide-react";
 const MIN_PLAYERS_FOR_BATTLE = 10;
 
 export const ToBattleButton = () => {
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
+  // Use centralized connection state from authStore
+  const isConnecting = useAuthStore((state) => state.isConnecting);
+  const connectionError = useAuthStore((state) => state.connectionError);
+  const setConnecting = useAuthStore((state) => state.setConnecting);
+  const setConnectionError = useAuthStore((state) => state.setConnectionError);
+  const clearConnectionError = useAuthStore((state) => state.clearConnectionError);
 
   const { closeSettingsModal } = useSettingsStore();
   const startCountdown = useGameStore((state) => state.startCountdown);
@@ -22,8 +26,8 @@ export const ToBattleButton = () => {
   const handleToBattle = async () => {
     if (isConnecting || isCountingDown) return;
 
-    setIsConnecting(true);
-    setConnectionError(null);
+    setConnecting(true);
+    clearConnectionError();
     closeSettingsModal();
 
     try {
@@ -47,7 +51,7 @@ export const ToBattleButton = () => {
       );
       stopCountdown();
     } finally {
-      setIsConnecting(false);
+      setConnecting(false);
     }
   };
 

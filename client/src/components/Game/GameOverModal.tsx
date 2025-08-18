@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { X } from "lucide-react";
 import { useGameStore } from "../../stores/gameStore";
+import { useAuthStore } from "../../stores/authStore";
 
 export const GameOverModal = React.memo(
   () => {
@@ -8,11 +9,27 @@ export const GameOverModal = React.memo(
     const isGameOver = useGameStore((state) => state.isGameOver);
     const score = useGameStore((state) => state.finalScore);
     const rank = useGameStore((state) => state.rank);
-    const getCurrentUserHighestScore = useGameStore((state) => state.getCurrentUserHighestScore);
     const setGameOver = useGameStore((state) => state.setGameState);
+    
+    // Auth store for scores and score update data
+    const scores = useAuthStore((state) => state.scores);
+    const isLoadingScores = useAuthStore((state) => state.isLoadingScores);
+    const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+    const scoreUpdateData = useAuthStore((state) => state.scoreUpdateData);
+    const updateScore = useAuthStore((state) => state.updateScore);
 
-    // Get user-specific highest score
-    const userHighestScore = getCurrentUserHighestScore();
+    // Update score and refresh scores when game ends
+    useEffect(() => {
+      if (isGameOver && score > 0 && isLoggedIn) {
+        updateScore(score);
+      }
+    }, [isGameOver, score, isLoggedIn, updateScore]);
+
+    // Get user-specific highest score from auth store or score update data
+    const userHighestScore = scoreUpdateData ? scoreUpdateData.newScore : (scores?.score || 0);
+    
+    // Check if this is a new record based on score update data
+    const isNewRecord = scoreUpdateData ? scoreUpdateData.scoreChange > 0 : false;
 
     const handleClose = () => {
       setGameOver({ isGameOver: false });
@@ -38,26 +55,20 @@ export const GameOverModal = React.memo(
             </div>
             <div className="stat-item">
               <span className="stat-label">Highest Score:</span>
-              <span className="stat-value highlight">{userHighestScore}</span>
+              <span className="stat-value highlight">
+                {isLoadingScores ? "Loading..." : userHighestScore}
+              </span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Current Rank:</span>
               <span className="stat-value">#{rank}</span>
             </div>
-            {score > userHighestScore && score > 0 && (
-              <div className="new-record">🎉 You got new highest score! 🎉</div>
+            {isNewRecord && (
+              <div className="new-record">
+                🎉 New Record! +{scoreUpdateData?.scoreChange} points! 🎉
+              </div>
             )}
           </div>
-          {/* <div className="modal-actions">
-            <button
-              className="restart-button"
-              onClick={handleRestart}
-              aria-label="Restart game"
-            >
-              <RotateCcw size={20} />
-              Restart Game
-            </button>
-          </div> */}
         </div>
       </div>
     );

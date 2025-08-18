@@ -52,5 +52,16 @@
     "success": "成功",
     "warning": "警告",
     "info": "信息"
+  },
+  "permission": {
+    "title": "需要权限",
+    "description": "我们需要访问您的用户信息以提供个性化的游戏体验。",
+    "explanation": "这允许我们保存您的进度、显示您的个人资料并与朋友连接。",
+    "retry": "授予权限",
+    "retrying": "请求中...",
+    "benefits": "授予权限的好处：",
+    "benefit1": "保存游戏进度",
+    "benefit2": "个性化资料",
+    "benefit3": "与朋友连接"
   }
 }

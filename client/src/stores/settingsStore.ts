@@ -9,11 +9,14 @@ export interface SoundSettings {
   muted: boolean;
 }
 
+export type SettingsTab = "language" | "sound";
+
 interface SettingsState {
   // UI State
   isSettingsModalOpen: boolean;
   isTopPlayersModalOpen: boolean;
   isProfileModalOpen: boolean;
+  activeSettingsTab: SettingsTab;
 
   // Language
   language: SupportedLanguage;
@@ -33,6 +36,7 @@ interface SettingsState {
   toggleProfileModal: () => void;
   setLanguage: (language: SupportedLanguage) => void;
   updateSoundSettings: (settings: Partial<SoundSettings>) => void;
+  setActiveSettingsTab: (tab: SettingsTab) => void;
   resetSettings: () => void;
 }
 
@@ -40,6 +44,7 @@ const defaultSettings = {
   isSettingsModalOpen: false,
   isTopPlayersModalOpen: false,
   isProfileModalOpen: false,
+  activeSettingsTab: "language" as SettingsTab,
   language: "en" as SupportedLanguage,
   sound: {
     master: 0.8,
@@ -88,6 +93,11 @@ export const useSettingsStore = create<SettingsState>()(
         set((state) => ({
           sound: { ...state.sound, ...settings },
         })),
+      
+      setActiveSettingsTab: (tab) => {
+        set({ activeSettingsTab: tab });
+      },
+      
       resetSettings: () => set(defaultSettings),
     }),
     {

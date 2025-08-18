@@ -35,6 +35,13 @@ export interface UserScore {
   rank: number;
 }
 
+export interface ScoreUpdateResponse {
+  id: string;
+  oldScore: number;
+  newScore: number;
+  scoreChange: number;
+}
+
 class AuthService {
   /**
    * Logs in using the MOS SDK
@@ -73,9 +80,13 @@ class AuthService {
   async getUserInfo(): Promise<UserInfo> {
     try {
       const userProfile = await this.getUserProfile();
-      if (userProfile) return userProfile;
+      if (userProfile?.authResult) return userProfile;
       const userInfoResponse = await window.mos.getUserInfo("user_info");
+      if (userInfoResponse.authorized) {
       return userInfoResponse || {};
+      }
+      // required user info
+      throw new Error("user_info_denied");
     } catch (error) {
       console.error("Get user info failed:", error);
       throw error;
@@ -106,9 +117,9 @@ class AuthService {
   /**
    * Updates player progress and score to the backend
    */
-  async updateScore(score: number): Promise<any> {
+  async updateScore(score: number): Promise<ScoreUpdateResponse> {
     try {
-      return await request.put("/progress/snakeZone/setScore", { score });
+      return await request.put<ScoreUpdateResponse>("/progress/snakeZone/setScore", { score });
     } catch (error) {
       console.error("Update progress failed:", error);
       throw error;

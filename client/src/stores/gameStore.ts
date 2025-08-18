@@ -23,16 +23,10 @@ interface GameStore extends GameState {
   otherSnakes: Snake[];
   foods: Food[];
   deadPoints: Point[];
-
   // Leaderboard
   leaderboard: LeaderboardPlayer[];
   fullLeaderboard: LeaderboardPlayer[];
   currentPlayerId: string | null;
-
-  // Persistent stats
-  highestScore: number;
-  userScores: Record<string, number>; // userId -> highest score
-
   // Controls
   controls: Controls;
 
@@ -53,13 +47,7 @@ interface GameStore extends GameState {
   updateLeaderboard: (leaderboard: LeaderboardPlayer[]) => void;
   updateFullLeaderboard: (fullLeaderboard: LeaderboardPlayer[]) => void;
   setCurrentPlayerId: (playerId: string) => void;
-  updateHighestScore: (score: number) => void;
-  getUserHighestScore: (userId: string) => number;
-  updateUserScore: (userId: string, score: number) => void;
-  getCurrentUserHighestScore: () => number;
   getRealUserId: () => string | null;
-  initializeUserScore: () => void;
-  updateCurrentUserScore: (score: number) => void;
   resetGame: () => void;
   startGame: () => void;
   endGame: (finalScore: number, finalRank: number) => void;
@@ -89,8 +77,7 @@ const initialState = {
   leaderboard: [],
   fullLeaderboard: [],
   currentPlayerId: null,
-  highestScore: 0,
-  userScores: {},
+  // Removed highestScore and userScores - now handled by authStore
 
   controls: {
     up: false,
@@ -106,7 +93,7 @@ const initialState = {
 
 export const useGameStore = create<GameStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       ...initialState,
 
       setGameState: (state) =>
@@ -164,36 +151,7 @@ export const useGameStore = create<GameStore>()(
 
       setCurrentPlayerId: (playerId) => set({ currentPlayerId: playerId }),
 
-      updateHighestScore: (score) =>
-        set((state) => ({
-          highestScore: Math.max(state.highestScore, score),
-        })),
-
-      getUserHighestScore: (userId) => {
-        const state = get();
-        return state.userScores[userId] || 0;
-      },
-
-      updateUserScore: (userId, score) => {
-        const state = get();
-        const currentHighest = state.userScores[userId] || 0;
-        if (score > currentHighest) {
-          set({
-            userScores: {
-              ...state.userScores,
-              [userId]: score,
-            },
-          });
-        }
-      },
-
-      getCurrentUserHighestScore: () => {
-        const state = get();
-        if (state.currentPlayerId) {
-          return state.userScores[state.currentPlayerId] || 0;
-        }
-        return 0;
-      },
+      // Removed score-related methods - now handled by authStore
 
       getRealUserId: () => {
         const authState = useAuthStore.getState();
@@ -206,44 +164,9 @@ export const useGameStore = create<GameStore>()(
       toggleHowToPlay: () =>
         set((state) => ({ isHowToPlayOpen: !state.isHowToPlayOpen })),
 
-      initializeUserScore: () => {
-        const state = get();
-        const realUserId = state.getRealUserId();
-
-        if (realUserId && state.currentPlayerId !== realUserId) {
-          // Set the real user ID as current player ID
-          set({ currentPlayerId: realUserId });
-
-          // Initialize user score if not exists
-          if (!(realUserId in state.userScores)) {
-            set({
-              userScores: {
-                ...state.userScores,
-                [realUserId]: 0,
-              },
-            });
-          }
-        }
-      },
-
-      updateCurrentUserScore: (score) => {
-        const state = get();
-        const realUserId = state.getRealUserId();
-        const userId = realUserId || state.currentPlayerId;
-
-        if (userId) {
-          state.updateUserScore(userId, score);
-
-          // Also update global highest score
-          state.updateHighestScore(score);
-        }
-      },
-
       resetGame: () =>
         set((prev) => ({
           ...initialState,
-          highestScore: prev.highestScore, // Preserve highest score
-          userScores: prev.userScores, // Preserve user scores
           currentPlayerId: prev.currentPlayerId, // Preserve player ID
         })),
 
@@ -259,23 +182,11 @@ export const useGameStore = create<GameStore>()(
 
       endGame: (finalScore, finalRank) =>
         set(() => {
-          // console.log('🏁 endGame called with finalScore:', finalScore, 'finalRank:', finalRank);
-
-          // Update user score using the new method
-          if (finalScore > 0) {
-            const gameState = get();
-            // console.log('🏁 Updating user score with finalScore:', finalScore);
-            gameState.updateCurrentUserScore(finalScore);
-          } else {
-            // console.log('🏁 finalScore is 0 or negative, not updating user score');
-          }
-
           // Leave the socket room after preserving the final game state
           try {
             // Import socketClient dynamically to avoid circular dependency
             import("../services/socketClient")
               .then(({ socketClient }) => {
-                // console.log('🚪 Leaving socket room after game end');
                 socketClient.leaveRoom();
               })
               .catch((error) => {
@@ -285,7 +196,6 @@ export const useGameStore = create<GameStore>()(
             console.error("❌ Error importing socketClient:", error);
           }
 
-          // console.log('🏁 Setting game state - score:', finalScore, 'rank:', finalRank);
           return {
             isPlaying: false,
             isGameOver: true,
@@ -332,10 +242,7 @@ export const useGameStore = create<GameStore>()(
     }),
     {
       name: "snake-zone-game-store",
-      partialize: (state) => ({
-        highestScore: state.highestScore,
-        userScores: state.userScores,
-      }),
+      partialize: () => ({}), // No persistent data needed - scores handled by authStore
     }
   )
 );

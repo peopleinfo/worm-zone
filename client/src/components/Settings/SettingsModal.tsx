@@ -1,20 +1,21 @@
-import React, { useState } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { X, Volume2, VolumeX, Globe } from "lucide-react";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { LanguageSelector } from "./LanguageSelector";
 
-type SettingsTab = "language" | "sound";
-
 export const SettingsModal: React.FC = () => {
   const { t } = useTranslation("common");
-  const [activeTab, setActiveTab] = useState<SettingsTab>("language");
   const {
     isSettingsModalOpen,
     closeSettingsModal,
     sound,
     updateSoundSettings,
+    activeSettingsTab,
+    setActiveSettingsTab,
   } = useSettingsStore();
+  
+  const activeTab = activeSettingsTab;
 
   // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -48,14 +49,14 @@ export const SettingsModal: React.FC = () => {
               className={`tab-button ${
                 activeTab === "language" ? "active" : ""
               }`}
-              onClick={() => setActiveTab("language")}
+              onClick={() => setActiveSettingsTab("language")}
             >
               <Globe size={18} />
               {t("settings.language")}
             </button>
             <button
               className={`tab-button ${activeTab === "sound" ? "active" : ""}`}
-              onClick={() => setActiveTab("sound")}
+              onClick={() => setActiveSettingsTab("sound")}
             >
               <Volume2 size={18} />
               {t("settings.sound")}

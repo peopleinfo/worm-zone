@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { authService, type Rank, type UserScore } from "../services/authService";
+import {
+  authService,
+  type Rank,
+  type UserScore,
+  type ScoreUpdateResponse,
+} from "../services/authService";
 import { useSettingsStore } from "./settingsStore";
 import { sleep } from "../utils";
 
@@ -20,6 +25,19 @@ interface AuthState {
   isLoggedIn: boolean;
   isLoading: boolean;
   isLoadingInit: boolean;
+  isUserInfoDenied: boolean;
+  // Game data
+  scores: UserScore;
+  isLoadingScores: boolean;
+  rank: Rank | null;
+  isLoadingRank: boolean;
+
+  // Connection state (from ToBattleButton)
+  isConnecting: boolean;
+  connectionError: string | null;
+
+  // Score update state (from GameOverModal)
+  scoreUpdateData: ScoreUpdateResponse | null;
 
   // Actions
   login: () => Promise<void>;
@@ -28,8 +46,16 @@ interface AuthState {
   initializeAuth: () => Promise<void>;
   getRank: () => Promise<Rank>;
   getScores: () => Promise<UserScore>;
-  scores: UserScore;
-  isLoadingScores: boolean;
+
+  // Connection actions
+  setConnecting: (isConnecting: boolean) => void;
+  setConnectionError: (error: string | null) => void;
+  clearConnectionError: () => void;
+
+  // Score update actions
+  setScoreUpdateData: (data: ScoreUpdateResponse | null) => void;
+  clearScoreUpdateData: () => void;
+  updateScore: (score: number) => Promise<ScoreUpdateResponse | null>;
 }
 
 const defaultAuthState = {
@@ -41,6 +67,15 @@ const defaultAuthState = {
   isLoadingInit: true,
   scores: {} as any,
   isLoadingScores: false,
+  rank: null,
+  isLoadingRank: false,
+  isUserInfoDenied: false,
+  // Connection state
+  isConnecting: false,
+  connectionError: null,
+
+  // Score update state
+  scoreUpdateData: null,
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -95,6 +130,7 @@ export const useAuthStore = create<AuthState>()(
             set({
               userInfo,
             });
+            console.log("userInfo111", userInfo);
             if (!userInfo.authResult) {
               await authService.saveUserInfo({
                 authResult: !!userInfo?.authorized,
@@ -104,8 +140,9 @@ export const useAuthStore = create<AuthState>()(
               });
             }
             console.log("Auto login successful, token:", state.token);
-          } catch (error) {
-            console.log("Auto login failed, continuing as guest:", error);
+          } catch (error: any) {
+            console.log("Auto login failed:", error);
+            set({ isUserInfoDenied: error.message === "user_info_denied" });
           }
         } finally {
           sleep(800).then(() => {
@@ -114,13 +151,51 @@ export const useAuthStore = create<AuthState>()(
         }
       },
       getRank: async () => {
+        set({ isLoadingRank: true });
         try {
-          const userProfile = await authService.getRank();
-          console.log("userProfile", userProfile);
-          return userProfile;
+          const rank = await authService.getRank();
+          set({ rank, isLoadingRank: false });
+          return rank;
         } catch (error) {
-          console.error("Get user profile failed:", error);
+          console.error("Get rank failed:", error);
+          set({ isLoadingRank: false });
           throw error;
+        }
+      },
+
+      // Connection actions
+      setConnecting: (isConnecting: boolean) => {
+        set({ isConnecting });
+      },
+
+      setConnectionError: (error: string | null) => {
+        set({ connectionError: error });
+      },
+
+      clearConnectionError: () => {
+        set({ connectionError: null });
+      },
+
+      // Score update actions
+      setScoreUpdateData: (data: ScoreUpdateResponse | null) => {
+        set({ scoreUpdateData: data });
+      },
+
+      clearScoreUpdateData: () => {
+        set({ scoreUpdateData: null });
+      },
+
+      updateScore: async (score: number) => {
+        try {
+          const updateResponse = await authService.updateScore(score);
+          set({ scoreUpdateData: updateResponse });
+          // Also refresh scores after update
+          const scores = await authService.getScore();
+          set({ scores });
+          return updateResponse;
+        } catch (error) {
+          console.error("Update score failed:", error);
+          return null;
         }
       },
     }),
