@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { authService } from "../services/authService";
+import { authService, type Rank, type UserScore } from "../services/authService";
 import { useSettingsStore } from "./settingsStore";
 import { sleep } from "../utils";
 
@@ -26,8 +26,10 @@ interface AuthState {
   logout: () => void;
   setUserInfo: (userInfo: UserInfo) => void;
   initializeAuth: () => Promise<void>;
-  // getUserProfile: () => Promise<void>;
-  getRank: () => Promise<void>;
+  getRank: () => Promise<Rank>;
+  getScores: () => Promise<UserScore>;
+  scores: UserScore;
+  isLoadingScores: boolean;
 }
 
 const defaultAuthState = {
@@ -37,6 +39,8 @@ const defaultAuthState = {
   isLoggedIn: false,
   isLoading: false,
   isLoadingInit: true,
+  scores: {} as any,
+  isLoadingScores: false,
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -59,6 +63,18 @@ export const useAuthStore = create<AuthState>()(
           throw error;
         }
       },
+      getScores: async () => {
+        set({ isLoadingScores: true });
+        try {
+          const scores = await authService.getScore();
+          set({ scores, isLoadingScores: false });
+          return scores;
+        } catch (error) {
+          console.error("Get score failed:", error);
+          set({ isLoadingScores: false });
+          throw error;
+        }
+      },
 
       logout: () => {
         set(defaultAuthState);
@@ -67,8 +83,6 @@ export const useAuthStore = create<AuthState>()(
       setUserInfo: (userInfo) => {
         set({ userInfo });
       },
-
-
       initializeAuth: async () => {
         const state = get();
         set({ isLoadingInit: true });
@@ -83,7 +97,7 @@ export const useAuthStore = create<AuthState>()(
             });
             if (!userInfo.authResult) {
               await authService.saveUserInfo({
-                authResult: userInfo?.authorized,
+                authResult: !!userInfo?.authorized,
                 firstName: userInfo?.firstName,
                 headPortrait: userInfo?.headPortrait,
                 lastName: userInfo?.lastName,
@@ -99,19 +113,11 @@ export const useAuthStore = create<AuthState>()(
           });
         }
       },
-      // getUserProfile: async () => {
-      //   try {
-      //     const userProfile = await authService.getUserProfile();
-      //     console.log("userProfile", userProfile);
-      //   } catch (error) {
-      //     console.error("Get user profile failed:", error);
-      //     throw error;
-      //   }
-      // },
       getRank: async () => {
         try {
           const userProfile = await authService.getRank();
           console.log("userProfile", userProfile);
+          return userProfile;
         } catch (error) {
           console.error("Get user profile failed:", error);
           throw error;

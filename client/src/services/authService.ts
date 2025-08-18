@@ -5,7 +5,7 @@ interface LoginResponse {
   code: string;
 }
 
-interface UserInfo {
+export interface UserInfo {
   firstName: string;
   lastName: string;
   headPortrait: string;
@@ -14,7 +14,26 @@ interface UserInfo {
   authResult?: boolean;
 }
 
+interface RankPlayer {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  score: number;
+  rank: number;
+}
 
+export interface Rank {
+  topPlayers: RankPlayer[];
+  currentUserRank: RankPlayer;
+}
+
+export interface UserScore {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  score: number;
+  rank: number;
+}
 
 class AuthService {
   /**
@@ -76,9 +95,9 @@ class AuthService {
   /**
    * Gets player score from the backend
    */
-  async getScore(): Promise<any> {
+  async getScore() {
     try {
-      return await request.get("/progress/snakeZone/getScore");
+      return await request.get<UserScore>("/progress/snakeZone/getScore");
     } catch (error) {
       console.error("Get score failed:", error);
       throw error;
@@ -96,11 +115,11 @@ class AuthService {
     }
   }
   /**
-   * Posts game rank data to the backend
+   * game rank data
    */
-  async getRank(): Promise<any> {
+  async getRank() {
     try {
-      return await request.post("/rank/snakeZone");
+      return await request.post<Rank>("/rank/snakeZone");
     } catch (error) {
       console.error("Post game rank failed:", error);
       throw error;
@@ -109,9 +128,9 @@ class AuthService {
   /**
    * Gets user information from the backend
    */
-  async getUserProfile(): Promise<any> {
+  async getUserProfile() {
     try {
-      return await request.post("/user/snakeZone/getUserInfo");
+      return await request.post<UserInfo>("/user/snakeZone/getUserInfo");
     } catch (error) {
       console.error("Get user info from backend failed:", error);
       throw error;
@@ -144,7 +163,6 @@ declare global {
       getWindowInfo: any;
       login: (appKey: string) => Promise<LoginResponse>;
       getUserInfo: (scope: string) => Promise<UserInfo>;
-
     };
   }
 }

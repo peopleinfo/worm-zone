@@ -17,7 +17,6 @@ export const ProfileModal: React.FC = () => {
   const highestScore = useGameStore((state) => state.highestScore);
   const leaderboard = useGameStore((state) => state.leaderboard);
   const currentPlayerId = useGameStore((state) => state.currentPlayerId);
-  // const getRank = useAuthStore((state) => state.getRank);
 
   // Get current user's rank from leaderboard
   const getCurrentUserRank = () => {
@@ -40,7 +39,6 @@ export const ProfileModal: React.FC = () => {
   useEffect(() => {
     if (isProfileModalOpen) {
       // getRank();
-      // authService.getScore()
       // authService.updateScore(110);
     }
   }, [isProfileModalOpen]);
