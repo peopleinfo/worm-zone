@@ -31,41 +31,27 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
               <h3>Game Objective & Controls</h3>
             </div>
             <ul>
+              <li>Play with friends in the same match</li>
               <li>Control your worm to eat food and grow longer</li>
               <li>Use touch controls or arrow keys to move</li>
               <li>Avoid hitting other worms or the walls</li>
               <li>Become the longest worm to dominate the arena!</li>
             </ul>
           </div>
-
           <div className="rule-section">
             <div style={{ display: "flex", gap: 4 }}>
               <div className="rule-icon">
-                <Users size={24} />
+                <Trophy size={24} />
               </div>
-              <h3>Multiplayer Rules</h3>
-            </div>
-            <ul>
-              <li>Play with friends in the same room</li>
-              <li>Auto-connect to available rooms</li>
-            </ul>
-          </div>
-
-          <div className="rule-section">
-            <div style={{ display: "flex", gap: 4 }}>
-            <div className="rule-icon">
-              <Trophy size={24} />
-            </div>
-            <h3>Scoring System</h3>
+              <h3>Scoring System</h3>
             </div>
             <ul>
               <li>Eat food to increase your score and length</li>
               <li>Larger worms give more points when eliminated</li>
               <li>Compete for the highest score on the leaderboard</li>
-              <li>Your best score is saved automatically</li>
+              <li>Your best score is saved every game ends</li>
             </ul>
           </div>
-
           <div className="rule-section">
             <div style={{ display: "flex", gap: 4 }}>
               <div className="rule-icon">
