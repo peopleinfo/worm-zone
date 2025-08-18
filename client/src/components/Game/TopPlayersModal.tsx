@@ -79,16 +79,24 @@ export const TopPlayersModal: React.FC = () => {
                         }`}
                       >
                         <div className="player-rank">{index + 1}</div>
-                        <div className="player-name" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          {player.name}
+                        <div
+                          className="player-name"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
                           <img
                             style={{
                               width: 24,
                               height: 24,
+                              borderRadius: "50%",
                             }}
-                            src={rank?.currentUserRank?.avatarUrl}
-                            alt={rank?.currentUserRank?.name}
+                            src={player.avatarUrl}
+                            alt={player.name}
                           />
+                          {player.name}
                         </div>
                         <div className="player-score">
                           {player.score.toLocaleString()}

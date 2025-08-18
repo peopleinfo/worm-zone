@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, RefreshCw, Shield, User, Users, Save } from "lucide-react";
+import { RefreshCw, Shield } from "lucide-react";
 
 interface UserInfoDeniedModalProps {
   onRetry: () => void;
@@ -27,54 +27,44 @@ export const UserInfoDeniedModal: React.FC<UserInfoDeniedModalProps> = ({
       <div className="settings-modal permission-modal enhanced-permission-modal">
         {/* Header with improved visual hierarchy */}
         <div className="modal-header permission-header">
-          <div className="permission-icon-wrapper">
-            <Shield className="w-8 h-8 text-blue-500" />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <Shield className="icon-shield" />
+            <h2 className="modal-title permission-title">
+              {t("permission.title")}
+            </h2>
           </div>
-          <h2 className="modal-title permission-title">{t('permission.title')}</h2>
         </div>
-        
+
         {/* Main content with better spacing */}
         <div className="permission-content">
           <div className="permission-message">
             <p className="permission-description primary-description">
-              {t('permission.description')}
+              {t("permission.description")}
             </p>
-            <p className="permission-explanation">
-              {t('permission.explanation')}
-            </p>
-          </div>
-          
-          {/* Benefits section */}
-          <div className="permission-benefits">
-            <h3 className="benefits-title">{t('permission.benefits')}</h3>
-            <ul className="benefits-list">
-              <li className="benefit-item">
-                <Save className="w-4 h-4 text-green-500" />
-                <span>{t('permission.benefit1')}</span>
-              </li>
-              <li className="benefit-item">
-                <User className="w-4 h-4 text-blue-500" />
-                <span>{t('permission.benefit2')}</span>
-              </li>
-              <li className="benefit-item">
-                <Users className="w-4 h-4 text-purple-500" />
-                <span>{t('permission.benefit3')}</span>
-              </li>
-            </ul>
           </div>
         </div>
-        
+
         {/* Enhanced action button */}
         <div className="permission-actions">
-          <button 
+          <button
             onClick={handleRetry}
             disabled={isRetrying}
             className={`retry-button enhanced-retry-button ${
-              isRetrying ? 'retrying' : ''
+              isRetrying ? "retrying" : ""
             }`}
           >
-            <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
-            <span>{isRetrying ? t('permission.retrying') : t('permission.retry')}</span>
+            <RefreshCw
+              className={`w-4 h-4 ${isRetrying ? "animate-spin" : ""}`}
+            />
+            <span>
+              {isRetrying ? t("permission.retrying") : t("permission.retry")}
+            </span>
           </button>
         </div>
       </div>
