@@ -529,14 +529,13 @@ canvas:not(#gameCanvas) {
 /* Leaderboard Styles */
 .leaderboard {
   position: absolute;
-  top: 2px;
+  top: 100px !important;
   left: 0px;
   border-radius: 10px;
-  padding: 2px;
   color: var(--color-light);
-  font-size: 12px;
-  min-width: 180px;
-  max-width: 230px;
+  font-size: 11px;
+  min-width: 160px;
+  max-width: 260px;
   z-index: 100;
   pointer-events: auto;
 }
@@ -544,8 +543,8 @@ canvas:not(#gameCanvas) {
 .leaderboard-header {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding-bottom: 1px;
+  gap: 2px;
+  margin-bottom: 1px;
 }
 
 .leaderboard-icon {
@@ -562,27 +561,17 @@ canvas:not(#gameCanvas) {
 .leaderboard-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
 .leaderboard-item {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 1px 4px;
-  border-radius: 4px;
+  padding: 2px 2px;
   transition: background-color 0.2s ease;
-  min-height: 18px;
 }
 
-.leaderboard-item:hover {
-  background: var(--color-primary-transparent-1);
-}
-
-.leaderboard-item.current-player {
-  background: var(--color-primary-transparent-2);
-  /* border: 1px solid rgba(76, 175, 80, 0.5); */
-}
 
 .player-rank {
   color: var(--color-primary);
@@ -675,7 +664,7 @@ canvas:not(#gameCanvas) {
   /* border: 3px solid var(--color-primary); */
   border-top: 0;
   border-radius: 15px;
-  padding: 30px;
+  padding: 20px;
   text-align: center;
   color: var(--color-light);
   min-width: 320px;
@@ -1166,7 +1155,6 @@ canvas:not(#gameCanvas) {
 
 /* Modal Content */
 .modal-content {
-  padding: 16px;
   max-height: calc(80vh - 80px);
   overflow-y: auto;
   scrollbar-width: thin;
@@ -1832,8 +1820,8 @@ canvas:not(#gameCanvas) {
 }
 
 .profile-avatar {
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid var(--color-primary-transparent-3);
@@ -2416,8 +2404,7 @@ canvas:not(#gameCanvas) {
 
 .leaderboard-header {
   display: flex;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  padding: 2px;
   border-radius: 8px 8px 0 0;
   font-weight: 600;
   font-size: 14px;
@@ -2432,8 +2419,6 @@ canvas:not(#gameCanvas) {
 
 .leaderboard-item {
   display: flex;
-  padding: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   transition: background-color 0.2s ease;
 }
 
@@ -2442,8 +2427,6 @@ canvas:not(#gameCanvas) {
 }
 
 .leaderboard-item.current-player {
-  background: rgba(59, 130, 246, 0.2);
-  border: 1px solid rgba(59, 130, 246, 0.4);
   font-weight: 600;
 }
 

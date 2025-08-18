@@ -130,7 +130,7 @@ export const useAuthStore = create<AuthState>()(
             set({
               userInfo,
             });
-            console.log("userInfo111", userInfo);
+            console.log("userInfo", userInfo);
             if (!userInfo.authResult) {
               await authService.saveUserInfo({
                 authResult: !!userInfo?.authorized,

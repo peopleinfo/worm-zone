@@ -34,7 +34,7 @@ function App() {
   //   };
   //   test().then(console.log);
   // }, []);
-  if (!isUserInfoDenied) {
+  if (isUserInfoDenied) {
     return <UserInfoDeniedModal onRetry={autoLogin} />;
   }
   if (isLoadingInit || !isLoggedIn) {
