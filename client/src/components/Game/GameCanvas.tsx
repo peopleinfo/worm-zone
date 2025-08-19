@@ -61,6 +61,7 @@ export const GameCanvas: React.FC = () => {
       style={{
         display: 'block',
         cursor: isPlaying ? 'none' : 'pointer',
+        background: 'transparent'
       }}
     />
   );
