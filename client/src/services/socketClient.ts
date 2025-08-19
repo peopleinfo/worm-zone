@@ -138,7 +138,17 @@ class SocketClient {
       // Set current player ID
       store.setCurrentPlayerId(data.playerId);
       
-      // Convert server players to client snakes
+      // Find current player in server data and create their snake
+      const currentPlayerData = data.gameState.players.find(p => p.id === this.playerId);
+      if (currentPlayerData) {
+        console.log('🐍 Creating current player snake from server data:', currentPlayerData);
+        const currentPlayerSnake = this.convertServerPlayerToSnake(currentPlayerData);
+        currentPlayerSnake.ai = false; // Mark as human player
+        store.updateMySnake(currentPlayerSnake);
+        console.log('✅ Current player snake created at position:', currentPlayerData.x, currentPlayerData.y);
+      }
+      
+      // Convert other server players to client snakes
       const otherSnakes = data.gameState.players
         .filter(p => p.id !== this.playerId)
         .map(p => this.convertServerPlayerToSnake(p));

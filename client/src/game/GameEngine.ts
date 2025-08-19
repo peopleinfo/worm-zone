@@ -98,11 +98,22 @@ export class GameEngine {
   }
 
   private initializeGame(): void {
-    // Initialize player snake at world center
-    const centerX = this.WORLD_WIDTH / 2;
-    const centerY = this.WORLD_HEIGHT / 2;
-    this.mySnake = new Snake(centerX, centerY, 25, 'green', 'player');
-    this.mySnake.ai = false;
+    const store = useGameStore.getState();
+    
+    // Check if snake already exists from server data
+    if (store.mySnake) {
+      console.log('🐍 Using existing snake from server data at position:', store.mySnake.getHead()?.x, store.mySnake.getHead()?.y);
+      this.mySnake = store.mySnake;
+    } else {
+      // Fallback: Initialize player snake at world center (for offline mode or initial state)
+      console.log('🐍 Creating fallback snake at world center');
+      const centerX = this.WORLD_WIDTH / 2;
+      const centerY = this.WORLD_HEIGHT / 2;
+      this.mySnake = new Snake(centerX, centerY, 25, 'green', 'player');
+      this.mySnake.ai = false;
+      // Update store with the new snake
+      store.updateMySnake(this.mySnake);
+    }
   }
 
   start(): void {
@@ -126,6 +137,12 @@ export class GameEngine {
 
   private update(): void {
     const store = useGameStore.getState();
+    
+    // Sync with store's mySnake if it has been updated from socket events
+    if (store.mySnake && this.mySnake !== store.mySnake) {
+      console.log('🔄 Syncing GameEngine snake with store snake');
+      this.mySnake = store.mySnake;
+    }
     
     if (!store.isPlaying || !this.mySnake) return;
 

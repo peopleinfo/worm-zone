@@ -83,7 +83,7 @@ class AuthService {
       if (userProfile?.authResult) return userProfile;
       const userInfoResponse = await window.mos.getUserInfo("user_info");
       if (userInfoResponse.authorized) {
-      return userInfoResponse || {};
+        return userInfoResponse || {};
       }
       // required user info
       throw new Error("user_info_denied");
@@ -119,7 +119,10 @@ class AuthService {
    */
   async updateScore(score: number): Promise<ScoreUpdateResponse> {
     try {
-      return await request.put<ScoreUpdateResponse>("/progress/snakeZone/setScore", { score });
+      return await request.put<ScoreUpdateResponse>(
+        "/progress/snakeZone/setScore",
+        { score }
+      );
     } catch (error) {
       console.error("Update progress failed:", error);
       throw error;

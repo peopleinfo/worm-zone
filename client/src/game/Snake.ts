@@ -179,8 +179,8 @@ export class Snake implements SnakeInterface {
     const head = this.getHead();
 
     if (
-      head.x < 0 ||
-      head.y < 0 ||
+      head.x - head.radius < 0 ||
+      head.y - head.radius < 0 ||
       head.x + head.radius > worldWidth ||
       head.y + head.radius > worldHeight
     ) {
