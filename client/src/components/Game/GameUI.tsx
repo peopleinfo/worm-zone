@@ -6,6 +6,7 @@ import { MiniMap } from "./MiniMap";
 import { Settings, Trophy, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../../stores/settingsStore";
+import { audioService } from "../../services/audioService";
 import { SettingsModal } from "../Settings/SettingsModal";
 import { TopPlayersModal } from "./TopPlayersModal";
 import { ProfileModal } from "../Profile/ProfileModal";
@@ -33,6 +34,12 @@ export const GameUI: React.FC = React.memo(() => {
   );
 
   const openProfileModal = useSettingsStore((state) => state.openProfileModal);
+
+  // Handle settings button click to initialize audio context
+  const handleSettingsClick = () => {
+    audioService.handleUserInteraction();
+    openSettingsModal();
+  };
   const isGameOver = useGameStore((state) => state.isGameOver);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
@@ -79,7 +86,7 @@ export const GameUI: React.FC = React.memo(() => {
             </button>
             <button
               className="settings-button"
-              onClick={openSettingsModal}
+              onClick={handleSettingsClick}
               aria-label={t("common:navigation.settings")}
             >
               <Settings size={24} />

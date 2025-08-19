@@ -63,5 +63,28 @@
     "benefit1": "Save your game progress",
     "benefit2": "Personalized profile",
     "benefit3": "Connect with friends"
+  },
+  "gameRules": {
+    "title": "How to Play",
+    "objective": "Objective",
+    "objectiveDesc": "Grow your snake by eating food and become the longest snake on the field!",
+    "controls": "Controls",
+    "arrowKeys": "Use arrow keys or WASD to move",
+    "mouse": "Click and drag to change direction",
+    "touch": "Swipe on mobile devices",
+    "rules": "Rules",
+    "eatFood": "Eat colored food to grow",
+    "avoidWalls": "Don't hit the walls",
+    "avoidSnakes": "Don't collide with other snakes",
+    "survive": "Survive as long as possible",
+    "tips": "Tips",
+    "startSmall": "Start with small movements",
+    "planAhead": "Plan your route ahead",
+    "watchOthers": "Watch out for other players",
+    "bePatient": "Be patient and strategic",
+    "startPlaying": "Start Playing!",
+    "backgroundMusic": "Background Music",
+    "mute": "Mute",
+    "unmute": "Unmute"
   }
 }

@@ -165,19 +165,37 @@ export const useGameStore = create<GameStore>()(
         set((state) => ({ isHowToPlayOpen: !state.isHowToPlayOpen })),
 
       resetGame: () =>
-        set((prev) => ({
-          ...initialState,
-          currentPlayerId: prev.currentPlayerId, // Preserve player ID
-        })),
+        set((prev) => {
+          // Resume background music when game resets - use dynamic import
+          import("../services/audioService").then(({ audioService }) => {
+            audioService.playBackgroundMusic();
+          }).catch((error) => {
+            console.error('Failed to play background music on reset:', error);
+          });
+          
+          return {
+            ...initialState,
+            currentPlayerId: prev.currentPlayerId, // Preserve player ID
+          };
+        }),
 
       startGame: () =>
-        set({
-          isPlaying: true,
-          isGameOver: false,
-          isPaused: false,
-          status: "Playing",
-          score: 0,
-          rank: 0,
+        set(() => {
+          // Start background music when game starts - use dynamic import
+          import("../services/audioService").then(({ audioService }) => {
+            audioService.playBackgroundMusic();
+          }).catch((error) => {
+            console.error('Failed to play background music on start:', error);
+          });
+          
+          return {
+            isPlaying: true,
+            isGameOver: false,
+            isPaused: false,
+            status: "Playing",
+            score: 0,
+            rank: 0,
+          };
         }),
 
       endGame: (finalScore, finalRank) =>
@@ -195,6 +213,13 @@ export const useGameStore = create<GameStore>()(
           } catch (error) {
             console.error("❌ Error importing socketClient:", error);
           }
+
+          // Stop background music when game ends - use dynamic import
+          import("../services/audioService").then(({ audioService }) => {
+            audioService.stopBackgroundMusic();
+          }).catch((error) => {
+            console.error('Failed to stop background music on end:', error);
+          });
 
           return {
             isPlaying: false,

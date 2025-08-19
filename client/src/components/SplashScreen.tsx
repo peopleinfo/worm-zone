@@ -1,6 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { audioService } from "../services/audioService";
 
 const SplashScreen: React.FC = () => {
+  // Initialize audio on splash screen load
+  useEffect(() => {
+    // Try to start audio as early as possible
+    audioService.handleUserInteraction();
+  }, []);
+
   return (
     <>
       <div className="splash-screen">

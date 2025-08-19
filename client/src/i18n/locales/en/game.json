@@ -48,5 +48,9 @@
   },
   "navigation": {
     "close": "Close"
+  },
+  "audio": {
+    "muteMusic": "Mute music",
+    "unmuteMusic": "Unmute music"
   }
 }

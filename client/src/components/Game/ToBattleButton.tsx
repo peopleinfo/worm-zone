@@ -2,7 +2,9 @@ import { useGameStore } from "../../stores/gameStore";
 import { useAuthStore } from "../../stores/authStore";
 import { socketClient } from "../../services/socketClient";
 import { useSettingsStore } from "../../stores/settingsStore";
+import { audioService } from "../../services/audioService";
 import { HelpCircle } from "lucide-react";
+import { MuteToggleButton } from "./MuteToggleButton";
 
 // Configuration constants
 const MIN_PLAYERS_FOR_BATTLE = 5;
@@ -13,7 +15,9 @@ export const ToBattleButton = () => {
   const connectionError = useAuthStore((state) => state.connectionError);
   const setConnecting = useAuthStore((state) => state.setConnecting);
   const setConnectionError = useAuthStore((state) => state.setConnectionError);
-  const clearConnectionError = useAuthStore((state) => state.clearConnectionError);
+  const clearConnectionError = useAuthStore(
+    (state) => state.clearConnectionError
+  );
 
   const { closeSettingsModal } = useSettingsStore();
   const startCountdown = useGameStore((state) => state.startCountdown);
@@ -25,6 +29,9 @@ export const ToBattleButton = () => {
 
   const handleToBattle = async () => {
     if (isConnecting || isCountingDown) return;
+
+    // Handle audio context initialization on user interaction
+    audioService.handleUserInteraction();
 
     setConnecting(true);
     clearConnectionError();
@@ -121,6 +128,7 @@ export const ToBattleButton = () => {
           <div className="countdown-text">Get Ready!</div>
         </div>
       )}
+      <MuteToggleButton />
     </div>
   );
 };
