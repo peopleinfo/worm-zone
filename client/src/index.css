@@ -34,7 +34,6 @@ body {
   width: 100%;
   height: 100%;
   font-family: Arial, sans-serif;
-  background: var(--color-dark);
   overflow: hidden;
   position: fixed;
   top: 0;
@@ -54,6 +53,30 @@ body {
   left: 0;
   overflow: hidden;
   background: var(--color-dark);
+  background-image: url('/7.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: backgroundFloat 30s ease-in-out infinite;
+}
+
+@keyframes backgroundFloat {
+  0%, 100% {
+    background-position: center;
+    transform: scale(1);
+  }
+  25% {
+    background-position: 5% 10%;
+    transform: scale(1.02);
+  }
+  50% {
+    background-position: 95% 90%;
+    transform: scale(1.03);
+  }
+  75% {
+    background-position: 10% 95%;
+    transform: scale(1.02);
+  }
 }
 
 
@@ -74,7 +97,6 @@ body {
   background-position: center !important;
   background-repeat: no-repeat !important;
 }
-
 .splash-overlay {
   position: absolute !important;
   top: 0 !important;
@@ -218,7 +240,6 @@ body {
   width: 100%;
   height: 100%;
   position: relative;
-  background: var(--color-dark);
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -236,7 +257,6 @@ body {
   margin-top: -50vw;
   margin-left: -50vh;
   overflow: hidden;
-  background: var(--color-dark);
   /* Hardware acceleration for smoother performance */
   will-change: transform;
   backface-visibility: hidden;
@@ -255,7 +275,6 @@ body {
   bottom: 0;
   display: flex;
   flex-direction: column;
-  background: var(--color-dark);
   margin: 0;
   padding: 0;
 }
