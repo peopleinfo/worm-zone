@@ -59,27 +59,24 @@ body {
   background-repeat: no-repeat;
   animation: backgroundFloat 30s ease-in-out infinite;
 }
-
 @keyframes backgroundFloat {
   0%, 100% {
     background-position: center;
     transform: scale(1);
   }
   25% {
-    background-position: 5% 10%;
-    transform: scale(1.02);
+    background-position: 51% 51%;
+    transform: scale(1.01);
   }
   50% {
-    background-position: 95% 90%;
-    transform: scale(1.03);
+    background-position: 49% 49%;
+    transform: scale(1.015);
   }
   75% {
-    background-position: 10% 95%;
-    transform: scale(1.02);
+    background-position: 51% 49%;
+    transform: scale(1.01);
   }
 }
-
-
 
 /* Splash screen specific styling for portrait mode */
 .splash-screen {
@@ -369,9 +366,9 @@ canvas:not(#gameCanvas) {
   height: 150px;
   /* border: 2px solid var(--color-primary); */
   border-radius: 8px;
-  background: var(--color-overlay-dark);
+  /* background: var(--color-overlay-dark); */
   padding: 5px;
-  box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+  /* box-shadow: 0 0 10px rgba(76, 175, 80, 0.3); */
 }
 
 .mini-map-canvas {
