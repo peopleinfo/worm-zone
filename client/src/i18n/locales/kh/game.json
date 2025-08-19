@@ -48,5 +48,9 @@
   },
   "navigation": {
     "close": "បិទ"
+  },
+  "audio": {
+    "muteMusic": "បិទសំឡេងតន្ត្រី",
+    "unmuteMusic": "បើកសំឡេងតន្ត្រី"
   }
 }

@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { X, Volume2, VolumeX, Globe } from "lucide-react";
 import { useSettingsStore } from "../../stores/settingsStore";
+import { audioService } from "../../services/audioService";
 import { LanguageSelector } from "./LanguageSelector";
 
 export const SettingsModal: React.FC = () => {
@@ -22,6 +23,11 @@ export const SettingsModal: React.FC = () => {
     if (e.target === e.currentTarget) {
       closeSettingsModal();
     }
+  };
+
+  // Handle settings button click to initialize audio context
+  const handleSettingsButtonClick = () => {
+    audioService.handleUserInteraction();
   };
 
   if (!isSettingsModalOpen) return null;
@@ -49,14 +55,20 @@ export const SettingsModal: React.FC = () => {
               className={`tab-button ${
                 activeTab === "language" ? "active" : ""
               }`}
-              onClick={() => setActiveSettingsTab("language")}
+              onClick={() => {
+                handleSettingsButtonClick();
+                setActiveSettingsTab("language");
+              }}
             >
               <Globe size={18} />
               {t("settings.language")}
             </button>
             <button
               className={`tab-button ${activeTab === "sound" ? "active" : ""}`}
-              onClick={() => setActiveSettingsTab("sound")}
+              onClick={() => {
+                handleSettingsButtonClick();
+                setActiveSettingsTab("sound");
+              }}
             >
               <Volume2 size={18} />
               {t("settings.sound")}
@@ -83,11 +95,12 @@ export const SettingsModal: React.FC = () => {
                         max="1"
                         step="0.1"
                         value={sound.music}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          handleSettingsButtonClick();
                           updateSoundSettings({
                             music: parseFloat(e.target.value),
-                          })
-                        }
+                          });
+                        }}
                         className="volume-slider"
                       />
                       <span className="slider-value">
@@ -105,11 +118,12 @@ export const SettingsModal: React.FC = () => {
                         max="1"
                         step="0.1"
                         value={sound.effects}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          handleSettingsButtonClick();
                           updateSoundSettings({
                             effects: parseFloat(e.target.value),
-                          })
-                        }
+                          });
+                        }}
                         className="volume-slider"
                       />
                       <span className="slider-value">
@@ -121,9 +135,10 @@ export const SettingsModal: React.FC = () => {
                   <div className="setting-item">
                     <button
                       className={`toggle-button ${sound.muted ? "active" : ""}`}
-                      onClick={() =>
-                        updateSoundSettings({ muted: !sound.muted })
-                      }
+                      onClick={() => {
+                        handleSettingsButtonClick();
+                        updateSoundSettings({ muted: !sound.muted });
+                      }}
                     >
                       {sound.muted ? (
                         <VolumeX size={20} />
