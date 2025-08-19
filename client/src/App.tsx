@@ -1,8 +1,7 @@
 import { GameLayout } from "./components/Layout/GameLayout";
 import { SplashScreen } from "./components/SplashScreen";
 import { UserInfoDeniedModal } from "./components/Game/UserInfoDeniedModal";
-import { GameRulesModal } from "./components/GameRulesModal";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuthStore } from "./stores/authStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { audioService } from "./services/audioService";
@@ -13,7 +12,6 @@ function App() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const isUserInfoDenied = useAuthStore((s) => s.isUserInfoDenied);
   const sound = useSettingsStore((s) => s.sound);
-  const [showGameRules, setShowGameRules] = useState(true);
 
   // Auto login function
   const autoLogin = async () => {
@@ -51,18 +49,6 @@ function App() {
     audioService.syncWithSettings();
   }, [sound.music, sound.muted]);
 
-
-
-
-
-  // useEffect(() => {
-  //   const test = async () => {
-  //     const mos = window.mos;
-  //     console.log("mosSDK ", mos);
-  //     return mos;
-  //   };
-  //   test().then(console.log);
-  // }, []);
   if (isUserInfoDenied) {
     return <UserInfoDeniedModal onRetry={autoLogin} />;
   }
@@ -74,11 +60,6 @@ function App() {
       <div className="game-container">
         <GameLayout />
       </div>
-      {/* Game Rules Modal - shows on first load */}
-      <GameRulesModal 
-        isOpen={showGameRules} 
-        onClose={() => setShowGameRules(false)} 
-      />
     </div>
   );
 }
