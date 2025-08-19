@@ -11,6 +11,7 @@ export class GameEngine {
   private animationId: number | null = null;
   private mySnake: Snake | null = null;
   private lastSocketUpdate: number = 0;
+  private lastFrameTime: number = 0;
   private aiSnakes: Snake[] = [];
   private foods: Food[] = [];
   private zoom: number = MAP_ZOOM_LEVEL;
@@ -146,13 +147,17 @@ export class GameEngine {
     
     if (!store.isPlaying || !this.mySnake) return;
 
-    // Throttle socket updates to reduce network overhead
+    // Calculate deltaTime for frame-rate independent movement
     const now = Date.now();
+    const deltaTime = this.lastFrameTime ? now - this.lastFrameTime : 16.67; // Default to 60 FPS
+    this.lastFrameTime = now;
+    
+    // Throttle socket updates to reduce network overhead
     const shouldSendUpdate = now - this.lastSocketUpdate > 50; // 20 FPS for network updates
 
     // Update player snake
     if (this.mySnake.isAlive) {
-      this.mySnake.move(store.controls);
+      this.mySnake.move(store.controls, deltaTime);
       this.mySnake.checkCollisionsWithBoundary(this.WORLD_WIDTH, this.WORLD_HEIGHT);
 
       // Food collisions - multiplayer only
@@ -306,6 +311,7 @@ export class GameEngine {
     
     // Reset timing
     this.lastSocketUpdate = 0;
+    this.lastFrameTime = 0;
     
     // Reinitialize game
     this.initializeGame();
@@ -321,6 +327,7 @@ export class GameEngine {
     
     // Reset timing variables
     this.lastSocketUpdate = 0;
+    this.lastFrameTime = 0;
     
     // Disconnect socket if connected
     if (socketClient.isSocketConnected()) {

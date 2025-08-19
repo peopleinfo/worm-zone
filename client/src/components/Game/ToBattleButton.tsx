@@ -5,7 +5,7 @@ import { useSettingsStore } from "../../stores/settingsStore";
 import { HelpCircle } from "lucide-react";
 
 // Configuration constants
-const MIN_PLAYERS_FOR_BATTLE = 10;
+const MIN_PLAYERS_FOR_BATTLE = 5;
 
 export const ToBattleButton = () => {
   // Use centralized connection state from authStore
@@ -56,11 +56,18 @@ export const ToBattleButton = () => {
   };
 
   const waitForMinimumPlayers = async (): Promise<void> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      const timeout = 15000; // 15 second timeout
+      
       const checkPlayers = () => {
         const currentPlayerCount = useGameStore.getState().playerCount;
+        const elapsed = Date.now() - startTime;
+        
         if (currentPlayerCount >= MIN_PLAYERS_FOR_BATTLE) {
           resolve();
+        } else if (elapsed > timeout) {
+          reject(new Error(`Timeout waiting for minimum players. Current: ${currentPlayerCount}/${MIN_PLAYERS_FOR_BATTLE}`));
         } else {
           // Request server to add bots if needed
           if (socketClient.isSocketConnected()) {

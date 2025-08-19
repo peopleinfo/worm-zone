@@ -83,7 +83,13 @@ io.use((socket, next) => {
 });
 
 // Bot configuration
-const MAX_BOTS = 20;
+const MAX_BOTS = 5;
+
+// Bot management throttling
+let lastBotSpawnAttempt = 0;
+let lastBotLimitLog = 0;
+const BOT_SPAWN_COOLDOWN = 2000; // 2 seconds between spawn attempts
+const BOT_LOG_THROTTLE = 5000; // 5 seconds between limit logs
 
 // Game state
 const gameState = {
@@ -425,7 +431,7 @@ function createBot(id) {
     points: [],
     angle: safeAngle,
     radius: botRadius,
-    speed: 1.1, // Slightly faster than human players for competitive gameplay
+    speed: 1.0, // Consistent speed with human players for fair gameplay
     color: getRandomColor(),
     score: 1.0,
     alive: true,
@@ -451,17 +457,29 @@ function createBot(id) {
 }
 
 function spawnBots(count = 5) {
+  const currentTime = Date.now();
+  
+  // Throttle spawn attempts to prevent spam
+  if (currentTime - lastBotSpawnAttempt < BOT_SPAWN_COOLDOWN) {
+    return;
+  }
+  
   // Count current bots (both alive and dead)
   const currentBots = Array.from(gameState.players.values()).filter(p => p.isBot).length;
   const availableSlots = MAX_BOTS - currentBots;
   const botsToSpawn = Math.min(count, availableSlots);
   
   if (botsToSpawn <= 0) {
-    // console.log(`Bot limit reached (${MAX_BOTS}). Cannot spawn more bots. Current bots: ${currentBots}`);
+    // Throttled logging to prevent spam
+    if (currentTime - lastBotLimitLog > BOT_LOG_THROTTLE) {
+      console.log(`Bot limit reached (${MAX_BOTS}). Current bots: ${currentBots}`);
+      lastBotLimitLog = currentTime;
+    }
     return;
   }
   
-  // console.log(`Spawning ${botsToSpawn} bots...`);
+  lastBotSpawnAttempt = currentTime;
+  
   for (let i = 0; i < botsToSpawn; i++) {
     const botId = `bot-${generatePlayerId()}`;
     const bot = createBot(botId);
@@ -474,7 +492,7 @@ function spawnBots(count = 5) {
   
   const totalBots = currentBots + botsToSpawn;
   const aliveBots = Array.from(gameState.players.values()).filter(p => p.isBot && p.alive).length;
-  // console.log(`Bot spawning complete: ${botsToSpawn} spawned, ${totalBots}/${MAX_BOTS} total, ${aliveBots} alive`);
+  console.log(`Bot spawning complete: ${botsToSpawn} spawned, ${totalBots}/${MAX_BOTS} total, ${aliveBots} alive`);
 }
 
 // Helper function for collision detection (same logic as client-side)
@@ -763,7 +781,7 @@ io.on('connection', (socket) => {
       points: [],
       angle: safeAngle,
       radius: playerRadius,
-      speed: 1,
+      speed: 1.0,
       color: getRandomColor(),
       score: 0,
       alive: true,
@@ -1038,7 +1056,12 @@ io.on('connection', (socket) => {
       if (maxBotsAllowed > 0) {
         spawnBots(maxBotsAllowed);
       } else {
-        console.log(`Cannot add more bots. Current: ${currentBots}/${MAX_BOTS}`);
+        // Throttled logging to prevent spam
+        const currentTime = Date.now();
+        if (currentTime - lastBotLimitLog > BOT_LOG_THROTTLE) {
+          console.log(`Cannot add more bots. Current: ${currentBots}/${MAX_BOTS}`);
+          lastBotLimitLog = currentTime;
+        }
       }
       
       // Broadcast updated game state to all players
@@ -1112,23 +1135,61 @@ setInterval(() => {
 
 // Automatic bot respawning function
 function maintainMinimumBots() {
-  const currentBots = Array.from(gameState.players.values()).filter(p => p.isBot && p.alive).length;
-  const humanPlayers = Array.from(gameState.players.values()).filter(p => !p.isBot).length;
-  const minBots = Math.max(3, Math.min(5, 8 - humanPlayers)); // 3-5 bots minimum, adjust based on human players
+  const humanPlayers = Array.from(gameState.players.values()).filter(p => !p.isBot && p.alive).length;
+  const aliveBots = Array.from(gameState.players.values()).filter(p => p.isBot && p.alive);
+  const allBots = Array.from(gameState.players.values()).filter(p => p.isBot);
   
-  if (currentBots < minBots) {
-    const botsToSpawn = minBots - currentBots;
-    console.log(`Maintaining minimum bots: spawning ${botsToSpawn} bots (current: ${currentBots}, target: ${minBots})`);
-    spawnBots(botsToSpawn);
+  // Maintain 3-5 bots minimum, adjusting based on human player count
+  const minBots = Math.max(3, Math.min(5, 5 - humanPlayers));
+  const maxBots = 5;
+  
+  // If we have too many bots, remove lowest-scoring ones (high rank priority)
+  if (allBots.length > maxBots) {
+    // Sort bots by score (descending) to keep highest-scoring ones
+    const sortedBots = allBots.sort((a, b) => b.score - a.score);
+    const botsToRemove = sortedBots.slice(maxBots); // Remove excess bots (lowest scores)
+    
+    botsToRemove.forEach(bot => {
+      console.log(`Removing low-rank bot ${bot.id} (score: ${bot.score.toFixed(1)}) to maintain max ${maxBots} bots`);
+      if (bot.alive) {
+        handleBotDeath(bot);
+      } else {
+        // Remove dead bot from game state
+        gameState.players.delete(bot.id);
+        io.emit('playerDisconnected', bot.id);
+      }
+    });
+    
+    // Update leaderboard after bot removal
+    const leaderboard = generateLeaderboard();
+    const fullLeaderboard = generateFullLeaderboard();
+    io.emit('leaderboardUpdate', {
+      leaderboard: leaderboard,
+      fullLeaderboard: fullLeaderboard
+    });
+  }
+  
+  // Only attempt to spawn bots if we actually need them and haven't tried recently
+  const currentAliveBots = aliveBots.length;
+  if (currentAliveBots < minBots && allBots.length < maxBots) {
+    const botsNeeded = Math.min(minBots - currentAliveBots, maxBots - allBots.length);
+    if (botsNeeded > 0) {
+      spawnBots(botsNeeded);
+    }
   }
 }
 
 // Update bots continuously
+let botMaintenanceCounter = 0;
 setInterval(() => {
   updateBots();
   
-  // Maintain minimum bot count
-  maintainMinimumBots();
+  // Maintain minimum bot count less frequently (every 2 seconds instead of every 100ms)
+  botMaintenanceCounter++;
+  if (botMaintenanceCounter >= 20) { // 20 * 100ms = 2000ms = 2 seconds
+    maintainMinimumBots();
+    botMaintenanceCounter = 0;
+  }
   
   // Broadcast bot movements to all players
   gameState.players.forEach((player) => {

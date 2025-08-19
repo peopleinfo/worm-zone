@@ -13,6 +13,7 @@ export interface Snake {
   angle: number;
   radius: number;
   speed: number;
+  baseSpeed: number;
   turningSpeed: number;
   color: string;
   ai: boolean;

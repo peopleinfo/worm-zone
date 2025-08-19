@@ -37,6 +37,7 @@ export class Snake implements SnakeInterface {
     this.radius = 4;
     this.speed = 1.0;
     this.turningSpeed = 7;
+    this.baseSpeed = 1.0; // Base speed for platform consistency
     this.points = [new Point(x, y, this.radius, color)];
     this.velocity = { x: 1, y: 0 };
     this.overPos = { x: 0, y: 0 };
@@ -89,7 +90,7 @@ export class Snake implements SnakeInterface {
     return [0, 45, 90, 135, 180, 225, 270, 315, 360][Math.floor(Math.random() * 8)];
   }
 
-  move(controls?: Controls): void {
+  move(controls?: Controls, deltaTime: number = 16.67): void {
     if (!this.isAlive || this.points.length === 0) return;
 
     // For non-AI snakes, only update angle if using keyboard controls
@@ -108,13 +109,31 @@ export class Snake implements SnakeInterface {
       y: Math.sin(this.angle * -coeffD2R)
     };
 
-    const headX = this.getHead().x + this.speed * this.velocity.x;
-    const headY = this.getHead().y + this.speed * this.velocity.y;
+    // Platform-consistent movement with frame rate normalization
+    const normalizedDeltaTime = deltaTime / 16.67; // Normalize to 60 FPS baseline
+    const platformMultiplier = this.getPlatformSpeedMultiplier();
+    const effectiveSpeed = this.baseSpeed * normalizedDeltaTime * platformMultiplier;
+
+    const headX = this.getHead().x + effectiveSpeed * this.velocity.x;
+    const headY = this.getHead().y + effectiveSpeed * this.velocity.y;
 
     const head = new Point(headX, headY, this.getHead().radius, this.getHead().color);
 
     this.points.unshift(head);
     this.points.pop();
+  }
+
+  private getPlatformSpeedMultiplier(): number {
+    // Detect platform and apply consistent speed multipliers
+    const userAgent = navigator.userAgent.toLowerCase();
+    
+    if (/iphone|ipad|ipod/.test(userAgent)) {
+      return 1.0; // iOS baseline
+    } else if (/android/.test(userAgent)) {
+      return 1.0; // Android same as iOS
+    } else {
+      return 1.0; // Desktop same speed
+    }
   }
 
   updateAngle(targetAngle: number): void {
