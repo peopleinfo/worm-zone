@@ -29,17 +29,18 @@ function App() {
     return () => clearTimeout(timer);
   }, [initializeAuth]);
 
+
   // Initialize and sync audio settings when app loads
   useEffect(() => {
     if (isLoggedIn && !isLoadingInit) {
       // Force sync settings immediately
       audioService.forceSyncSettings();
-      
+
       // Set up periodic sync to ensure settings are always current
       const syncInterval = setInterval(() => {
         audioService.forceSyncSettings();
       }, 1000); // Sync every second
-      
+
       return () => clearInterval(syncInterval);
     }
   }, [isLoggedIn, isLoadingInit]);

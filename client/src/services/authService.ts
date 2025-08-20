@@ -164,6 +164,14 @@ class AuthService {
       throw error;
     }
   }
+  async getWindowInfo() {
+    try {
+      return await window.mos.getWindowInfo();
+    } catch (error) {
+      console.error("Get window info failed:", error);
+      throw error;
+    }
+  }
 }
 
 // Create a singleton instance
