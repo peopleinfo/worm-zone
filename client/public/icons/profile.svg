@@ -1,8 +1,0 @@
-<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
-  <!-- White circle with red outline -->
-  <circle cx="22" cy="22" r="20" fill="white" stroke="#ff0000" stroke-width="2"/>
-  
-  <!-- Light blue person silhouette -->
-  <circle cx="22" cy="18" r="4" fill="#87ceeb"/>
-  <path d="M14 32c0-4.4 3.6-8 8-8s8 3.6 8 8v2H14v-2z" fill="#87ceeb"/>
-</svg>

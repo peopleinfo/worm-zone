@@ -12,10 +12,10 @@ export const MuteToggleButton: React.FC = React.memo(() => {
   const handleToggleMute = () => {
     const newMutedState = !isMuted;
     updateSoundSettings({ muted: newMutedState });
-    
+
     // Ensure audio service is synced
     audioService.setMuted(newMutedState);
-    
+
     // If unmuting, try to play music if it's not already playing
     if (!newMutedState) {
       audioService.ensureMusicIsPlaying();
@@ -24,12 +24,23 @@ export const MuteToggleButton: React.FC = React.memo(() => {
 
   return (
     <button
-      className="mute-toggle-button"
+      className="circle-button"
+      style={{
+        left: 20,
+        position: "absolute",
+        top: 20,
+      }}
       onClick={handleToggleMute}
-      aria-label={isMuted ? t("game:audio.unmuteMusic") : t("game:audio.muteMusic")}
+      aria-label={
+        isMuted ? t("game:audio.unmuteMusic") : t("game:audio.muteMusic")
+      }
       title={isMuted ? t("game:audio.unmuteMusic") : t("game:audio.muteMusic")}
     >
-      {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+      {isMuted ? (
+        <img src="/icons/mute.png" alt="Mute" />
+      ) : (
+        <img src="/icons/unmute.png" alt="Unmute" />
+      )}
     </button>
   );
 });

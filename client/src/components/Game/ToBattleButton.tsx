@@ -92,7 +92,7 @@ export const ToBattleButton = () => {
     if (isCountingDown && countdownValue)
       return `Starting in ${countdownValue}...`;
     // if (isConnected && playerCount < MIN_PLAYERS_FOR_BATTLE) return `Waiting for players (${playerCount}/${MIN_PLAYERS_FOR_BATTLE})`;
-    return "To Battle!";
+    return "Battle!";
   };
 
   const isButtonDisabled = () => {
@@ -111,14 +111,13 @@ export const ToBattleButton = () => {
         disabled={isButtonDisabled()}
         className="to-battle-btn"
       >
-        {getButtonText()}
+        <span>{getButtonText()}</span>
       </button>
 
       {/* How to Play Link */}
-      <button onClick={toggleHowToPlay} className="how-to-play-link">
-        <HelpCircle size={18} />
+      <a onClick={toggleHowToPlay} className="how-to-play-link">
         How to Play
-      </button>
+      </a>
       {connectionError && (
         <div className="connection-error">Error: Connection failed</div>
       )}
@@ -128,7 +127,6 @@ export const ToBattleButton = () => {
           <div className="countdown-text">Get Ready!</div>
         </div>
       )}
-      <MuteToggleButton />
     </div>
   );
 };

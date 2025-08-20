@@ -13,6 +13,7 @@ import { ProfileModal } from "../Profile/ProfileModal";
 import { GameOverModal } from "./GameOverModal";
 import { useAuthStore } from "../../stores/authStore";
 import { HowToPlayModal } from "./HowToPlayModal";
+import { MuteToggleButton } from "./MuteToggleButton";
 
 export const GameUI: React.FC = React.memo(() => {
   const isPlaying = useGameStore((state) => state.isPlaying);
@@ -20,7 +21,7 @@ export const GameUI: React.FC = React.memo(() => {
   const toggleHowToPlay = useGameStore((state) => state.toggleHowToPlay);
 
   const { t } = useTranslation();
-  
+
   const openSettingsModal = useSettingsStore(
     (state) => state.openSettingsModal
   );
@@ -53,12 +54,27 @@ export const GameUI: React.FC = React.memo(() => {
         <div className="game-ui">
           <Leaderboard />
           {!isPlaying && (
-            <>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 30,
+              }}
+            >
+              <img
+                src="/logo.png"
+                alt="Snake Zone"
+                style={{
+                  width: 240,
+                  marginBottom: "20px",
+                }}
+              />
               <div className="start-message">
-                <h2>Snake Zone</h2>
                 <ToBattleButton />
               </div>
-            </>
+            </div>
           )}
         </div>
       )}
@@ -67,29 +83,30 @@ export const GameUI: React.FC = React.memo(() => {
       {/* Settings button positioned independently at top-right */}
       {!isPlaying && (
         <>
+          <MuteToggleButton />
           <div className="top-right-buttons">
             {isLoggedIn && (
               <button
-                className="settings-button"
+                className="circle-button"
                 onClick={openProfileModal}
                 aria-label={t("common:profile.title")}
               >
-                <User size={24} />
+                <img src="/icons/profile.png" alt="Profile" />
               </button>
             )}
             <button
-              className="settings-button"
+              className="circle-button"
               onClick={openTopPlayersModal}
               aria-label={t("game:leaderboard.topPlayers")}
             >
-              <Trophy size={24} />
+              <img src="/icons/trophy.png" alt="Trophy" />
             </button>
             <button
-              className="settings-button"
+              className="circle-button"
               onClick={handleSettingsClick}
               aria-label={t("common:navigation.settings")}
             >
-              <Settings size={24} />
+              <img src="/icons/setting.png" alt="Settings" />
             </button>
           </div>
           <SettingsModal />
