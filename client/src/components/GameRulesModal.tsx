@@ -1,36 +1,16 @@
-import React, { useState } from 'react';
-import { X, Volume2, VolumeX } from 'lucide-react';
+import React from 'react';
+import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { audioService } from '../services/audioService';
 
 interface GameRulesModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const GameRulesModal: React.FC<GameRulesModalProps> = ({ isOpen, onClose }) => {
+export const GameRulesModal: React.FC<GameRulesModalProps> = ({ isOpen }) => {
   const { t } = useTranslation();
-  const [isMuted, setIsMuted] = useState(true); // Start muted by default
-
-  const handleClose = () => {
-    // Start background music when user closes the rules
-    audioService.handleUserInteraction();
-    onClose();
-  };
-
-  const handleToggleMute = () => {
-    const newMutedState = !isMuted;
-    setIsMuted(newMutedState);
-    audioService.setMuted(newMutedState);
-    
-    // If unmuting, also start the audio
-    if (!newMutedState) {
-      audioService.handleUserInteraction();
-    }
-  };
 
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
@@ -39,7 +19,6 @@ export const GameRulesModal: React.FC<GameRulesModalProps> = ({ isOpen, onClose 
             {t('gameRules.title', 'How to Play')}
           </h2>
           <button
-            onClick={handleClose}
             className="text-gray-500 hover:text-gray-700 transition-colors"
           >
             <X size={24} />
@@ -93,27 +72,8 @@ export const GameRulesModal: React.FC<GameRulesModalProps> = ({ isOpen, onClose 
         </div>
 
         <div className="mt-6 flex flex-col items-center space-y-4">
-          {/* Audio Toggle */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">
-              {t('gameRules.backgroundMusic', 'Background Music')}:
-            </span>
-            <button
-              onClick={handleToggleMute}
-              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-              title={isMuted ? t('gameRules.unmute', 'Unmute') : t('gameRules.mute', 'Mute')}
-            >
-              {isMuted ? (
-                <VolumeX size={20} className="text-gray-600" />
-              ) : (
-                <Volume2 size={20} className="text-blue-500" />
-              )}
-            </button>
-          </div>
-          
           {/* Start Playing Button */}
           <button
-            onClick={handleClose}
             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors"
           >
             {t('gameRules.startPlaying', 'Start Playing!')}

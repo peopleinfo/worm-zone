@@ -1238,22 +1238,6 @@ canvas:not(#gameCanvas) {
   font-weight: bold;
 }
 
-/* Settings Sections */
-.settings-section {
-  margin-bottom: 20px;
-  padding: 12px;
-  background: rgba(var(--color-primary-rgb), 0.03);
-  border-radius: 12px;
-  border: 1px solid var(--color-primary-transparent-1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.settings-section:hover {
-  background: var(--color-primary-transparent-7);
-  border-color: var(--color-primary-transparent-2);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
 
 .section-title {
   display: flex;
@@ -1290,12 +1274,8 @@ canvas:not(#gameCanvas) {
   align-items: center;
   margin-bottom: 12px;
   padding: 4px 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 } 
 
-.setting-item:hover {
-  transform: translateX(4px);
-}
 
 .setting-item label {
   color: rgba(var(--color-light-rgb), 0.9);
@@ -1305,9 +1285,6 @@ canvas:not(#gameCanvas) {
   transition: color 0.3s ease;
 }
 
-.setting-item:hover label {
-  color: rgba(var(--color-light-rgb), 1);
-}
 
 /* Slider Styles */
 .slider-container {
@@ -1319,10 +1296,6 @@ canvas:not(#gameCanvas) {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.slider-container:hover {
-  background: rgba(var(--color-dark-rgb), 0.3);
-  transform: scale(1.02);
-}
 
 .volume-slider,
 .sensitivity-slider {
@@ -1334,7 +1307,6 @@ canvas:not(#gameCanvas) {
   cursor: pointer;
   -webkit-appearance: none;
   position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .volume-slider:hover,
@@ -1545,10 +1517,6 @@ canvas:not(#gameCanvas) {
   min-height: 180px;
 }
 
-.tab-panel {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1562,30 +1530,32 @@ canvas:not(#gameCanvas) {
 
 /* Language Selector */
 .language-selector {
-  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .language-options {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
 }
 
 .language-option {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: rgba(var(--color-dark-rgb), 0.2);
-  border: 1px solid rgba(102, 102, 102, 0.3);
-  border-radius: 12px;
-  color: rgba(var(--color-light-rgb), 0.9);
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 20px;
+  color: #000;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
+  font-weight: bold;
 }
 
 .language-option::before {
@@ -1616,95 +1586,32 @@ canvas:not(#gameCanvas) {
 }
 
 .language-option.active {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary-transparent-2) 0%,
-    rgba(102, 187, 106, 0.2) 100%
-  );
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary-transparent-3),
-    0 6px 20px var(--color-primary-transparent-2);
+  background: #FF6B35;
+  color: white;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
 }
 
 .language-flag {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(var(--color-light-rgb), 0.1);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-}
-
-.flag-emoji {
-  font-size: 18px;
-}
-
-.language-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.language-name {
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-.language-code {
-  font-size: 12px;
-  opacity: 0.7;
-  font-weight: 400;
-}
-
-.language-check {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--color-primary);
-  color: #000;
-  animation: checkIn 0.3s ease-out;
 }
 
-@keyframes checkIn {
-  from {
-    transform: scale(0) rotate(180deg);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
+.flag-emoji {
+  font-size: 16px;
 }
 
-/* Mobile Responsive */
-@media (max-width: 480px) {
-  .settings-tabs {
-    gap: 4px;
-    padding: 2px;
-  }
 
-  .tab-button {
-    padding: 10px 12px;
-    font-size: 13px;
-  }
 
-  .language-option {
-    padding: 10px 12px;
-  }
-
-  .language-name {
-    font-size: 15px;
-  }
+.language-code {
+  font-size: 14px;
+  font-weight: bold;
 }
+
+
 
 /* Username Input */
 .username-input {

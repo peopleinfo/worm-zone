@@ -1,5 +1,4 @@
 import React from 'react';
-import { Check } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { supportedLanguages, type SupportedLanguage } from '../../i18n';
 
@@ -12,6 +11,7 @@ export const LanguageSelector: React.FC = () => {
 
   return (
     <div className="language-selector">
+      <div className="language-label">Language</div>
       <div className="language-options">
         {supportedLanguages.map((lang) => (
           <button
@@ -24,17 +24,7 @@ export const LanguageSelector: React.FC = () => {
             <div className="language-flag">
               <span className="flag-emoji">{lang.flag}</span>
             </div>
-            
-            <div className="language-info">
-              <span className="language-name">{lang.name}</span>
-              <span className="language-code">{lang.code.toUpperCase()}</span>
-            </div>
-            
-            {language === lang.code && (
-              <div className="language-check">
-                <Check size={20} />
-              </div>
-            )}
+            <span className="language-code">{lang.code.toUpperCase()}</span>
           </button>
         ))}
       </div>
