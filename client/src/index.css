@@ -568,6 +568,14 @@ canvas:not(#gameCanvas) {
   align-items: center;
   gap: 2px;
   margin-bottom: 1px;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.playing-leaderboard-header {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-bottom: 1px;
 }
 
 .leaderboard-icon {
@@ -575,8 +583,17 @@ canvas:not(#gameCanvas) {
   flex-shrink: 0;
 }
 
+.playing-leaderboard-icon {
+  color: white;
+}
+
 .leaderboard-title {
-  color: var(--color-primary);
+  color: white;
+  font-size: 12px;
+}
+
+.playing-leaderboard-title {
+  color: white;
   font-weight: bold;
   font-size: 13px;
 }
@@ -595,16 +612,8 @@ canvas:not(#gameCanvas) {
   transition: background-color 0.2s ease;
 }
 
-.player-rank {
-  color: var(--color-primary);
-  font-weight: bold;
-  min-width: 20px;
-  font-size: 13px;
-}
-
 .player-name {
   flex: 1;
-  color: var(--color-light);
   font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -613,20 +622,17 @@ canvas:not(#gameCanvas) {
 
 .current-player-name {
   font-weight: bold;
-  color: var(--color-primary);
-}
-
-.bot-player .player-name {
-  color: var(--color-gray);
+  /* color: var(--color-primary); */
 }
 
 .player-score {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: var(--color-primary);
   font-weight: bold;
   font-size: 12px;
+  width: 96px;
+  text-align: right;
 }
 
 .score-icon {
@@ -686,10 +692,10 @@ canvas:not(#gameCanvas) {
   padding: 20px;
   text-align: center;
   min-width: 320px;
-  position: relative;
+  min-height: 160px;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
-  max-height: calc(80vh - 80px);
+  max-height: calc(40vh - 120px);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--color-primary-rgb), 0.5) transparent;
@@ -714,7 +720,7 @@ canvas:not(#gameCanvas) {
 
 .game-over-modal .close-button:hover {
   background: var(--color-primary-transparent-2);
-  border-color: var(--color-primary-light);
+  /* border-color: var(--color-primary-light); */
   color: var(--color-primary-light);
   transform: scale(1.1);
 }
@@ -1093,6 +1099,7 @@ canvas:not(#gameCanvas) {
   justify-content: space-between;
   align-items: center;
   padding-inline: 20px;
+  padding-block: 10px;
   position: relative;
   background: white;
 }
@@ -1108,7 +1115,7 @@ canvas:not(#gameCanvas) {
 
 .modal-title {
   color: var(--color-primary);
-  font-size: 22px;
+  font-size: 24px;
   font-weight: bold;
   margin: 0;
   text-shadow: 0 0 20px var(--color-primary-transparent-3);
@@ -1124,18 +1131,12 @@ canvas:not(#gameCanvas) {
 }
 
 .close-button {
-  background: var(--color-primary-transparent-1);
-  border: 1px solid var(--color-primary-transparent-3);
-  border-radius: 8px;
-  color: var(--color-primary);
   cursor: pointer;
-  padding: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  padding: 0;
 }
 
 .close-button:hover {
@@ -1244,23 +1245,10 @@ canvas:not(#gameCanvas) {
   font-weight: 600;
 }
 
-.player-rank {
-  color: var(--color-primary);
-  font-weight: 600;
-  text-align: left;
-}
-
 .player-name {
-  color: rgba(var(--color-light-rgb), 0.9);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.player-score {
-  color: var(--color-primary);
-  font-weight: 600;
-  text-align: right;
 }
 
 .you-indicator {
@@ -1308,7 +1296,7 @@ canvas:not(#gameCanvas) {
   font-weight: 600;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--color-primary-transparent-2);
+  /* border-bottom: 1px solid var(--color-primary-transparent-2); */
   position: relative;
 }
 
@@ -1827,7 +1815,6 @@ canvas:not(#gameCanvas) {
   border: 3px solid var(--color-primary);
   border-radius: 20px;
   padding: 0;
-  color: #fff;
   max-width: 500px;
   width: 100vw;
   max-height: 40vh;
@@ -1846,18 +1833,14 @@ canvas:not(#gameCanvas) {
 }
 
 .how-to-play-modal .modal-header h2 {
-  margin: 0;
-  font-size: 18px;
   font-weight: bold;
   color: var(--color-primary);
-  text-shadow: 0 2px 10px var(--color-primary-transparent-3);
 }
 
 .how-to-play-modal .modal-content {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: calc(40vh - 120px);
   overflow-y: auto;
 }
 
@@ -2168,7 +2151,6 @@ canvas:not(#gameCanvas) {
 .permission-title {
   font-size: 22px;
   font-weight: 700;
-  color: #fff;
   margin: 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   letter-spacing: 0.5px;
@@ -2385,12 +2367,9 @@ canvas:not(#gameCanvas) {
   border-radius: 8px 8px 0 0;
   font-weight: 600;
   font-size: 14px;
-  color: #fff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .leaderboard-body {
-  background: rgba(0, 0, 0, 0.2);
   border-radius: 0 0 8px 8px;
 }
 
@@ -2410,23 +2389,17 @@ canvas:not(#gameCanvas) {
 .player-rank {
   width: 28px;
   flex-shrink: 0;
-  color: #fff;
-  font-weight: 600;
+  text-align: left;
+  font-weight: bold;
+  min-width: 20px;
+  font-size: 13px;
 }
 
 .player-name {
   flex: 1;
-  color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.player-score {
-  width: 96px;
-  text-align: right;
-  color: #fff;
-  font-weight: 600;
 }
 
 .leaderboard-separator {

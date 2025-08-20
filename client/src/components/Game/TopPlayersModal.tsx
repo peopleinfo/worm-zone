@@ -38,8 +38,12 @@ export const TopPlayersModal: React.FC = () => {
         {/* Modal Header */}
         <div className="modal-header">
           <h2 className="modal-title">
-            <Trophy size={20} style={{ marginRight: "8px" }} />
-            {t("leaderboard.topPlayers", "Top Players")}
+            <img
+              src={"/icons/rank-leaderboard.png"}
+              alt="leaderboard"
+              style={{ marginRight: "8px" }}
+            />
+            Leaderboard
           </h2>
           <button
             className="close-button"

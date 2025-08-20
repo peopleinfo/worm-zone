@@ -35,9 +35,9 @@ export const Leaderboard: React.FC = React.memo(() => {
   
   return (
     <div className="leaderboard">
-      <div className="leaderboard-header">
-        <span className="leaderboard-icon">👥</span>
-        <span className="leaderboard-title">Top players (in the arena: {totalPlayers})</span>
+      <div className="playing-leaderboard-header">
+        {/* <span className="playing-leaderboard-icon"></span> */}
+        <span className="playing-leaderboard-title">Top players (in the arena: {totalPlayers})</span>
       </div>
       
       <div className="leaderboard-list">
@@ -61,7 +61,7 @@ export const Leaderboard: React.FC = React.memo(() => {
                 {player.name}
               </span>
               <div className="player-score">
-                <span className="score-icon">👤</span>
+                {/* <span className="score-icon">👤</span> */}
                 <span className="score-value">{Math.round(player.score).toLocaleString()}</span>
               </div>
             </div>
