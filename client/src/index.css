@@ -1330,7 +1330,6 @@ canvas:not(#gameCanvas) {
   box-shadow: 0 0 0 3px var(--color-primary-transparent-2),
     0 4px 12px var(--color-primary-transparent-4),
     inset 0 1px 0 rgba(var(--color-light-rgb), 0.2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
@@ -1353,6 +1352,7 @@ canvas:not(#gameCanvas) {
 }
 
 .slider-value {
+  width: 60px;
   color: var(--color-primary);
   font-size: 15px;
   font-weight: 600;
