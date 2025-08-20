@@ -25,7 +25,7 @@ export const MuteToggleButton: React.FC<{ isAbsolute?: boolean }> = React.memo((
   return (
     <button
       className="circle-button"
-      style={isAbsolute ? { position: "absolute", left: 10, top: 20 } : {}}
+      style={isAbsolute ? { position: "absolute", left: 20, top: 20 } : {}}
       onClick={handleToggleMute}
       aria-label={
         isMuted ? t("game:audio.unmuteMusic") : t("game:audio.muteMusic")
