@@ -4,6 +4,7 @@ import { X, Volume2, VolumeX, Globe } from "lucide-react";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { audioService } from "../../services/audioService";
 import { LanguageSelector } from "./LanguageSelector";
+import { MuteToggleButton } from "../Game/MuteToggleButton";
 
 export const SettingsModal: React.FC = () => {
   const { t } = useTranslation("common");
@@ -15,7 +16,7 @@ export const SettingsModal: React.FC = () => {
     activeSettingsTab,
     setActiveSettingsTab,
   } = useSettingsStore();
-  
+
   const activeTab = activeSettingsTab;
 
   // Handle backdrop click
@@ -88,6 +89,7 @@ export const SettingsModal: React.FC = () => {
                 <div className="settings-section">
                   <div className="setting-item">
                     <label>{t("settings.music")}</label>
+                    <MuteToggleButton isAbsolute={false} />
                     <div className="slider-container">
                       <input
                         type="range"
@@ -109,7 +111,7 @@ export const SettingsModal: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="setting-item">
+                  {/* <div className="setting-item">
                     <label>{t("settings.effects")}</label>
                     <div className="slider-container">
                       <input
@@ -130,24 +132,7 @@ export const SettingsModal: React.FC = () => {
                         {Math.round(sound.effects * 100)}%
                       </span>
                     </div>
-                  </div>
-
-                  <div className="setting-item">
-                    <button
-                      className={`toggle-button ${sound.muted ? "active" : ""}`}
-                      onClick={() => {
-                        handleSettingsButtonClick();
-                        updateSoundSettings({ muted: !sound.muted });
-                      }}
-                    >
-                      {sound.muted ? (
-                        <VolumeX size={20} />
-                      ) : (
-                        <Volume2 size={20} />
-                      )}
-                      {sound.muted ? "Unmute" : "Mute"}
-                    </button>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             )}

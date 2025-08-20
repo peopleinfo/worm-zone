@@ -4,7 +4,7 @@ import { useSettingsStore } from "../../stores/settingsStore";
 import { audioService } from "../../services/audioService";
 import { useTranslation } from "react-i18next";
 
-export const MuteToggleButton: React.FC = React.memo(() => {
+export const MuteToggleButton: React.FC<{ isAbsolute?: boolean }> = React.memo(({ isAbsolute = true }) => {
   const { sound, updateSoundSettings } = useSettingsStore();
   const { t } = useTranslation();
   const isMuted = sound.muted;
@@ -25,11 +25,7 @@ export const MuteToggleButton: React.FC = React.memo(() => {
   return (
     <button
       className="circle-button"
-      style={{
-        left: 20,
-        position: "absolute",
-        top: 20,
-      }}
+      style={isAbsolute ? { position: "absolute", left: 20, top: 20 } : {}}
       onClick={handleToggleMute}
       aria-label={
         isMuted ? t("game:audio.unmuteMusic") : t("game:audio.muteMusic")

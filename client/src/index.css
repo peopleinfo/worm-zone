@@ -1289,9 +1289,9 @@ canvas:not(#gameCanvas) {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  padding: 8px 0;
+  padding: 4px 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+} 
 
 .setting-item:hover {
   transform: translateX(4px);
@@ -1316,9 +1316,6 @@ canvas:not(#gameCanvas) {
   gap: 12px;
   padding: 6px;
   border-radius: 8px;
-  background: rgba(var(--color-dark-rgb), 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -1331,7 +1328,7 @@ canvas:not(#gameCanvas) {
 .sensitivity-slider {
   width: 100px;
   height: 6px;
-  background: linear-gradient(90deg, #333 0%, #444 100%);
+  background: linear-gradient(90deg, #8a8989 0%, #8d8b8b 100%);
   border-radius: 3px;
   outline: none;
   cursor: pointer;
