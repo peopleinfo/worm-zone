@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { X, User, Trophy, Target } from "lucide-react";
+import { X, User } from "lucide-react";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { useAuthStore } from "../../stores/authStore";
 
@@ -53,7 +53,7 @@ export const ProfileModal: React.FC = () => {
         {/* Modal Content */}
         <div className="modal-content">
           <div className="profile-content">
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ marginBottom: 10 }}>
               {/* Profile Picture */}
               <div className="profile-picture">
                 {userInfo?.headPortrait ? (
@@ -104,11 +104,7 @@ export const ProfileModal: React.FC = () => {
                     <div className="stat-value">
                       {isLoadingRank
                         ? "Loading..."
-                        : rank?.currentUserRank?.rank
-                        ? `${
-                            rank.currentUserRank.rank
-                          }`
-                        : "N/A"}
+                        : rank?.currentUserRank?.rank ?? "N/A"}
                     </div>
                   </div>
                 </div>

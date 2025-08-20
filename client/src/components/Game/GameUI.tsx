@@ -3,7 +3,7 @@ import { useGameStore } from "../../stores/gameStore";
 import { Leaderboard } from "./Leaderboard";
 import { ToBattleButton } from "./ToBattleButton";
 import { MiniMap } from "./MiniMap";
-import { Settings, Trophy, User } from "lucide-react";
+
 import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { audioService } from "../../services/audioService";

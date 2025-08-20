@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Gamepad2, Trophy, RotateCcw } from "lucide-react";
+import { X } from "lucide-react";
 
 interface HowToPlayModalProps {
   isOpen: boolean;

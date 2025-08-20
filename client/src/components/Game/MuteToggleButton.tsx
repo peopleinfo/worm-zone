@@ -1,5 +1,5 @@
 import React from "react";
-import { Volume2, VolumeX } from "lucide-react";
+
 import { useSettingsStore } from "../../stores/settingsStore";
 import { audioService } from "../../services/audioService";
 import { useTranslation } from "react-i18next";
