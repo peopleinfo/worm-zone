@@ -24,7 +24,7 @@ const SplashScreen: React.FC = () => {
             {/* Logo image */}
             <div className="splash-logo-image-container">
               <img
-                src="https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?prompt=colorful%20snake%20game%20logo%20with%20neon%20effects%20and%20gaming%20aesthetic%20digital%20art&image_size=square"
+                src="/snake-splash.jpeg"
                 alt="Snake Zone Logo"
                 className="splash-logo-image"
               />
