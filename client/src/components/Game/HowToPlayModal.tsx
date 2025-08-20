@@ -16,7 +16,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
     <div className="settings-modal-overlay" onClick={onClose}>
       <div className="how-to-play-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>How to Play - Snake Zone</h2>
+          <h2>How to Play</h2>
           <button className="close-button" onClick={onClose}>
             <X size={24} />
           </button>
@@ -25,9 +25,6 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
         <div className="modal-content">
           <div className="rule-section">
             <div style={{ display: "flex", gap: 4 }}>
-              <div className="rule-icon">
-                <Gamepad2 size={24} />
-              </div>
               <h3>Game Objective & Controls</h3>
             </div>
             <ul>
@@ -40,9 +37,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
           </div>
           <div className="rule-section">
             <div style={{ display: "flex", gap: 4 }}>
-              <div className="rule-icon">
-                <Trophy size={24} />
-              </div>
+       
               <h3>Scoring System</h3>
             </div>
             <ul>
@@ -54,9 +49,6 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
           </div>
           <div className="rule-section">
             <div style={{ display: "flex", gap: 4 }}>
-              <div className="rule-icon">
-                <RotateCcw size={24} />
-              </div>
               <h3>Death & Restart</h3>
             </div>
             <ul>

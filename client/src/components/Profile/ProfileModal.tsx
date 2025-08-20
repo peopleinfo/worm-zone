@@ -53,53 +53,62 @@ export const ProfileModal: React.FC = () => {
         {/* Modal Content */}
         <div className="modal-content">
           <div className="profile-content">
-            {/* Profile Picture */}
-            <div className="profile-picture">
-              {userInfo?.headPortrait ? (
-                <img
-                  src={userInfo.headPortrait}
-                  alt={t("profile.avatar")}
-                  className="profile-avatar"
-                />
-              ) : (
-                <div className="profile-avatar-placeholder">
-                  <User size={40} />
-                </div>
-              )}
-            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              {/* Profile Picture */}
+              <div className="profile-picture">
+                {userInfo?.headPortrait ? (
+                  <img
+                    src={userInfo.headPortrait}
+                    alt={t("profile.avatar")}
+                    className="profile-avatar"
+                  />
+                ) : (
+                  <div className="profile-avatar-placeholder">
+                    <User size={40} />
+                  </div>
+                )}
+              </div>
 
-            {/* Profile Info */}
-            <div className="profile-info">
-              <div className="profile-name">
-                {userInfo?.firstName ? userInfo.firstName : "N/A"}
+              {/* Profile Info */}
+              <div className="profile-info">
+                <div className="profile-name">
+                  {userInfo?.firstName ? userInfo.firstName : "N/A"}
+                </div>
               </div>
             </div>
-
             {/* Game Statistics */}
             <div className="profile-stats">
               <div className="stats-grid">
                 <div className="stat-item">
-                  <div className="stat-icon">
-                    <Trophy size={20} />
-                  </div>
+                  <img
+                    src={"/icons/trophy.png"}
+                    alt="score"
+                    className="stat-icon"
+                  />
                   <div className="stat-content">
                     <div className="stat-label">{t("profile.bestScore")}</div>
                     <div className="stat-value">
-                      {isLoadingScores ? "Loading..." : (scores?.score || 0)}
+                      {isLoadingScores ? "Loading..." : scores?.score || 0}
                     </div>
                   </div>
                 </div>
 
                 <div className="stat-item">
-                  <div className="stat-icon">
-                    <Target size={20} />
-                  </div>
+                  <img
+                    src={"/icons/rank-leaderboard.png"}
+                    alt="score"
+                    className="stat-icon"
+                  />
                   <div className="stat-content">
-                    <div className="stat-label">{t("profile.rank")}</div>
+                    <div className="stat-label">Ranking</div>
                     <div className="stat-value">
-                      {isLoadingRank ? "Loading..." : 
-                        (rank?.currentUserRank?.rank ? `${t("profile.currentRank")} ${rank.currentUserRank.rank}` : "N/A")
-                      }
+                      {isLoadingRank
+                        ? "Loading..."
+                        : rank?.currentUserRank?.rank
+                        ? `${
+                            rank.currentUserRank.rank
+                          }`
+                        : "N/A"}
                     </div>
                   </div>
                 </div>
