@@ -692,12 +692,11 @@ canvas:not(#gameCanvas) {
   min-height: 220px;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
-  max-height: calc(40vh - 120px);
+  max-height: calc(40vh - 100px);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--color-primary-rgb), 0.5) transparent;
 }
-
 
 
 .final-stats {
@@ -956,24 +955,6 @@ canvas:not(#gameCanvas) {
   object-fit: contain;
 }
 
-/* Rotation button styles removed - using permanent landscape rotation */
-
-/* All rotation button styles removed */
-
-/* Rotation Animation */
-.rotating {
-  animation: rotate 0.5s ease-in-out;
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* Settings Modal Styles */
 .settings-modal-overlay {
   position: fixed;
@@ -1072,14 +1053,14 @@ canvas:not(#gameCanvas) {
   background: white;
 }
 
-.modal-header::after {
+/* .modal-header::after {
   content: "";
   position: absolute;
   bottom: 0;
   left: 28px;
   right: 28px;
   height: 1px;
-}
+} */
 
 .modal-title {
   color: var(--color-primary);
