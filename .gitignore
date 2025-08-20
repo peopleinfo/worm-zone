@@ -40,3 +40,4 @@ dist.zip
 
 # Multiplayer server and client files
 multiplayer/client.js
+.figma
