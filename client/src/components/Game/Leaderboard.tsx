@@ -44,7 +44,7 @@ export const Leaderboard: React.FC = React.memo(() => {
   }
 
   return (
-    <div className="leaderboard" style={{ left: marginTop?.statusBarHeight }}>
+    <div className="leaderboard" style={{ left: marginTop?.statusBarHeight + 6 }}>
       <div className="playing-leaderboard-header">
         {/* <span className="playing-leaderboard-icon"></span> */}
         <span className="playing-leaderboard-title">
