@@ -15,6 +15,12 @@ export class GameEngine {
   private aiSnakes: Snake[] = [];
   private foods: Food[] = [];
   private zoom: number = MAP_ZOOM_LEVEL;
+  
+  // Frame rate limiting
+  private readonly TARGET_FPS = 60;
+  private readonly FRAME_INTERVAL = 1000 / 60; // 16.67ms per frame
+  private lastRenderTime: number = 0;
+  
   // World coordinate system - consistent boundaries for collision and rendering
   private readonly WORLD_WIDTH: number = WORLD_WIDTH;
   private readonly WORLD_HEIGHT: number = WORLD_HEIGHT;
@@ -131,8 +137,16 @@ export class GameEngine {
   }
 
   private gameLoop = (): void => {
-    this.update();
-    this.render();
+    const now = performance.now();
+    const elapsed = now - this.lastRenderTime;
+    
+    // Only update and render if enough time has passed (60 FPS limiting)
+    if (elapsed >= this.FRAME_INTERVAL) {
+      this.update();
+      this.render();
+      this.lastRenderTime = now - (elapsed % this.FRAME_INTERVAL);
+    }
+    
     this.animationId = requestAnimationFrame(this.gameLoop);
   };
 
@@ -312,6 +326,7 @@ export class GameEngine {
     // Reset timing
     this.lastSocketUpdate = 0;
     this.lastFrameTime = 0;
+    this.lastRenderTime = 0;
     
     // Reinitialize game
     this.initializeGame();

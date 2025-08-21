@@ -14,6 +14,10 @@ interface MiniMapProps {
 export const MiniMap: React.FC<MiniMapProps> = ({ className = "" }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
+  
+  // Frame rate limiting for 60 FPS
+  const lastRenderTimeRef = useRef<number>(0);
+  const FRAME_INTERVAL = 1000 / 60; // 16.67ms per frame
 
   // Get game state from Zustand store
   const mySnake = useGameStore((state) => state.mySnake);
@@ -89,7 +93,15 @@ export const MiniMap: React.FC<MiniMapProps> = ({ className = "" }) => {
     if (!isPlaying) return;
 
     const animate = () => {
-      drawMiniMap();
+      const now = performance.now();
+      const elapsed = now - lastRenderTimeRef.current;
+      
+      // Only render if enough time has passed (60 FPS limiting)
+      if (elapsed >= FRAME_INTERVAL) {
+        drawMiniMap();
+        lastRenderTimeRef.current = now - (elapsed % FRAME_INTERVAL);
+      }
+      
       animationRef.current = requestAnimationFrame(animate);
     };
 
