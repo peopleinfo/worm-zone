@@ -17,7 +17,7 @@ export class GameEngine {
   private zoom: number = MAP_ZOOM_LEVEL;
   
   // Frame rate limiting
-  private readonly FRAME_INTERVAL = 1000 / 60; // 16.67ms per frame
+  private readonly FRAME_INTERVAL = 1000 / 30; // 33.33ms per frame
   private lastRenderTime: number = 0;
   
   // World coordinate system - consistent boundaries for collision and rendering
@@ -139,7 +139,7 @@ export class GameEngine {
     const now = performance.now();
     const elapsed = now - this.lastRenderTime;
     
-    // Only update and render if enough time has passed (60 FPS limiting)
+    // Only update and render if enough time has passed (30 FPS limiting)
     if (elapsed >= this.FRAME_INTERVAL) {
       this.update();
       this.render();
@@ -162,7 +162,7 @@ export class GameEngine {
 
     // Calculate deltaTime for frame-rate independent movement
     const now = Date.now();
-    const deltaTime = this.lastFrameTime ? now - this.lastFrameTime : 16.67; // Default to 60 FPS
+    const deltaTime = this.lastFrameTime ? now - this.lastFrameTime : 33.33; // Default to 30 FPS
     this.lastFrameTime = now;
     
     // Throttle socket updates to reduce network overhead
