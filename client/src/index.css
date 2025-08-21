@@ -520,7 +520,6 @@ canvas:not(#gameCanvas) {
   font-size: 8rem;
   font-weight: bold;
   color: var(--color-primary);
-  text-shadow: 0 0 20px rgba(251, 126, 59, 0.5);
   animation: countdownPulse 1s ease-in-out;
   margin-bottom: 1rem;
 }
@@ -843,7 +842,6 @@ canvas:not(#gameCanvas) {
   color: var(--color-primary);
   font-size: 32px;
   margin-bottom: 20px;
-  text-shadow: 0 0 10px var(--color-primary);
 }
 
 .start-message p {
@@ -890,7 +888,6 @@ canvas:not(#gameCanvas) {
   padding: 15px 40px;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   min-width: 200px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -1076,7 +1073,6 @@ canvas:not(#gameCanvas) {
   font-size: 26px;
   font-weight: bold;
   margin: 0;
-  text-shadow: 0 0 20px var(--color-primary-transparent-3);
   letter-spacing: -0.5px;
   background: linear-gradient(
     135deg,
@@ -1864,7 +1860,6 @@ canvas:not(#gameCanvas) {
 .profile-name {
   font-size: 20px;
   font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   letter-spacing: 0.5px;
 }
 
@@ -1892,7 +1887,6 @@ canvas:not(#gameCanvas) {
   color: var(--color-primary);
   text-align: center;
   margin-bottom: 10px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   letter-spacing: 0.5px;
 }
 
@@ -1944,7 +1938,6 @@ canvas:not(#gameCanvas) {
 .stat-value {
   font-size: 18px;
   font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   letter-spacing: 0.5px;
 }
 
@@ -2015,7 +2008,6 @@ canvas:not(#gameCanvas) {
   font-size: 22px;
   font-weight: 700;
   margin: 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   letter-spacing: 0.5px;
 }
 
