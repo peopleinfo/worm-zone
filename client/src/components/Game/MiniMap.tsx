@@ -114,6 +114,10 @@ export const MiniMap: React.FC<MiniMapProps> = ({ className = "" }) => {
         width={MINI_MAP_WIDTH}
         height={MINI_MAP_HEIGHT}
         className="mini-map-canvas"
+        style={{ 
+          borderRadius: '10px',
+          border: '1px solid white',
+        }}
       />
     </div>
   );
