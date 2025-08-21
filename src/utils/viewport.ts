@@ -136,7 +136,7 @@ export class SpatialGrid {
   private worldWidth: number;
   private worldHeight: number;
   
-  constructor(cellSize: number = 100, worldWidth: number = 2000, worldHeight: number = 2000) {
+  constructor(cellSize: number = 100, worldWidth: number = 1500, worldHeight: number = 1000) {
     this.cellSize = cellSize;
     this.grid = new Map();
     this.worldWidth = worldWidth;

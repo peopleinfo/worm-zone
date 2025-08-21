@@ -380,8 +380,8 @@ canvas:not(#gameCanvas) {
   width: 150px;
   height: 150px;
   /* border: 2px solid var(--color-primary); */
-  border-radius: 8px;
-  /* background: var(--color-overlay-dark); */
+  border-radius: 15px;
+  background: rgba(var(--color-dark-rgb), 0.1);
   padding: 5px;
   /* box-shadow: 0 0 10px rgba(251, 126, 59, 0.3); */
 }
@@ -695,7 +695,7 @@ canvas:not(#gameCanvas) {
 .modal-content {
   background: white;
   padding: 20px;
-  padding-top: 0px;
+  padding-top: 10px;
   text-align: center;
   min-width: 320px;
   min-height: 220px;

@@ -96,9 +96,9 @@ const gameState = {
   players: new Map(),
   foods: [],
   deadPoints: [],
-  maxFoods: 1000,
-  worldWidth: 2000,
-  worldHeight: 2000
+  maxFoods: 600,
+  worldWidth: 1500,
+  worldHeight: 1000
 };
 
 // Initialize food
