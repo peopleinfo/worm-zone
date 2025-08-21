@@ -91,6 +91,298 @@ let lastBotLimitLog = 0;
 const BOT_SPAWN_COOLDOWN = 2000; // 2 seconds between spawn attempts
 const BOT_LOG_THROTTLE = 5000; // 5 seconds between limit logs
 
+// ===== SERVER PERFORMANCE OPTIMIZATION CONFIGURATION =====
+
+// Server State Management
+const SERVER_STATES = {
+  ACTIVE: 'active',
+  PAUSED: 'paused',
+  RESUMING: 'resuming'
+};
+
+let serverState = SERVER_STATES.ACTIVE;
+let lastPlayerActivity = Date.now();
+let pauseTimeout = null;
+let gameLoopIntervals = [];
+
+// Performance Configuration
+const PERFORMANCE_CONFIG = {
+  // Server state management
+  PAUSE_DELAY: 30000, // 30 seconds of no players before pausing
+  RESUME_TIMEOUT: 1000, // 1 second to fully resume
+  
+  // Dead point cleanup
+  MAX_DEAD_POINTS: 2000,
+  CLEANUP_THRESHOLD: 1500,
+  CLEANUP_BATCH_SIZE: 500,
+  CLEANUP_INTERVAL: 15000, // 15 seconds
+  
+  // Bot management optimization
+  IDLE_BOT_UPDATE_INTERVAL: 1000, // 1 second when no players
+  ACTIVE_BOT_UPDATE_INTERVAL: 100, // 100ms when players present
+  MIN_BOTS_IDLE: 2,
+  MAX_BOTS_IDLE: 3,
+  MIN_BOTS_ACTIVE: 3,
+  MAX_BOTS_ACTIVE: 5,
+  
+  // Memory monitoring
+  MEMORY_CHECK_INTERVAL: 5000, // 5 seconds
+  MEMORY_WARNING_THRESHOLD: 150 * 1024 * 1024, // 150MB
+  MEMORY_CRITICAL_THRESHOLD: 200 * 1024 * 1024, // 200MB
+  
+  // Performance metrics
+  METRICS_LOG_INTERVAL: 30000 // 30 seconds
+};
+
+// Performance Metrics
+const performanceMetrics = {
+  serverStartTime: Date.now(),
+  totalPlayers: 0,
+  totalBots: 0,
+  deadPointsCreated: 0,
+  deadPointsCleanedUp: 0,
+  memoryUsage: { rss: 0, heapUsed: 0, heapTotal: 0 },
+  cpuUsage: 0,
+  stateTransitions: 0,
+  lastMetricsLog: Date.now(),
+  
+  // Enhanced performance tracking
+  botUpdates: 0,
+  botMaintenanceCycles: 0,
+  playerConnections: 0,
+  playerDisconnections: 0,
+  foodEaten: 0,
+  deadPointsEaten: 0,
+  memoryCleanups: 0,
+  aggressiveCleanups: 0,
+  serverPauses: 0,
+  serverResumes: 0,
+  
+  // Performance timing
+  avgResponseTime: 0,
+  maxResponseTime: 0,
+  totalRequests: 0,
+  
+  // Game state metrics
+  peakPlayerCount: 0,
+  peakDeadPointCount: 0,
+  totalGameTime: 0
+};
+
+// Memory monitoring state
+let memoryMonitorInterval = null;
+let lastMemoryCleanup = Date.now();
+
+// Performance metrics interval
+let performanceMetricsInterval = null;
+
+// ===== MEMORY MONITORING SYSTEM =====
+
+// Start memory monitoring with automatic cleanup triggers
+function startMemoryMonitoring() {
+  if (memoryMonitorInterval) clearInterval(memoryMonitorInterval);
+  
+  memoryMonitorInterval = setInterval(() => {
+    const memUsage = process.memoryUsage();
+    performanceMetrics.memoryUsage = memUsage;
+    
+    // Check memory thresholds and trigger cleanup if needed
+    if (memUsage.heapUsed > PERFORMANCE_CONFIG.MEMORY_CRITICAL_THRESHOLD) {
+      console.log(`🚨 MEMORY CRITICAL: ${(memUsage.heapUsed / 1024 / 1024).toFixed(1)}MB - Forcing aggressive cleanup`);
+      performAggressiveCleanup();
+    } else if (memUsage.heapUsed > PERFORMANCE_CONFIG.MEMORY_WARNING_THRESHOLD) {
+      console.log(`⚠️ MEMORY WARNING: ${(memUsage.heapUsed / 1024 / 1024).toFixed(1)}MB - Performing cleanup`);
+      performMemoryCleanup();
+    }
+    
+    // Log memory stats every 5 minutes
+    if (Date.now() - performanceMetrics.lastMetricsLog > 300000) {
+      logMemoryStats();
+      performanceMetrics.lastMetricsLog = Date.now();
+    }
+  }, 10000); // Check every 10 seconds
+}
+
+// Perform standard memory cleanup
+function performMemoryCleanup() {
+  const currentTime = Date.now();
+  if (currentTime - lastMemoryCleanup < 30000) return; // Throttle cleanup to every 30 seconds
+  
+  lastMemoryCleanup = currentTime;
+  console.log('🧹 MEMORY: Starting standard cleanup');
+  
+  // Force dead point cleanup
+  performSmartDeadPointCleanup(true);
+  
+  // Remove old disconnected players
+  cleanupDisconnectedPlayers();
+  
+  // Trigger garbage collection if available
+  if (global.gc) {
+    global.gc();
+    console.log('🗑️ MEMORY: Garbage collection triggered');
+  }
+  
+  // Track cleanup metrics
+  performanceMetrics.memoryCleanups++;
+}
+
+// Perform aggressive cleanup for critical memory situations
+function performAggressiveCleanup() {
+  console.log('🚨 MEMORY: Starting aggressive cleanup');
+  
+  // Remove 50% of dead points immediately
+  const deadPointsToRemove = Math.floor(gameState.deadPoints.length * 0.5);
+  if (deadPointsToRemove > 0) {
+    gameState.deadPoints.splice(0, deadPointsToRemove);
+    performanceMetrics.deadPointsCleanedUp += deadPointsToRemove;
+    console.log(`🧹 MEMORY: Removed ${deadPointsToRemove} dead points aggressively`);
+  }
+  
+  // Remove excess bots if any
+  const bots = Array.from(gameState.players.values()).filter(p => p.isBot);
+  const botsToRemove = Math.max(0, bots.length - 3); // Keep minimum 3 bots
+  for (let i = 0; i < botsToRemove; i++) {
+    gameState.players.delete(bots[i].id);
+  }
+  
+  // Force garbage collection multiple times
+  if (global.gc) {
+    for (let i = 0; i < 3; i++) {
+      global.gc();
+    }
+    console.log('🗑️ MEMORY: Aggressive garbage collection completed');
+  }
+  
+  // Track aggressive cleanup metrics
+  performanceMetrics.aggressiveCleanups++;
+  
+  lastMemoryCleanup = Date.now();
+}
+
+// Clean up old disconnected players
+function cleanupDisconnectedPlayers() {
+  const currentTime = Date.now();
+  let cleanedCount = 0;
+  
+  for (const [playerId, player] of gameState.players.entries()) {
+    // Remove players that have been disconnected for more than 5 minutes
+    if (!player.alive && !player.isBot && 
+        player.lastActivity && (currentTime - player.lastActivity > 300000)) {
+      gameState.players.delete(playerId);
+      cleanedCount++;
+    }
+  }
+  
+  if (cleanedCount > 0) {
+    console.log(`🧹 MEMORY: Cleaned up ${cleanedCount} old disconnected players`);
+  }
+}
+
+// Log detailed memory statistics
+function logMemoryStats() {
+  const memUsage = process.memoryUsage();
+  const uptime = Date.now() - performanceMetrics.serverStartTime;
+  
+  console.log('📊 MEMORY STATS:');
+  console.log(`  RSS: ${(memUsage.rss / 1024 / 1024).toFixed(1)}MB`);
+  console.log(`  Heap Used: ${(memUsage.heapUsed / 1024 / 1024).toFixed(1)}MB`);
+  console.log(`  Heap Total: ${(memUsage.heapTotal / 1024 / 1024).toFixed(1)}MB`);
+  console.log(`  External: ${(memUsage.external / 1024 / 1024).toFixed(1)}MB`);
+  console.log(`  Players: ${gameState.players.size} (${Array.from(gameState.players.values()).filter(p => !p.isBot).length} human, ${Array.from(gameState.players.values()).filter(p => p.isBot).length} bots)`);
+  console.log(`  Dead Points: ${gameState.deadPoints.length}`);
+  console.log(`  Uptime: ${Math.floor(uptime / 60000)} minutes`);
+  console.log(`  Server State: ${serverState}`);
+}
+
+// Comprehensive performance metrics logging
+function logPerformanceMetrics() {
+  const currentTime = Date.now();
+  const uptime = currentTime - performanceMetrics.serverStartTime;
+  const uptimeMinutes = Math.floor(uptime / 60000);
+  const memUsage = process.memoryUsage();
+  
+  console.log('\n🚀 ===== PERFORMANCE METRICS REPORT =====');
+  console.log(`⏱️  Server Uptime: ${uptimeMinutes} minutes`);
+  console.log(`🌐 Server State: ${serverState}`);
+  
+  // Player metrics
+  const humanPlayers = Array.from(gameState.players.values()).filter(p => !p.isBot).length;
+  const botPlayers = Array.from(gameState.players.values()).filter(p => p.isBot).length;
+  console.log(`\n👥 PLAYER METRICS:`);
+  console.log(`  Current Players: ${gameState.players.size} (${humanPlayers} human, ${botPlayers} bots)`);
+  console.log(`  Peak Players: ${performanceMetrics.peakPlayerCount}`);
+  console.log(`  Total Connections: ${performanceMetrics.playerConnections}`);
+  console.log(`  Total Disconnections: ${performanceMetrics.playerDisconnections}`);
+  
+  // Game activity metrics
+  console.log(`\n🎮 GAME ACTIVITY:`);
+  console.log(`  Food Eaten: ${performanceMetrics.foodEaten}`);
+  console.log(`  Dead Points Eaten: ${performanceMetrics.deadPointsEaten}`);
+  console.log(`  Dead Points Created: ${performanceMetrics.deadPointsCreated}`);
+  console.log(`  Dead Points Cleaned: ${performanceMetrics.deadPointsCleanedUp}`);
+  console.log(`  Current Dead Points: ${gameState.deadPoints.length}`);
+  console.log(`  Peak Dead Points: ${performanceMetrics.peakDeadPointCount}`);
+  
+  // Bot performance metrics
+  console.log(`\n🤖 BOT PERFORMANCE:`);
+  console.log(`  Bot Updates: ${performanceMetrics.botUpdates}`);
+  console.log(`  Bot Maintenance Cycles: ${performanceMetrics.botMaintenanceCycles}`);
+  console.log(`  Updates per Minute: ${uptimeMinutes > 0 ? Math.round(performanceMetrics.botUpdates / uptimeMinutes) : 0}`);
+  
+  // Memory and cleanup metrics
+  console.log(`\n🧹 CLEANUP & MEMORY:`);
+  console.log(`  Memory Cleanups: ${performanceMetrics.memoryCleanups}`);
+  console.log(`  Aggressive Cleanups: ${performanceMetrics.aggressiveCleanups}`);
+  console.log(`  Current Memory: ${(memUsage.heapUsed / 1024 / 1024).toFixed(1)}MB`);
+  console.log(`  Memory Efficiency: ${gameState.deadPoints.length > 0 ? Math.round(gameState.deadPoints.length / (memUsage.heapUsed / 1024 / 1024)) : 'N/A'} points/MB`);
+  
+  // Server state metrics
+  console.log(`\n⚡ SERVER STATE:`);
+  console.log(`  State Transitions: ${performanceMetrics.stateTransitions}`);
+  console.log(`  Server Pauses: ${performanceMetrics.serverPauses}`);
+  console.log(`  Server Resumes: ${performanceMetrics.serverResumes}`);
+  
+  // Performance timing (if available)
+  if (performanceMetrics.totalRequests > 0) {
+    console.log(`\n📈 RESPONSE TIMES:`);
+    console.log(`  Average Response: ${performanceMetrics.avgResponseTime.toFixed(2)}ms`);
+    console.log(`  Max Response: ${performanceMetrics.maxResponseTime.toFixed(2)}ms`);
+    console.log(`  Total Requests: ${performanceMetrics.totalRequests}`);
+  }
+  
+  console.log('========================================\n');
+  
+  // Update last metrics log time
+  performanceMetrics.lastMetricsLog = currentTime;
+}
+
+// Update peak metrics tracking
+function updatePeakMetrics() {
+  const currentPlayers = gameState.players.size;
+  const currentDeadPoints = gameState.deadPoints.length;
+  
+  if (currentPlayers > performanceMetrics.peakPlayerCount) {
+    performanceMetrics.peakPlayerCount = currentPlayers;
+  }
+  
+  if (currentDeadPoints > performanceMetrics.peakDeadPointCount) {
+    performanceMetrics.peakDeadPointCount = currentDeadPoints;
+  }
+}
+
+// Start performance metrics logging interval
+function startPerformanceMetricsLogging() {
+  if (performanceMetricsInterval) clearInterval(performanceMetricsInterval);
+  
+  performanceMetricsInterval = setInterval(() => {
+    logPerformanceMetrics();
+    updatePeakMetrics();
+  }, PERFORMANCE_CONFIG.METRICS_LOG_INTERVAL);
+  
+  console.log(`📊 Performance metrics logging started (${PERFORMANCE_CONFIG.METRICS_LOG_INTERVAL / 1000}s intervals)`);
+}
+
 // Game state
 const gameState = {
   players: new Map(),
@@ -544,6 +836,234 @@ function handleBotDeath(bot) {
   });
 }
 
+// ===== SERVER STATE MANAGEMENT FUNCTIONS =====
+
+// Check if server should be paused (no human players)
+function shouldPauseServer() {
+  const humanPlayers = Array.from(gameState.players.values()).filter(p => !p.isBot && p.alive);
+  return humanPlayers.length === 0;
+}
+
+// Pause server operations
+function pauseServer() {
+  if (serverState === SERVER_STATES.PAUSED) return;
+  
+  console.log('🔄 SERVER: Pausing server operations (no active players)');
+  serverState = SERVER_STATES.PAUSED;
+  performanceMetrics.stateTransitions++;
+  performanceMetrics.serverPauses++;
+  
+  // Clear all game loop intervals
+  gameLoopIntervals.forEach(interval => clearInterval(interval));
+  gameLoopIntervals = [];
+  
+  // Keep minimal bot count during pause
+  const currentBots = Array.from(gameState.players.values()).filter(p => p.isBot);
+  const botsToRemove = currentBots.length - PERFORMANCE_CONFIG.MIN_BOTS_IDLE;
+  
+  if (botsToRemove > 0) {
+    // Remove excess bots (keep lowest scoring ones)
+    const sortedBots = currentBots.sort((a, b) => a.score - b.score);
+    for (let i = 0; i < botsToRemove; i++) {
+      const bot = sortedBots[i];
+      gameState.players.delete(bot.id);
+      io.emit('playerDisconnected', bot.id);
+    }
+    console.log(`🤖 SERVER: Removed ${botsToRemove} bots during pause (keeping ${PERFORMANCE_CONFIG.MIN_BOTS_IDLE})`);
+  }
+  
+  // Start idle game loop with reduced frequency
+  startIdleGameLoop();
+  
+  // Restart intervals with idle configuration
+  startBotIntervals();
+  startCleanupInterval();
+}
+
+// Resume server operations
+function resumeServer() {
+  if (serverState === SERVER_STATES.ACTIVE) return;
+  
+  console.log('🔄 SERVER: Resuming server operations');
+  serverState = SERVER_STATES.RESUMING;
+  performanceMetrics.stateTransitions++;
+  performanceMetrics.serverResumes++;
+  
+  // Clear pause timeout if exists
+  if (pauseTimeout) {
+    clearTimeout(pauseTimeout);
+    pauseTimeout = null;
+  }
+  
+  // Ensure minimum active bots
+  const currentBots = Array.from(gameState.players.values()).filter(p => p.isBot);
+  const botsNeeded = PERFORMANCE_CONFIG.MIN_BOTS_ACTIVE - currentBots.length;
+  
+  if (botsNeeded > 0) {
+    spawnBots(botsNeeded);
+    console.log(`🤖 SERVER: Spawned ${botsNeeded} additional bots for active state`);
+  }
+  
+  // Start active game loop
+  setTimeout(() => {
+    serverState = SERVER_STATES.ACTIVE;
+    startActiveGameLoop();
+    
+    // Restart intervals with active configuration
+    startBotIntervals();
+    startCleanupInterval();
+    
+    console.log('✅ SERVER: Server fully resumed and active');
+  }, PERFORMANCE_CONFIG.RESUME_TIMEOUT);
+}
+
+// Update player activity tracking
+function updatePlayerActivity() {
+  lastPlayerActivity = Date.now();
+  
+  // Cancel pause timeout if server should resume
+  if (serverState === SERVER_STATES.PAUSED && !shouldPauseServer()) {
+    resumeServer();
+  } else if (serverState === SERVER_STATES.ACTIVE && shouldPauseServer()) {
+    // Schedule pause if no activity
+    if (pauseTimeout) clearTimeout(pauseTimeout);
+    pauseTimeout = setTimeout(() => {
+      if (shouldPauseServer()) {
+        pauseServer();
+      }
+    }, PERFORMANCE_CONFIG.PAUSE_DELAY);
+  }
+}
+
+// ===== SMART DEAD SNAKE CLEANUP FUNCTIONS =====
+
+// Calculate priority score for dead point cleanup (higher = more likely to be removed)
+function calculateCleanupPriority(deadPoint, playerPositions, spawnZones) {
+  let priority = 0;
+  const currentTime = Date.now();
+  
+  // Age factor (older points get higher priority for removal)
+  const age = currentTime - (deadPoint.createdAt || currentTime);
+  priority += Math.min(age / 60000, 10); // Max 10 points for age (1 minute = max age score)
+  
+  // Distance from players (farther = higher priority for removal)
+  let minPlayerDistance = Infinity;
+  for (const pos of playerPositions) {
+    const distance = Math.hypot(deadPoint.x - pos.x, deadPoint.y - pos.y);
+    minPlayerDistance = Math.min(minPlayerDistance, distance);
+  }
+  
+  if (minPlayerDistance > 300) priority += 5; // Far from players
+  else if (minPlayerDistance > 150) priority += 2; // Moderately far
+  else if (minPlayerDistance < 50) priority -= 3; // Very close to players (keep)
+  
+  // Distance from spawn zones (closer to spawn = lower priority for removal)
+  let minSpawnDistance = Infinity;
+  for (const zone of spawnZones) {
+    const distance = Math.hypot(deadPoint.x - zone.x, deadPoint.y - zone.y);
+    minSpawnDistance = Math.min(minSpawnDistance, distance);
+  }
+  
+  if (minSpawnDistance < 100) priority -= 4; // Very close to spawn (keep)
+  else if (minSpawnDistance < 200) priority -= 1; // Close to spawn
+  
+  // Cluster density (remove from dense areas)
+  // This will be calculated in the main cleanup function
+  
+  return priority;
+}
+
+// Smart dead point cleanup with priority-based removal
+function performSmartDeadPointCleanup(forceCleanup = false) {
+  const currentCount = gameState.deadPoints.length;
+  
+  // Check if cleanup is needed
+  if (!forceCleanup && currentCount < PERFORMANCE_CONFIG.CLEANUP_THRESHOLD) {
+    return;
+  }
+  
+  const targetCount = PERFORMANCE_CONFIG.MAX_DEAD_POINTS;
+  const pointsToRemove = Math.max(0, currentCount - targetCount);
+  
+  if (pointsToRemove === 0) return;
+  
+  console.log(`🧹 CLEANUP: Starting smart cleanup - removing ${pointsToRemove} of ${currentCount} dead points`);
+  
+  // Get current player positions
+  const playerPositions = Array.from(gameState.players.values())
+    .filter(p => p.alive)
+    .map(p => ({ x: p.x, y: p.y }));
+  
+  // Get spawn zones
+  const spawnZones = getSpawnZones();
+  
+  // Add timestamps to dead points if missing
+  const currentTime = Date.now();
+  gameState.deadPoints.forEach(dp => {
+    if (!dp.createdAt) dp.createdAt = currentTime - Math.random() * 30000; // Random age up to 30s
+  });
+  
+  // Calculate cluster density for each point
+  gameState.deadPoints.forEach(point => {
+    let nearbyCount = 0;
+    for (const other of gameState.deadPoints) {
+      if (other !== point) {
+        const distance = Math.hypot(point.x - other.x, point.y - other.y);
+        if (distance < 50) nearbyCount++;
+      }
+    }
+    point.clusterDensity = nearbyCount;
+  });
+  
+  // Calculate priority scores
+  const pointsWithPriority = gameState.deadPoints.map(point => {
+    let priority = calculateCleanupPriority(point, playerPositions, spawnZones);
+    
+    // Add cluster density bonus (remove from dense areas)
+    if (point.clusterDensity > 5) priority += 3;
+    else if (point.clusterDensity > 2) priority += 1;
+    
+    return { point, priority };
+  });
+  
+  // Sort by priority (highest first) and remove top candidates
+  pointsWithPriority.sort((a, b) => b.priority - a.priority);
+  const pointsToRemoveList = pointsWithPriority.slice(0, pointsToRemove).map(item => item.point);
+  
+  // Remove selected points
+  gameState.deadPoints = gameState.deadPoints.filter(point => !pointsToRemoveList.includes(point));
+  
+  // Update metrics
+  performanceMetrics.deadPointsCleanedUp += pointsToRemove;
+  
+  console.log(`✅ CLEANUP: Removed ${pointsToRemove} dead points, ${gameState.deadPoints.length} remaining`);
+  
+  // Broadcast cleanup to clients if significant
+  if (pointsToRemove > 100) {
+    io.emit('deadPointsCleanup', {
+      removedCount: pointsToRemove,
+      remainingCount: gameState.deadPoints.length
+    });
+  }
+}
+
+// Enhanced dead point creation with timestamp
+function createDeadPoint(x, y, radius, color) {
+  const deadPoint = {
+    x,
+    y,
+    radius,
+    color,
+    createdAt: Date.now()
+  };
+  
+  gameState.deadPoints.push(deadPoint);
+  performanceMetrics.deadPointsCreated++;
+  updatePeakMetrics();
+  
+  return deadPoint;
+}
+
 function updateBots() {
   // Iterate over all players and filter for bots
   gameState.players.forEach((player) => {
@@ -805,6 +1325,13 @@ io.on('connection', (socket) => {
 
     gameState.players.set(playerId, newPlayer);
     console.log(`✅ DEBUG: Player ${playerId} created successfully with ${newPlayer.points.length} body points`);
+    
+    // Track player connection metrics
+    performanceMetrics.playerConnections++;
+    updatePeakMetrics();
+
+    // Update player activity for server state management
+    updatePlayerActivity();
 
     // Automatically spawn 5 bots when a user connects (if not already present)
     const humanPlayers = Array.from(gameState.players.values()).filter(p => !p.isBot);
@@ -848,6 +1375,11 @@ io.on('connection', (socket) => {
   socket.on('playerMove', (data) => {
     const player = gameState.players.get(data.playerId);
     if (player && player.alive) {
+      // Update player activity for server state management
+      if (!player.isBot) {
+        updatePlayerActivity();
+      }
+      
       player.angle = data.angle;
       player.x = data.x;
       player.y = data.y;
@@ -881,6 +1413,10 @@ io.on('connection', (socket) => {
     const food = gameState.foods.find(f => f.id === foodId);
     
     if (player && food) {
+      // Update player activity for server state management
+      if (!player.isBot) {
+        updatePlayerActivity();
+      }
       // Regenerate food with logging
       const oldPos = { x: food.x, y: food.y };
       food.x = Math.random() * gameState.worldWidth;
@@ -888,6 +1424,7 @@ io.on('connection', (socket) => {
       food.color = getRandomColor();
       
       player.score++;
+      performanceMetrics.foodEaten++;
       
       console.log(`🍎 Player ${playerId} ate food ${foodId}: regenerated from (${oldPos.x.toFixed(2)}, ${oldPos.y.toFixed(2)}) to (${food.x.toFixed(2)}, ${food.y.toFixed(2)})`);
       
@@ -918,6 +1455,10 @@ io.on('connection', (socket) => {
     const player = gameState.players.get(playerId);
     
     if (player && deadPoints && deadPoints.length > 0) {
+      // Update player activity for server state management
+      if (!player.isBot) {
+        updatePlayerActivity();
+      }
       // Remove consumed dead points from game state
       deadPoints.forEach(consumedPoint => {
         const index = gameState.deadPoints.findIndex(dp => 
@@ -932,6 +1473,7 @@ io.on('connection', (socket) => {
       
       // Update player score - award 1 point per dead snake consumed
       player.score += 1;
+      performanceMetrics.deadPointsEaten += deadPoints.length;
       
       // Broadcast dead point removal to all clients
       io.emit('deadPointsRemoved', {
@@ -964,7 +1506,9 @@ io.on('connection', (socket) => {
       
       // Add dead points to game state
       const deadPoints = data.deadPoints;
-      gameState.deadPoints.push(...deadPoints);
+      deadPoints.forEach(dp => {
+        createDeadPoint(dp.x, dp.y, dp.radius, dp.color);
+      });
       
       // Broadcast player death and dead points
       io.emit('playerDied', {
@@ -1110,6 +1654,8 @@ io.on('connection', (socket) => {
     }
     if (disconnectedPlayerId) {
       gameState.players.delete(disconnectedPlayerId);
+      performanceMetrics.playerDisconnections++;
+      updatePeakMetrics();
       io.emit('playerDisconnected', disconnectedPlayerId);
       socket.broadcast.emit('playerLeft', {
         playerId: disconnectedPlayerId
@@ -1126,12 +1672,23 @@ io.on('connection', (socket) => {
   });
 });
 
-// Clean up dead points periodically
-setInterval(() => {
-  if (gameState.deadPoints.length > 5000) {
-    gameState.deadPoints = gameState.deadPoints.slice(-2500);
-  }
-}, 30000);
+// Smart dead point cleanup with performance optimization
+let cleanupInterval;
+
+function startCleanupInterval() {
+  if (cleanupInterval) clearInterval(cleanupInterval);
+  
+  const interval = serverState === SERVER_STATES.ACTIVE ? 
+    PERFORMANCE_CONFIG.CLEANUP_INTERVAL : 
+    PERFORMANCE_CONFIG.CLEANUP_INTERVAL * 2; // Less frequent when paused
+  
+  cleanupInterval = setInterval(() => {
+    performSmartDeadPointCleanup();
+  }, interval);
+}
+
+// Start initial cleanup interval
+startCleanupInterval();
 
 // Automatic bot respawning function
 function maintainMinimumBots() {
@@ -1179,36 +1736,126 @@ function maintainMinimumBots() {
   }
 }
 
-// Update bots continuously
+// ===== OPTIMIZED BOT MANAGEMENT SYSTEM =====
+
+// Bot update intervals based on server state
+let botUpdateInterval;
+let botMaintenanceInterval;
 let botMaintenanceCounter = 0;
-setInterval(() => {
-  updateBots();
+
+// Start optimized bot intervals
+function startBotIntervals() {
+  // Clear existing intervals
+  if (botUpdateInterval) clearInterval(botUpdateInterval);
+  if (botMaintenanceInterval) clearInterval(botMaintenanceInterval);
   
-  // Maintain minimum bot count less frequently (every 2 seconds instead of every 100ms)
-  botMaintenanceCounter++;
-  if (botMaintenanceCounter >= 20) { // 20 * 100ms = 2000ms = 2 seconds
-    maintainMinimumBots();
-    botMaintenanceCounter = 0;
+  // Set intervals based on server state
+  const updateFreq = serverState === SERVER_STATES.ACTIVE ? 
+    PERFORMANCE_CONFIG.ACTIVE_BOT_UPDATE_INTERVAL : 
+    PERFORMANCE_CONFIG.IDLE_BOT_UPDATE_INTERVAL;
+  
+  const maintenanceFreq = serverState === SERVER_STATES.ACTIVE ? 
+    5000 : 10000; // 5s active, 10s idle
+  
+  console.log(`🤖 BOT: Starting intervals - Update: ${updateFreq}ms, Maintenance: ${maintenanceFreq}ms (State: ${serverState})`);
+  
+  // Bot update interval (movement and AI)
+  botUpdateInterval = setInterval(() => {
+    if (serverState !== SERVER_STATES.PAUSED) {
+      updateBots();
+      
+      // Broadcast bot movements to all players
+      gameState.players.forEach((player) => {
+        if (player.isBot && player.alive) {
+          const currentTime = Date.now();
+          const spawnProtectionDuration = 3000;
+          const hasSpawnProtection = player.spawnProtection && (currentTime - player.spawnTime) < spawnProtectionDuration;
+          
+          io.emit('playerMoved', {
+            playerId: player.id,
+            x: player.x,
+            y: player.y,
+            angle: player.angle,
+            points: player.points,
+            spawnProtection: hasSpawnProtection
+          });
+        }
+      });
+      
+      // Update performance metrics
+      performanceMetrics.botUpdates++;
+    }
+  }, updateFreq);
+  
+  // Bot maintenance interval (spawning, cleanup)
+  botMaintenanceInterval = setInterval(() => {
+    if (serverState !== SERVER_STATES.PAUSED) {
+      maintainOptimizedBots();
+      performanceMetrics.botMaintenanceCycles++;
+    }
+  }, maintenanceFreq);
+}
+
+// Enhanced bot maintenance with state-aware scaling
+function maintainOptimizedBots() {
+  const humanPlayers = Array.from(gameState.players.values()).filter(p => !p.isBot && p.alive).length;
+  const aliveBots = Array.from(gameState.players.values()).filter(p => p.isBot && p.alive);
+  const allBots = Array.from(gameState.players.values()).filter(p => p.isBot);
+  
+  // Dynamic bot scaling based on server state and player count
+  let minBots, maxBots;
+  
+  if (serverState === SERVER_STATES.PAUSED) {
+    minBots = PERFORMANCE_CONFIG.MIN_BOTS_IDLE;
+    maxBots = PERFORMANCE_CONFIG.MIN_BOTS_IDLE;
+  } else {
+    minBots = Math.max(PERFORMANCE_CONFIG.MIN_BOTS_ACTIVE, Math.min(5, 5 - humanPlayers));
+    maxBots = PERFORMANCE_CONFIG.MAX_BOTS_ACTIVE;
   }
   
-  // Broadcast bot movements to all players
-  gameState.players.forEach((player) => {
-    if (player.isBot && player.alive) {
-      const currentTime = Date.now();
-      const spawnProtectionDuration = 3000;
-      const hasSpawnProtection = player.spawnProtection && (currentTime - player.spawnTime) < spawnProtectionDuration;
-      
-      io.emit('playerMoved', {
-        playerId: player.id,
-        x: player.x,
-        y: player.y,
-        angle: player.angle,
-        points: player.points,
-        spawnProtection: hasSpawnProtection
-      });
+  // Remove excess bots if over limit
+  if (allBots.length > maxBots) {
+    const sortedBots = allBots.sort((a, b) => b.score - a.score);
+    const botsToRemove = sortedBots.slice(maxBots);
+    
+    botsToRemove.forEach(bot => {
+      console.log(`🤖 REMOVE: Bot ${bot.id} (score: ${bot.score.toFixed(1)}) - maintaining max ${maxBots} bots`);
+      if (bot.alive) {
+        handleBotDeath(bot);
+      } else {
+        gameState.players.delete(bot.id);
+        io.emit('playerDisconnected', bot.id);
+      }
+    });
+    
+    // Update leaderboard after bot removal
+    const leaderboard = generateLeaderboard();
+    const fullLeaderboard = generateFullLeaderboard();
+    io.emit('leaderboardUpdate', {
+      leaderboard: leaderboard,
+      fullLeaderboard: fullLeaderboard
+    });
+  }
+  
+  // Spawn bots if needed
+  const currentAliveBots = aliveBots.length;
+  if (currentAliveBots < minBots && allBots.length < maxBots) {
+    const botsNeeded = Math.min(minBots - currentAliveBots, maxBots - allBots.length);
+    if (botsNeeded > 0) {
+      console.log(`🤖 SPAWN: Adding ${botsNeeded} bots (${currentAliveBots}/${minBots} alive, state: ${serverState})`);
+      spawnBots(botsNeeded);
     }
-  });
-}, 100); // Update bots every 100ms
+  }
+}
+
+// Start initial bot intervals
+startBotIntervals();
+
+// Start memory monitoring system
+startMemoryMonitoring();
+
+// Start performance metrics logging
+startPerformanceMetricsLogging();
 
 // Generate leaderboard data
 function generateLeaderboard() {
