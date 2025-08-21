@@ -17,7 +17,6 @@ export class GameEngine {
   private zoom: number = MAP_ZOOM_LEVEL;
   
   // Frame rate limiting
-  private readonly TARGET_FPS = 60;
   private readonly FRAME_INTERVAL = 1000 / 60; // 16.67ms per frame
   private lastRenderTime: number = 0;
   
