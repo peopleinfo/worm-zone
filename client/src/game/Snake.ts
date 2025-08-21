@@ -231,8 +231,20 @@ export class Snake implements SnakeInterface {
   draw(ctx: CanvasRenderingContext2D): void {
     if (!this.isAlive || this.points.length === 0) return;
 
-    for (let i = 0; i < this.points.length; i += Math.floor(this.radius)) {
+    // Draw body segments with overlap to create continuous appearance
+    // Use smaller increment to ensure segments overlap and connect seamlessly
+    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.6)); // 60% of radius for overlap
+    
+    for (let i = 0; i < this.points.length; i += segmentSpacing) {
       this.points[i].draw(ctx, '', this.radius);
+    }
+    
+    // Always draw the last segment to ensure tail is visible
+    if (this.points.length > 1) {
+      const lastIndex = this.points.length - 1;
+      if (lastIndex % segmentSpacing !== 0) {
+        this.points[lastIndex].draw(ctx, '', this.radius);
+      }
     }
 
     this.drawEye(ctx);
