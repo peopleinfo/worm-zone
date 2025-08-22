@@ -1,5 +1,5 @@
 import { Snake } from './Snake';
-import { Food } from './Food';
+// import { Food } from './Food';
 import { Point } from './Point';
 import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
@@ -13,8 +13,8 @@ export class GameEngine {
   private mySnake: Snake | null = null;
   private lastSocketUpdate: number = 0;
   private lastFrameTime: number = 0;
-  private aiSnakes: Snake[] = [];
-  private foods: Food[] = [];
+  // private aiSnakes: Snake[] = [];
+  // private foods: Food[] = [];
   private zoom: number = MAP_ZOOM_LEVEL;
   
   // Frame rate limiting with adaptive throttling
