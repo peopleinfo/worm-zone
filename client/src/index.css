@@ -317,12 +317,18 @@ canvas {
   z-index: 1;
   margin: 0;
   padding: 0;
-  /* Improve canvas rendering quality */
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  image-rendering: pixelated;
-  will-change: transform;
+  /* Optimize canvas for mobile performance and quality */
+  image-rendering: auto;
+  image-rendering: smooth;
+  transform: translateZ(0);
   backface-visibility: hidden;
+  /* Reduce GPU overhead while maintaining quality */
+  contain: layout style paint;
+  /* Optimize for mobile touch interactions */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Joypad canvas styling for rotated landscape */

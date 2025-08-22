@@ -8,6 +8,7 @@ class AudioService {
   constructor() {
     this.initializeAudio();
     this.setupPageVisibilityListener();
+    this.setupMediaSession();
   }
 
   private initializeAudio(): void {
@@ -44,11 +45,6 @@ class AudioService {
       console.error('Failed to initialize audio service:', error);
     }
   }
-
-
-
-
-
   public playBackgroundMusic(): void {
     if (!this.backgroundMusic || !this.isInitialized) {
       console.warn('Audio service not initialized');
@@ -62,7 +58,10 @@ class AudioService {
       // Only play if not muted and audio is paused
       if (this.backgroundMusic.paused && !this.isMuted) {
         console.log('🎵 Attempting to play background music');
-        this.backgroundMusic.play().catch((error) => {
+        this.backgroundMusic.play().then(() => {
+          // Set media session metadata when music starts playing
+          this.setMediaSessionMetadata();
+        }).catch((error) => {
           console.warn('Failed to play background music:', error);
           // Handle autoplay policy - user interaction required
           if (error.name === 'NotAllowedError') {
@@ -73,6 +72,8 @@ class AudioService {
         console.log('🎵 Background music is muted - not playing');
       } else {
         console.log('🎵 Background music is already playing');
+        // Ensure media session is set if already playing
+        this.setMediaSessionMetadata();
       }
     } catch (error) {
       console.error('Error playing background music:', error);
@@ -84,6 +85,8 @@ class AudioService {
 
     try {
       this.backgroundMusic.pause();
+      // Clear media session metadata when music is paused
+      this.clearMediaSessionMetadata();
     } catch (error) {
       console.error('Error pausing background music:', error);
     }
@@ -95,6 +98,8 @@ class AudioService {
     try {
       this.backgroundMusic.pause();
       this.backgroundMusic.currentTime = 0;
+      // Clear media session metadata when music is stopped
+      this.clearMediaSessionMetadata();
     } catch (error) {
       console.error('Error stopping background music:', error);
     }
@@ -124,6 +129,9 @@ class AudioService {
           this.playBackgroundMusic();
           console.log('🎵 Music resumed after unmute');
         }
+      } else if (!muted && !this.backgroundMusic.paused) {
+        // If unmuting while music is already playing, ensure media session is set
+        this.setMediaSessionMetadata();
       }
     }
   }
@@ -239,6 +247,8 @@ class AudioService {
       this.stopBackgroundMusic();
       this.backgroundMusic = null;
     }
+    // Clear media session metadata when destroying service
+    this.clearMediaSessionMetadata();
     this.isInitialized = false;
   }
 
@@ -299,6 +309,10 @@ class AudioService {
       this.pauseBackgroundMusic();
       console.log('🎵 Music paused due to page visibility change');
     }
+    
+    // Clear media session metadata to hide lock screen controls
+    this.clearMediaSessionMetadata();
+    console.log('🎵 Media session metadata cleared for lock screen');
   }
 
   private handlePageVisible(): void {
@@ -316,6 +330,60 @@ class AudioService {
     
     // Reset the flag
     this.wasPlayingBeforeHidden = false;
+  }
+
+  private setupMediaSession(): void {
+    // Initialize media session if supported
+    if ('mediaSession' in navigator) {
+      console.log('🎵 Media Session API supported - setting up handlers');
+      
+      // Set up media session action handlers
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (this.backgroundMusic && this.backgroundMusic.paused && !this.isMuted) {
+          this.playBackgroundMusic();
+        }
+      });
+      
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (this.backgroundMusic && !this.backgroundMusic.paused) {
+          this.pauseBackgroundMusic();
+        }
+      });
+      
+      navigator.mediaSession.setActionHandler('stop', () => {
+        this.stopBackgroundMusic();
+      });
+    } else {
+      console.log('🎵 Media Session API not supported');
+    }
+  }
+
+  private setMediaSessionMetadata(): void {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'Snake Zone',
+        artist: 'Background Music',
+        album: 'Game Audio',
+        artwork: [
+          { src: '/logo.png', sizes: '96x96', type: 'image/png' },
+          { src: '/logo.png', sizes: '128x128', type: 'image/png' },
+          { src: '/logo.png', sizes: '192x192', type: 'image/png' },
+          { src: '/logo.png', sizes: '256x256', type: 'image/png' },
+        ]
+      });
+      
+      // Set playback state
+      navigator.mediaSession.playbackState = 'playing';
+      console.log('🎵 Media session metadata set');
+    }
+  }
+
+  private clearMediaSessionMetadata(): void {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = 'none';
+      console.log('🎵 Media session metadata cleared');
+    }
   }
 }
 
