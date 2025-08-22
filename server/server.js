@@ -880,8 +880,8 @@ function getSpawnZones() {
   return zones;
 }
 
-// Check if position is safe (no collision with existing worms) - enhanced safety checks
-function isPositionSafe(x, y, radius, minDistance = 150) {
+5// Check if position is safe (no collision with existing worms) - enhanced safety checks
+function isPositionSafe(x, y, radius, minDistance = 250) {
   const alivePlayers = Array.from(gameState.players.values()).filter(
     (p) => p.alive
   );
@@ -1032,7 +1032,7 @@ function findSafeSpawnPosition(radius) {
     const x = margin + Math.random() * (gameState.worldWidth - 2 * margin);
     const y = margin + Math.random() * (gameState.worldHeight - 2 * margin);
 
-    if (isPositionSafe(x, y, radius, 100)) {
+    if (isPositionSafe(x, y, radius, 20)) {
       // Reduced safety distance for fallback
       console.log(
         `✅ DEBUG: Found safe fallback position at (${x.toFixed(
