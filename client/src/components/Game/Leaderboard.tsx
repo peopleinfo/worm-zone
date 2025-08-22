@@ -70,7 +70,7 @@ export const Leaderboard: React.FC = React.memo(() => {
                   isCurrentPlayer ? "current-player-name" : ""
                 }`}
               >
-                {player.name}
+                {player.name} {isCurrentPlayer ? "(you)" : ""}
               </span>
               <div className="player-score">
                 {/* <span className="score-icon">👤</span> */}

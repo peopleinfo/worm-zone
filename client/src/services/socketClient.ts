@@ -4,6 +4,7 @@ import { Point } from '../game/Point';
 import { useGameStore } from '../stores/gameStore';
 import { useAuthStore } from '../stores/authStore';
 import { PooledObjects } from '../utils/ObjectPool';
+import { WORLD_HEIGHT, WORLD_WIDTH } from '../config/gameConfig';
 
 interface ServerPlayer {
   id: string;
@@ -243,7 +244,7 @@ class SocketClient {
       
       // Convert server food data to client Food objects
       const clientFoods = newFoods.map((f: any) => {
-        const food = PooledObjects.createFood(f.radius, store.worldWidth, store.worldHeight);
+        const food = PooledObjects.createFood(f.radius, WORLD_WIDTH, WORLD_HEIGHT);
         food.id = f.id;
         food.x = f.x;
         food.y = f.y;
