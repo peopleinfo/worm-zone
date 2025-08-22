@@ -968,6 +968,24 @@ canvas:not(#gameCanvas) {
   z-index: 100;
 }
 
+/* Quit Modal Styles */
+.quit-description {
+  color: rgba(var(--color-light-rgb), 0.8);
+  font-size: 16px;
+  text-align: center;
+  margin: 20px 0;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 20px;
+  justify-content: center;
+  background: white;
+  border-radius: 0 0 16px 16px;
+}
+
 .button-icon {
   width: 44px;
   height: 44px;

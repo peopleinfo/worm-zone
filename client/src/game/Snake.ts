@@ -1,6 +1,6 @@
 import { Point } from './Point';
 import type { Snake as SnakeInterface, Controls } from '../types/game';
-import { getRandomColor, isCollided, coeffD2R, INFINITY, defRad } from '../utils/gameUtils';
+import { getRandomColor, isCollided, coeffD2R, INFINITY } from '../utils/gameUtils';
 import { PooledObjects } from '../utils/ObjectPool';
 import { GAME_FPS } from '../config/gameConfig';
 
@@ -38,9 +38,9 @@ export class Snake implements SnakeInterface {
   ) {
     this.id = id;
     this.radius = 4;
-    this.speed = 0.9;
+    this.speed = 1.0;
     this.turningSpeed = 7;
-    this.baseSpeed = 0.8; // Base speed for platform consistency (increased for better gameplay feel)
+    this.baseSpeed = 1.0; // Base speed for platform consistency (increased for better gameplay feel)
     this.points = [PooledObjects.createPoint(x, y, this.radius, color)];
     this.velocity = { x: 1, y: 0 };
     this.overPos = { x: 0, y: 0 };

@@ -14,11 +14,15 @@ import { GameOverModal } from "./GameOverModal";
 import { useAuthStore } from "../../stores/authStore";
 import { HowToPlayModal } from "./HowToPlayModal";
 import { MuteToggleButton } from "./MuteToggleButton";
+import { QuitModal } from "../QuitModal";
 
 export const GameUI: React.FC = React.memo(() => {
   const isPlaying = useGameStore((state) => state.isPlaying);
   const isHowToPlayOpen = useGameStore((state) => state.isHowToPlayOpen);
   const toggleHowToPlay = useGameStore((state) => state.toggleHowToPlay);
+  const resetGame = useGameStore((state) => state.resetGame);
+
+  const [isQuitModalOpen, setIsQuitModalOpen] = React.useState(false);
 
   const { t } = useTranslation();
 
@@ -40,6 +44,18 @@ export const GameUI: React.FC = React.memo(() => {
   const handleSettingsClick = () => {
     audioService.handleUserInteraction();
     openSettingsModal();
+  };
+
+  // Handle quit button click
+  const handleQuitClick = () => {
+    audioService.handleUserInteraction();
+    setIsQuitModalOpen(true);
+  };
+
+  // Handle quit confirmation
+  const handleQuitConfirm = () => {
+    resetGame();
+    setIsQuitModalOpen(false);
   };
   const isGameOver = useGameStore((state) => state.isGameOver);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -80,6 +96,28 @@ export const GameUI: React.FC = React.memo(() => {
       )}
       {/* MiniMap positioned at top-right during gameplay */}
       {isPlaying && <MiniMap />}
+      {/* Quit button positioned at top-right during gameplay */}
+      {isPlaying && (
+        <div className="top-right-buttons" style={{ right: 150, zIndex: 9000 }}>
+          <svg
+            onClick={handleQuitClick}
+            style={{ color: "white" }}
+            aria-label={t("game:quit.button", "Quit Game")}
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 6L6 18" />
+            <path d="M6 6l12 12" />
+          </svg>
+        </div>
+      )}
       {/* Settings button positioned independently at top-right */}
       {!isPlaying && (
         <>
@@ -112,6 +150,11 @@ export const GameUI: React.FC = React.memo(() => {
           <SettingsModal />
         </>
       )}
+      <QuitModal
+        isOpen={isQuitModalOpen}
+        onClose={() => setIsQuitModalOpen(false)}
+        onConfirm={handleQuitConfirm}
+      />
     </>
   );
 });
