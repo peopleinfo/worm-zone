@@ -4,11 +4,11 @@ import './index.css'
 import App from './App.tsx'
 
 // Initialize vconsole for mobile debugging in development mode
-// if (import.meta.env.DEV) {
+if (import.meta.env.DEV) {
   import('vconsole').then(({ default: VConsole }) => {
     new VConsole()
   })
-// }
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
