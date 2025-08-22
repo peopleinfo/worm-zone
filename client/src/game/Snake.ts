@@ -37,9 +37,9 @@ export class Snake implements SnakeInterface {
   ) {
     this.id = id;
     this.radius = 4;
-    this.speed = 1.0;
+    this.speed = 0.5;
     this.turningSpeed = 7;
-    this.baseSpeed = 1.0; // Base speed for platform consistency
+    this.baseSpeed = 0.6; // Base speed for platform consistency (reduced by 3x)
     this.points = [PooledObjects.createPoint(x, y, this.radius, color)];
     this.velocity = { x: 1, y: 0 };
     this.overPos = { x: 0, y: 0 };
@@ -240,7 +240,7 @@ export class Snake implements SnakeInterface {
 
     // Draw body segments with overlap to create continuous appearance
     // Use smaller increment to ensure segments overlap and connect seamlessly
-    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.6)); // 60% of radius for overlap
+    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.3)); // 30% of radius for more compact segments
     
     for (let i = 0; i < this.points.length; i += segmentSpacing) {
       this.points[i].draw(ctx, '', this.radius);

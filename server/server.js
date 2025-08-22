@@ -1241,7 +1241,7 @@ function createBot(id) {
     points: [],
     angle: safeAngle,
     radius: botRadius,
-    speed: 1.0, // Consistent speed with human players for fair gameplay
+    speed: 0.5, // Consistent speed with human players for fair gameplay (reduced by 3x)
     color: getRandomColor(),
     score: 1.0,
     alive: true,
@@ -1925,7 +1925,7 @@ io.on("connection", (socket) => {
       points: [],
       angle: safeAngle,
       radius: playerRadius,
-      speed: 1.0,
+      speed: 0.5,
       color: getRandomColor(),
       score: 0,
       alive: true,

@@ -53,7 +53,7 @@ export class Food implements FoodInterface {
     );
     
     // Add gradient stops for a more appealing look
-    gradient.addColorStop(0, this.lightenColor(drawColor, 0.4));
+    gradient.addColorStop(0, this.lightenColor(drawColor, 0.5));
     gradient.addColorStop(0.7, drawColor);
     gradient.addColorStop(1, this.darkenColor(drawColor, 0.3));
     
