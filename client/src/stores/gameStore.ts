@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { GameState, Controls } from "../types/game";
-import type { Snake } from "../game/Snake";
-import type { Food } from "../game/Food";
-import type { Point } from "../game/Point";
+import { Snake } from "../game/Snake";
+import { Food } from "../game/Food";
+import { Point } from "../game/Point";
 import { useAuthStore } from "./authStore";
+import { PooledObjects } from "../utils/ObjectPool";
 
 // Leaderboard player interface
 export interface LeaderboardPlayer {
@@ -113,12 +114,23 @@ export const useGameStore = create<GameStore>()(
 
       updateOtherSnakes: (snakes) => set({ otherSnakes: snakes }),
 
-      updateFoods: (foods) => set({ foods }),
+      updateFoods: (foods) => 
+        set((state) => {
+          // Release old foods back to pool
+          state.foods.forEach(food => PooledObjects.releaseFood(food));
+          return { foods };
+        }),
 
       removeFood: (foodId) =>
-        set((state) => ({
-          foods: state.foods.filter((food) => food.id !== foodId),
-        })),
+        set((state) => {
+          const foodToRemove = state.foods.find((food) => food.id === foodId);
+          if (foodToRemove) {
+            PooledObjects.releaseFood(foodToRemove);
+          }
+          return {
+            foods: state.foods.filter((food) => food.id !== foodId),
+          };
+        }),
 
       addDeadPoints: (points) =>
         set((state) => ({
@@ -126,11 +138,18 @@ export const useGameStore = create<GameStore>()(
         })),
 
       removeDeadPoints: (points) =>
-        set((state) => ({
-          deadPoints: state.deadPoints.filter(
-            (dp) => !points.some((p) => p.x === dp.x && p.y === dp.y)
-          ),
-        })),
+        set((state) => {
+          const pointsToRemove = state.deadPoints.filter(
+            (dp) => points.some((p) => p.x === dp.x && p.y === dp.y)
+          );
+          // Release removed points back to pool
+          pointsToRemove.forEach(point => PooledObjects.releasePoint(point));
+          return {
+            deadPoints: state.deadPoints.filter(
+              (dp) => !points.some((p) => p.x === dp.x && p.y === dp.y)
+            ),
+          };
+        }),
 
       updateControls: (controls) =>
         set((state) => ({
@@ -166,6 +185,16 @@ export const useGameStore = create<GameStore>()(
 
       resetGame: () =>
         set((prev) => {
+          // Release all pooled objects back to their pools
+          prev.foods.forEach(food => PooledObjects.releaseFood(food));
+          prev.deadPoints.forEach(point => PooledObjects.releasePoint(point));
+          if (prev.mySnake) {
+            prev.mySnake.points.forEach(point => PooledObjects.releasePoint(point));
+          }
+          prev.otherSnakes.forEach(snake => {
+            snake.points.forEach(point => PooledObjects.releasePoint(point));
+          });
+          
           // Resume background music when game resets - use dynamic import
           import("../services/audioService").then(({ audioService }) => {
             audioService.playBackgroundMusic();

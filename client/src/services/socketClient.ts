@@ -1,9 +1,9 @@
 import { io, Socket } from 'socket.io-client';
 import { Snake } from '../game/Snake';
-import { Food } from '../game/Food';
 import { Point } from '../game/Point';
 import { useGameStore } from '../stores/gameStore';
 import { useAuthStore } from '../stores/authStore';
+import { PooledObjects } from '../utils/ObjectPool';
 
 interface ServerPlayer {
   id: string;
@@ -155,7 +155,7 @@ class SocketClient {
       
       // Convert server foods to client foods
       const foods = data.gameState.foods.map(f => {
-        const food = new Food(f.radius, data.gameState.worldWidth, data.gameState.worldHeight);
+        const food = PooledObjects.createFood(f.radius, data.gameState.worldWidth, data.gameState.worldHeight);
         food.id = f.id;
         food.x = f.x;
         food.y = f.y;
@@ -166,7 +166,8 @@ class SocketClient {
       store.updateOtherSnakes(otherSnakes);
       store.updateFoods(foods);
       // Convert server deadPoints to client Point instances
-      const deadPoints = data.gameState.deadPoints.map((p: any) => new Point(p.x, p.y, p.radius, p.color));
+      const deadPoints = data.gameState.deadPoints.map((p: any) => PooledObjects.createPoint(p.x, p.y, p.radius, p.color));
+      console.log(`🍎 [CLIENT] Initial game state loaded: ${foods.length} foods, ${deadPoints.length} dead points`);
       store.addDeadPoints(deadPoints);
       store.setGameState({ 
         mode: 'multiplayer',
@@ -195,7 +196,9 @@ class SocketClient {
       
       const updatedSnakes = store.otherSnakes.map(snake => {
         if (snake.id === data.playerId) {
-          snake.points = data.points.map((p: any) => new Point(p.x, p.y, p.radius, p.color));
+          // Release old points back to pool
+          snake.points.forEach(point => PooledObjects.releasePoint(point));
+          snake.points = data.points.map((p: any) => PooledObjects.createPoint(p.x, p.y, p.radius, p.color));
           snake.angle = data.angle;
           return snake;
         }
@@ -222,6 +225,61 @@ class SocketClient {
         }
         return f;
       });
+      store.updateFoods(updatedFoods);
+    });
+
+    // Foods added (dynamic food management)
+    this.socket.on('foodsAdded', (newFoods: any[]) => {
+      const store = useGameStore.getState();
+      
+      // Don't process food additions if the game is over
+      if (store.isGameOver) {
+        console.log('🚫 Ignoring foodsAdded - game is over');
+        return;
+      }
+      
+      console.log(`🍎 [CLIENT] Adding ${newFoods.length} foods to client`);
+      console.log(`🍎 [CLIENT] Sample food data:`, newFoods.slice(0, 2));
+      
+      // Convert server food data to client Food objects
+      const clientFoods = newFoods.map((f: any) => {
+        const food = PooledObjects.createFood(f.radius, store.worldWidth, store.worldHeight);
+        food.id = f.id;
+        food.x = f.x;
+        food.y = f.y;
+        food.color = f.color;
+        console.log(`🍎 [CLIENT] Created food: id=${food.id}, pos=(${food.x}, ${food.y}), color=${food.color}`);
+        return food;
+      });
+      
+      // Add new foods to existing foods array
+      const updatedFoods = [...store.foods, ...clientFoods];
+      console.log(`🍎 [CLIENT] Total foods after adding: ${updatedFoods.length} (was ${store.foods.length})`);
+      store.updateFoods(updatedFoods);
+    });
+
+    // Foods removed (dynamic food management)
+    this.socket.on('foodsRemoved', (removedFoodIds: string[]) => {
+      const store = useGameStore.getState();
+      
+      // Don't process food removal if the game is over
+      if (store.isGameOver) {
+        console.log('🚫 Ignoring foodsRemoved - game is over');
+        return;
+      }
+      
+      console.log(`🍎 Removing ${removedFoodIds.length} foods from client`);
+      
+      // Remove foods with matching IDs and release them back to pool
+      const updatedFoods = store.foods.filter(food => {
+        if (removedFoodIds.includes(food.id)) {
+          // Release the food object back to the pool
+          PooledObjects.releaseFood(food);
+          return false; // Remove from array
+        }
+        return true; // Keep in array
+      });
+      
       store.updateFoods(updatedFoods);
     });
 
@@ -266,7 +324,7 @@ class SocketClient {
       }
       
       // Convert server deadPoints to client Point instances
-      const deadPoints = data.deadPoints.map((p: any) => new Point(p.x, p.y, p.radius, p.color));
+      const deadPoints = data.deadPoints.map((p: any) => PooledObjects.createPoint(p.x, p.y, p.radius, p.color));
       store.addDeadPoints(deadPoints);
       store.setGameState({ playerCount: store.playerCount - 1 });
     });
@@ -384,7 +442,7 @@ class SocketClient {
 
   private convertServerPlayerToSnake(player: ServerPlayer): Snake {
     const snake = new Snake(player.x, player.y, player.points.length, player.color, player.id);
-    snake.points = player.points.map(p => new Point(p.x, p.y, p.radius, p.color));
+    snake.points = player.points.map(p => PooledObjects.createPoint(p.x, p.y, p.radius, p.color));
     snake.angle = player.angle;
     snake.radius = player.radius;
     snake.speed = player.speed;

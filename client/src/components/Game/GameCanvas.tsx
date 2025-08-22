@@ -10,6 +10,8 @@ export const GameCanvas: React.FC = () => {
   useEffect(() => {
     if (canvasRef.current && !gameEngineRef.current) {
       gameEngineRef.current = new GameEngine(canvasRef.current);
+      // Expose GameEngine instance globally for performance monitoring
+      (window as any).gameEngine = gameEngineRef.current;
     }
     
     // Handle window resize and orientation changes
@@ -30,6 +32,8 @@ export const GameCanvas: React.FC = () => {
       window.removeEventListener('orientationchange', handleResize);
       if (gameEngineRef.current) {
         gameEngineRef.current.stop();
+        // Clean up global reference
+        (window as any).gameEngine = null;
       }
     };
   }, []);

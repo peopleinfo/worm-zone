@@ -4,6 +4,7 @@ import { Point } from './Point';
 import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
 import { MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH } from '../config/gameConfig';
+import { PerformanceTracker, type PerformanceStats } from '../utils/PerformanceTracker';
 
 export class GameEngine {
   private canvas: HTMLCanvasElement;
@@ -16,9 +17,14 @@ export class GameEngine {
   private foods: Food[] = [];
   private zoom: number = MAP_ZOOM_LEVEL;
   
-  // Frame rate limiting
-  private readonly FRAME_INTERVAL = 1000 / 20; // 50ms per frame
+  // Frame rate limiting with adaptive throttling
+  private readonly FRAME_INTERVAL = 1000 / 20; // 50ms per frame (20 FPS)
+  private readonly THROTTLED_FRAME_INTERVAL = 1000 / 10; // 100ms per frame (10 FPS) when overheating
   private lastRenderTime: number = 0;
+  
+  // Performance monitoring
+  private performanceTracker: PerformanceTracker = new PerformanceTracker();
+  private performanceStats: PerformanceStats | null = null;
   
   // World coordinate system - consistent boundaries for collision and rendering
   private readonly WORLD_WIDTH: number = WORLD_WIDTH;
@@ -124,6 +130,10 @@ export class GameEngine {
 
   start(): void {
     if (!this.animationId) {
+      // Reset performance monitoring when starting
+      this.performanceTracker.reset();
+      this.performanceStats = null;
+      
       this.gameLoop();
     }
   }
@@ -135,19 +145,56 @@ export class GameEngine {
     }
   }
 
+  // Public method to get current performance stats
+  getPerformanceStats(): PerformanceStats | null {
+    return this.performanceStats;
+  }
+
+  // Check if device is overheating based on performance
+  isOverheating(): boolean {
+    return this.performanceTracker.isOverheating();
+  }
+
   private gameLoop = (): void => {
     const now = performance.now();
     const elapsed = now - this.lastRenderTime;
     
-    // Only update and render if enough time has passed (20 FPS limiting)
-    if (elapsed >= this.FRAME_INTERVAL) {
+    // Start performance tracking for this frame
+    this.performanceTracker.startFrame();
+    
+    // Use adaptive frame interval based on device performance
+    const shouldThrottle = this.performanceTracker.shouldThrottleFrame();
+    const targetInterval = shouldThrottle ? this.THROTTLED_FRAME_INTERVAL : this.FRAME_INTERVAL;
+    
+    // Only update and render if enough time has passed
+    if (elapsed >= targetInterval) {
       this.update();
       this.render();
-      this.lastRenderTime = now - (elapsed % this.FRAME_INTERVAL);
+      this.lastRenderTime = now - (elapsed % targetInterval);
     }
+    
+    // End performance tracking and update stats
+    this.performanceTracker.endFrame();
+    this.updatePerformanceStats();
     
     this.animationId = requestAnimationFrame(this.gameLoop);
   };
+
+  private updatePerformanceStats(): void {
+    const store = useGameStore.getState();
+    
+    // Update performance stats with current object counts
+    this.performanceStats = this.performanceTracker.getStats({
+      foods: store.foods.length,
+      deadPoints: store.deadPoints.length,
+      snakes: store.otherSnakes.length + (this.mySnake ? 1 : 0)
+    });
+    
+    // Log performance warnings if overheating
+    if (this.performanceTracker.isOverheating()) {
+      console.log(`🔥 Device overheating detected (FPS: ${this.performanceStats.fps.toFixed(1)}, Memory: ${this.performanceStats.memoryUsage.toFixed(1)}MB)`);
+    }
+  }
 
   private update(): void {
     const store = useGameStore.getState();
@@ -260,6 +307,25 @@ export class GameEngine {
     // Ranking is handled by the server in multiplayer mode
   }
 
+  private isInViewport(x: number, y: number, size: number = 10): boolean {
+    // Always render everything if no player snake or snake is not alive
+    if (!this.mySnake || !this.mySnake.isAlive) {
+      return true;
+    }
+    
+    const head = this.mySnake.getHead();
+    const viewportWidth = this.canvas.width / this.zoom;
+    const viewportHeight = this.canvas.height / this.zoom;
+    const margin = size * 4; // Increased margin to ensure foods are visible
+    
+    const left = head.x - viewportWidth / 2 - margin;
+    const right = head.x + viewportWidth / 2 + margin;
+    const top = head.y - viewportHeight / 2 - margin;
+    const bottom = head.y + viewportHeight / 2 + margin;
+    
+    return x >= left && x <= right && y >= top && y <= bottom;
+  }
+
   private render(): void {
     const store = useGameStore.getState();
     
@@ -280,29 +346,58 @@ export class GameEngine {
 
     this.drawBoundary();
 
-    // Render foods
+    // Render foods with viewport culling
+    let renderedFoods = 0;
+    // Only log when there are foods to avoid spam
+    if (store.foods.length > 0) {
+      console.log(`🍎 [CLIENT RENDER] Rendering ${store.foods.length} foods`);
+    }
+    
     for (let i = 0; i < store.foods.length; i++) {
       const food = store.foods[i];
-      food.draw(this.ctx);
+      
+      if (this.isInViewport(food.x, food.y, food.radius || 5)) {
+        food.draw(this.ctx);
+        renderedFoods++;
+      }
+    }
+    
+    // Always log food count for debugging
+    if (store.foods.length > 0) {
+      console.log(`🍎 [CLIENT RENDER] Total foods in store: ${store.foods.length}, Rendered: ${renderedFoods}`);
     }
 
-    // Render dead points
+    // Render dead points with viewport culling
+    let renderedDeadPoints = 0;
     for (let i = 0; i < store.deadPoints.length; i++) {
       const point = store.deadPoints[i];
-      point.draw(this.ctx);
+      if (this.isInViewport(point.x, point.y, point.radius || 3)) {
+        point.draw(this.ctx);
+        renderedDeadPoints++;
+      }
     }
 
-    // Draw player snake
+    // Draw player snake (always render)
     if (this.mySnake && this.mySnake.isAlive) {
       this.mySnake.draw(this.ctx);
     }
 
-    // Draw other snakes
+    // Draw other snakes with viewport culling
+    let renderedSnakes = 0;
     for (let i = 0; i < store.otherSnakes.length; i++) {
       const snake = store.otherSnakes[i];
       if (snake.isAlive) {
-        snake.draw(this.ctx);
+        const head = snake.getHead();
+        if (this.isInViewport(head.x, head.y, snake.radius || 10)) {
+          snake.draw(this.ctx);
+          renderedSnakes++;
+        }
       }
+    }
+
+    // Log culling stats occasionally for debugging
+    if (Math.random() < 0.01) { // 1% chance to log
+      console.log(`[VIEWPORT CULLING] Rendered: ${renderedFoods}/${store.foods.length} foods, ${renderedDeadPoints}/${store.deadPoints.length} dead points, ${renderedSnakes}/${store.otherSnakes.length} snakes`);
     }
 
     this.ctx.restore();

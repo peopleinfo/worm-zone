@@ -1,6 +1,7 @@
 import { Point } from './Point';
 import type { Snake as SnakeInterface, Controls } from '../types/game';
 import { getRandomColor, isCollided, coeffD2R, INFINITY, defRad } from '../utils/gameUtils';
+import { PooledObjects } from '../utils/ObjectPool';
 
 export class Snake implements SnakeInterface {
   static deadPoints: Point[] = [];
@@ -39,7 +40,7 @@ export class Snake implements SnakeInterface {
     this.speed = 1.0;
     this.turningSpeed = 7;
     this.baseSpeed = 1.0; // Base speed for platform consistency
-    this.points = [new Point(x, y, this.radius, color)];
+    this.points = [PooledObjects.createPoint(x, y, this.radius, color)];
     this.velocity = { x: 1, y: 0 };
     this.overPos = { x: 0, y: 0 };
     this.color = color;
@@ -49,12 +50,12 @@ export class Snake implements SnakeInterface {
     this.isAlive = true;
 
     for (let i = 1; i < length; i++) {
-      this.points.push(new Point(INFINITY, INFINITY, this.radius, getRandomColor()));
+      this.points.push(PooledObjects.createPoint(INFINITY, INFINITY, this.radius, getRandomColor()));
     }
   }
 
   eat(color: string = 'red'): void {
-    const newPoint = new Point(INFINITY, INFINITY, this.radius, color);
+    const newPoint = PooledObjects.createPoint(INFINITY, INFINITY, this.radius, color);
     this.points.push(newPoint);
     this.radius = Math.min(10, Math.max(4, this.points.length * this.fatScaler));
   }
@@ -63,13 +64,13 @@ export class Snake implements SnakeInterface {
     // Award points equal to the length of the eaten snake
     for (let i = 0; i < points; i++) {
       const tail = this.points[this.points.length - 1];
-      const newPoint = new Point(tail.x, tail.y, tail.radius, this.color);
+      const newPoint = PooledObjects.createPoint(tail.x, tail.y, tail.radius, this.color);
       this.points.push(newPoint);
     }
   }
 
   getHead(): Point {
-    return this.points[0] ?? new Point(this.overPos.x, this.overPos.y);
+    return this.points[0] ?? PooledObjects.createPoint(this.overPos.x, this.overPos.y, this.radius, this.color);
   }
 
   calculateTargetAngleWithControls(controls: Controls): number {
@@ -118,10 +119,13 @@ export class Snake implements SnakeInterface {
     const headX = this.getHead().x + effectiveSpeed * this.velocity.x;
     const headY = this.getHead().y + effectiveSpeed * this.velocity.y;
 
-    const head = new Point(headX, headY, this.getHead().radius, this.getHead().color);
+    const head = PooledObjects.createPoint(headX, headY, this.getHead().radius, this.getHead().color);
 
     this.points.unshift(head);
-    this.points.pop();
+    const removedPoint = this.points.pop();
+    if (removedPoint) {
+      PooledObjects.releasePoint(removedPoint);
+    }
   }
 
   private getPlatformSpeedMultiplier(): number {
@@ -154,7 +158,7 @@ export class Snake implements SnakeInterface {
   checkCollisionsWithFood(target: Point | { x: number; y: number; radius: number; color: string }): Point | { x: number; y: number; radius: number; color: string } | undefined {
     const head = this.getHead();
     // Create a temporary Point object for collision detection if target is not a Point
-    const targetPoint = target instanceof Point ? target : new Point(target.x, target.y, target.radius, target.color);
+    const targetPoint = target instanceof Point ? target : PooledObjects.createPoint(target.x, target.y, target.radius, target.color);
     
     // Calculate distance for debugging
     const distance = Math.hypot(head.x - targetPoint.x, head.y - targetPoint.y);
@@ -216,8 +220,11 @@ export class Snake implements SnakeInterface {
     this.isAlive = false;
     const finalScore = this.points.length;
     
-    const latestDeadPoints = this.points.map(p => new Point(p.x, p.y, defRad, getRandomColor()));
+    const latestDeadPoints = this.points.map(p => PooledObjects.createPoint(p.x, p.y, defRad, getRandomColor()));
     Snake.deadPoints.push(...latestDeadPoints);
+    
+    // Release the snake's points back to the pool
+    this.points.forEach(point => PooledObjects.releasePoint(point));
 
     const head = this.getHead();
     this.overPos.x = head.x;
