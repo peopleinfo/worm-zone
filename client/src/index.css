@@ -36,6 +36,13 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  /* Prevent text selection and context menu for game-like experience */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,

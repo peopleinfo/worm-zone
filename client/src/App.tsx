@@ -29,6 +29,36 @@ function App() {
     return () => clearTimeout(timer);
   }, [initializeAuth]);
 
+  // Disable context menu (right-click) to avoid annoying browser menus
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
+    const handleSelectStart = (e: Event) => {
+      e.preventDefault();
+      return false;
+    };
+
+    const handleDragStart = (e: DragEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Add event listeners to prevent context menu and text selection
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('selectstart', handleSelectStart);
+    document.addEventListener('dragstart', handleDragStart);
+
+    // Cleanup event listeners on unmount
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('selectstart', handleSelectStart);
+      document.removeEventListener('dragstart', handleDragStart);
+    };
+  }, []);
+
 
   // Initialize and sync audio settings when app loads
   useEffect(() => {

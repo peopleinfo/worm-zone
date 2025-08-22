@@ -3,10 +3,11 @@ class AudioService {
   private isInitialized = false;
   private currentVolume = 0.6; // Default 60%
   private isMuted = false;
-
+  private wasPlayingBeforeHidden = false; // Track if music was playing before page became hidden
 
   constructor() {
     this.initializeAudio();
+    this.setupPageVisibilityListener();
   }
 
   private initializeAudio(): void {
@@ -54,9 +55,13 @@ class AudioService {
       return;
     }
 
+    // Sync with current settings before attempting to play
+    this.syncWithSettings();
+
     try {
-      // Check if audio is already playing
-      if (this.backgroundMusic.paused) {
+      // Only play if not muted and audio is paused
+      if (this.backgroundMusic.paused && !this.isMuted) {
+        console.log('🎵 Attempting to play background music');
         this.backgroundMusic.play().catch((error) => {
           console.warn('Failed to play background music:', error);
           // Handle autoplay policy - user interaction required
@@ -64,6 +69,10 @@ class AudioService {
             console.log('🎵 Autoplay blocked - waiting for user interaction');
           }
         });
+      } else if (this.isMuted) {
+        console.log('🎵 Background music is muted - not playing');
+      } else {
+        console.log('🎵 Background music is already playing');
       }
     } catch (error) {
       console.error('Error playing background music:', error);
@@ -97,8 +106,26 @@ class AudioService {
   }
 
   public setMuted(muted: boolean): void {
+    const wasPlaying = this.isMusicPlaying();
     this.isMuted = muted;
     this.updateVolume();
+    
+    // Handle play/pause based on mute state
+    if (this.backgroundMusic) {
+      if (muted && wasPlaying) {
+        // Mute: pause the music
+        if (this.backgroundMusic && !this.backgroundMusic.paused) {
+          this.pauseBackgroundMusic();
+          console.log('🎵 Music paused due to mute');
+        }
+      } else if (!muted && this.backgroundMusic.paused) {
+        // Unmute: resume the music
+        if (this.backgroundMusic && this.backgroundMusic.paused && this.isInitialized) {
+          this.playBackgroundMusic();
+          console.log('🎵 Music resumed after unmute');
+        }
+      }
+    }
   }
 
   private updateVolume(): void {
@@ -164,18 +191,46 @@ class AudioService {
   }
 
   public handleUserInteraction(): void {
-    if (this.backgroundMusic && this.backgroundMusic.paused) {
+    if (!this.backgroundMusic) {
+      console.warn('🎵 Background music not initialized');
+      return;
+    }
+
+    // Sync with current settings before attempting to play
+    this.syncWithSettings();
+    
+    if (this.backgroundMusic.paused) {
       console.log('🎵 User interaction - attempting to unlock audio');
       
-      this.backgroundMusic.play().then(() => {
-        console.log('🎵 Audio unlocked via user interaction!');
-        if (!this.isMuted) {
+      // Only attempt to play if not muted
+      if (!this.isMuted) {
+        this.backgroundMusic.play().then(() => {
+          console.log('🎵 Audio unlocked and playing via user interaction!');
           this.updateVolume();
           console.log('🎵 Audio playing at volume:', this.currentVolume);
-        }
-      }).catch((error) => {
-        console.warn('Failed to unlock audio:', error);
-      });
+        }).catch((error) => {
+          console.warn('Failed to unlock audio:', error);
+          // Handle autoplay policy - user interaction required
+          if (error.name === 'NotAllowedError') {
+            console.log('🎵 Autoplay still blocked - may need additional user interaction');
+          }
+        });
+      } else {
+        console.log('🎵 Audio is muted - not playing on user interaction');
+        // Still attempt to unlock the audio context for future use, but keep it paused
+        this.backgroundMusic.play().then(() => {
+          if (this.backgroundMusic) {
+            this.backgroundMusic.pause();
+            console.log('🎵 Audio context unlocked but kept paused due to mute setting');
+          }
+        }).catch((error) => {
+          console.warn('Failed to unlock audio context:', error);
+        });
+      }
+    } else if (!this.isMuted) {
+      // Audio is already playing, just ensure volume is correct
+      this.updateVolume();
+      console.log('🎵 Audio already playing, volume updated');
     }
   }
 
@@ -208,6 +263,59 @@ class AudioService {
   public forceSyncSettings(): void {
     // Force immediate sync with settings
     this.syncWithSettings();
+  }
+
+  private setupPageVisibilityListener(): void {
+    // Set up Page Visibility API listener to handle when user navigates away or locks screen
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        this.handleVisibilityChange();
+      });
+      
+      console.log('🎵 Page Visibility API listener set up');
+    }
+  }
+
+  private handleVisibilityChange(): void {
+    if (typeof document === 'undefined') return;
+
+    if (document.hidden) {
+      // Page is hidden (user navigated away, locked screen, minimized app, etc.)
+      this.handlePageHidden();
+    } else {
+      // Page is visible again
+      this.handlePageVisible();
+    }
+  }
+
+  private handlePageHidden(): void {
+    console.log('🎵 Page hidden - pausing background music');
+    
+    // Remember if music was playing before hiding
+    this.wasPlayingBeforeHidden = this.isMusicPlaying();
+    
+    // Always pause music when page is hidden to prevent lock screen playback
+    if (this.backgroundMusic && !this.backgroundMusic.paused) {
+      this.pauseBackgroundMusic();
+      console.log('🎵 Music paused due to page visibility change');
+    }
+  }
+
+  private handlePageVisible(): void {
+    console.log('🎵 Page visible - checking if music should resume');
+    
+    // Only resume if music was playing before and user hasn't muted it
+    if (this.wasPlayingBeforeHidden && !this.isMuted && this.backgroundMusic && this.backgroundMusic.paused) {
+      console.log('🎵 Resuming music after page became visible');
+      this.playBackgroundMusic();
+    } else if (this.isMuted) {
+      console.log('🎵 Music remains paused - user has muted audio');
+    } else if (!this.wasPlayingBeforeHidden) {
+      console.log('🎵 Music remains paused - was not playing before page was hidden');
+    }
+    
+    // Reset the flag
+    this.wasPlayingBeforeHidden = false;
   }
 }
 
