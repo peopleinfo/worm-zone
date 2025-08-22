@@ -202,13 +202,26 @@ export class Snake implements SnakeInterface {
     if (!this.isAlive) return false;
     
     const head = this.getHead();
-
-    if (
-      head.x - head.radius < 0 ||
-      head.y - head.radius < 0 ||
-      head.x + head.radius > worldWidth ||
-      head.y + head.radius > worldHeight
-    ) {
+    
+    // Debug logging for boundary collision detection
+    const leftBoundary = head.x - head.radius < 0;
+    const topBoundary = head.y - head.radius < 0;
+    const rightBoundary = head.x + head.radius > worldWidth;
+    const bottomBoundary = head.y + head.radius > worldHeight;
+    
+    const hasCollision = leftBoundary || topBoundary || rightBoundary || bottomBoundary;
+    
+    // Log detailed boundary information
+    console.log(`[BOUNDARY CHECK] Snake ${this.id.substring(0,6)} - Head: (${head.x.toFixed(2)}, ${head.y.toFixed(2)}) Radius: ${head.radius}`);
+    console.log(`[BOUNDARY CHECK] World: ${worldWidth}x${worldHeight}`);
+    console.log(`[BOUNDARY CHECK] Boundaries - Left: ${(head.x - head.radius).toFixed(2)} < 0 = ${leftBoundary}`);
+    console.log(`[BOUNDARY CHECK] Boundaries - Top: ${(head.y - head.radius).toFixed(2)} < 0 = ${topBoundary}`);
+    console.log(`[BOUNDARY CHECK] Boundaries - Right: ${(head.x + head.radius).toFixed(2)} > ${worldWidth} = ${rightBoundary}`);
+    console.log(`[BOUNDARY CHECK] Boundaries - Bottom: ${(head.y + head.radius).toFixed(2)} > ${worldHeight} = ${bottomBoundary}`);
+    
+    if (hasCollision) {
+      console.log(`[BOUNDARY DEATH] Snake ${this.id.substring(0,6)} died due to boundary collision!`);
+      console.log(`[BOUNDARY DEATH] Collision reasons: Left=${leftBoundary}, Top=${topBoundary}, Right=${rightBoundary}, Bottom=${bottomBoundary}`);
       this.over();
       return true;
     }

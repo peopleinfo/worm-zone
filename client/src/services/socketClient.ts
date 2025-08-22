@@ -139,6 +139,10 @@ class SocketClient {
       // Set current player ID
       store.setCurrentPlayerId(data.playerId);
       
+      // Store server world dimensions
+      store.setWorldDimensions(data.gameState.worldWidth, data.gameState.worldHeight);
+      console.log('🌍 World dimensions set from server:', data.gameState.worldWidth, 'x', data.gameState.worldHeight);
+      
       // Find current player in server data and create their snake
       const currentPlayerData = data.gameState.players.find(p => p.id === this.playerId);
       if (currentPlayerData) {
@@ -442,6 +446,22 @@ class SocketClient {
   }
 
   private convertServerPlayerToSnake(player: ServerPlayer): Snake {
+    // Debug logging for server player data
+    console.log(`[CONVERT PLAYER] Converting server player ${player.id.substring(0,6)}:`);
+    console.log(`[CONVERT PLAYER] Server position: (${player.x}, ${player.y})`);
+    console.log(`[CONVERT PLAYER] Server angle: ${player.angle}, radius: ${player.radius}, speed: ${player.speed}`);
+    console.log(`[CONVERT PLAYER] Server points count: ${player.points.length}, alive: ${player.alive}`);
+    console.log(`[CONVERT PLAYER] Server points data:`, player.points.slice(0, 3)); // Log first 3 points
+    
+    // Validate coordinates are within reasonable bounds
+    const store = useGameStore.getState();
+    const worldWidth = store.worldWidth || 1200;
+    const worldHeight = store.worldHeight || 800;
+    
+    if (player.x < 0 || player.x > worldWidth || player.y < 0 || player.y > worldHeight) {
+      console.warn(`[CONVERT PLAYER] WARNING: Server player position (${player.x}, ${player.y}) is outside world bounds (${worldWidth}x${worldHeight})`);
+    }
+    
     const snake = new Snake(player.x, player.y, player.points.length, player.color, player.id);
     snake.points = player.points.map(p => PooledObjects.createPoint(p.x, p.y, p.radius, p.color));
     snake.angle = player.angle;
@@ -450,6 +470,13 @@ class SocketClient {
     snake.color = player.color;
     snake.isAlive = player.alive;
     snake.ai = true;
+    
+    // Debug logging for created snake
+    const head = snake.getHead();
+    console.log(`[CONVERT PLAYER] Created snake head position: (${head.x}, ${head.y})`);
+    console.log(`[CONVERT PLAYER] Created snake points count: ${snake.points.length}`);
+    console.log(`[CONVERT PLAYER] Created snake alive status: ${snake.isAlive}`);
+    
     return snake;
   }
 

@@ -632,7 +632,7 @@ function adjustFoodCount() {
 
 // Grid-based food distribution system
 function createFoodGrid() {
-  const cellSize = 420; // Each cell is 200x200 pixels (viewport size)
+  const cellSize = 200; // Each cell is 200x200 pixels (viewport size)
   const minFoodsPerCell = 12; // Increased from 8 to 21 for ~500 total foods (24 cells × 21 = 504)
   const maxFoodsPerCell = 25; // Increased proportionally to avoid overcrowding
 

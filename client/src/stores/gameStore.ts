@@ -31,6 +31,10 @@ interface GameStore extends GameState {
   // Controls
   controls: Controls;
 
+  // World dimensions from server
+  worldWidth: number;
+  worldHeight: number;
+
   // Countdown state
   isCountingDown: boolean;
   countdownValue: number | null;
@@ -48,6 +52,7 @@ interface GameStore extends GameState {
   updateLeaderboard: (leaderboard: LeaderboardPlayer[]) => void;
   updateFullLeaderboard: (fullLeaderboard: LeaderboardPlayer[]) => void;
   setCurrentPlayerId: (playerId: string) => void;
+  setWorldDimensions: (width: number, height: number) => void;
   getRealUserId: () => string | null;
   resetGame: () => void;
   startGame: () => void;
@@ -79,6 +84,10 @@ const initialState = {
   fullLeaderboard: [],
   currentPlayerId: null,
   // Removed highestScore and userScores - now handled by authStore
+
+  // Default world dimensions (will be updated from server)
+  worldWidth: 1200,
+  worldHeight: 800,
 
   controls: {
     up: false,
@@ -169,6 +178,8 @@ export const useGameStore = create<GameStore>()(
       updateFullLeaderboard: (fullLeaderboard) => set({ fullLeaderboard }),
 
       setCurrentPlayerId: (playerId) => set({ currentPlayerId: playerId }),
+
+      setWorldDimensions: (width, height) => set({ worldWidth: width, worldHeight: height }),
 
       // Removed score-related methods - now handled by authStore
 

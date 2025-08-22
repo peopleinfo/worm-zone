@@ -26,9 +26,16 @@ export class GameEngine {
   private performanceTracker: PerformanceTracker = new PerformanceTracker();
   private performanceStats: PerformanceStats | null = null;
   
-  // World coordinate system - consistent boundaries for collision and rendering
-  private readonly WORLD_WIDTH: number = WORLD_WIDTH;
-  private readonly WORLD_HEIGHT: number = WORLD_HEIGHT;
+  // World coordinate system - get from server via gameStore
+  private getWorldWidth(): number {
+    const store = useGameStore.getState();
+    return store.worldWidth || WORLD_WIDTH; // Fallback to config if not set
+  }
+  
+  private getWorldHeight(): number {
+    const store = useGameStore.getState();
+    return store.worldHeight || WORLD_HEIGHT; // Fallback to config if not set
+  }
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -38,75 +45,45 @@ export class GameEngine {
   }
 
   private setupCanvas(): void {
-    // Use rotated dimensions for landscape mode
+    // Set canvas dimensions for landscape mode (mobile rotated view)
     this.canvas.width = window.innerHeight;
     this.canvas.height = window.innerWidth;
+    
+    // Configure canvas context for optimal rendering
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
-    // Optimize canvas for better performance
-    this.ctx.imageSmoothingEnabled = false;
+    this.ctx.imageSmoothingEnabled = false; // Better performance on mobile
+    
+    console.log(`🎮 [SETUP] Canvas initialized: ${this.canvas.width}x${this.canvas.height}, World: ${this.getWorldWidth()}x${this.getWorldHeight()}`);
   }
 
   // Handle canvas resize for orientation changes
   resize(): void {
-    const oldWidth = this.canvas.width;
-    const oldHeight = this.canvas.height;
+    console.log('🔄 [RESIZE] Canvas resize triggered - maintaining world coordinates');
     
-    // Update canvas dimensions for rotated view
+    // Update canvas dimensions for landscape mode (rotated view)
     this.canvas.width = window.innerHeight;
     this.canvas.height = window.innerWidth;
     
-    // Restore canvas context properties
+    // Restore canvas context properties after resize
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
+    this.ctx.imageSmoothingEnabled = false;
     
-    // Calculate scale factors for repositioning game elements
-    const scaleX = this.canvas.width / oldWidth;
-    const scaleY = this.canvas.height / oldHeight;
+    console.log(`🔄 [RESIZE] Canvas dimensions: ${this.canvas.width}x${this.canvas.height}, World: ${this.getWorldWidth()}x${this.getWorldHeight()}`);
     
-    // Reposition player snake if it exists
+    // CRITICAL FIX: Do NOT scale world coordinates!
+    // World coordinates should remain immutable (0,0 to WORLD_WIDTH,WORLD_HEIGHT)
+    // Only the canvas viewport changes, not the game world itself
+    
+    // Log current snake position for debugging
     if (this.mySnake && this.mySnake.isAlive) {
-      this.mySnake.points.forEach(point => {
-        point.x *= scaleX;
-        point.y *= scaleY;
-      });
+      const head = this.mySnake.getHead();
+      console.log(`🐍 [RESIZE] Snake position unchanged: (${head.x.toFixed(1)}, ${head.y.toFixed(1)})`);
     }
     
-    // Reposition AI snakes
-    this.aiSnakes.forEach(snake => {
-      if (snake.isAlive) {
-        snake.points.forEach(point => {
-          point.x *= scaleX;
-          point.y *= scaleY;
-        });
-      }
-    });
-    
-    // Reposition foods
-    this.foods.forEach(food => {
-      food.x *= scaleX;
-      food.y *= scaleY;
-      // Ensure foods stay within world bounds
-      food.x = Math.max(food.radius, Math.min(this.WORLD_WIDTH - food.radius, food.x));
-      food.y = Math.max(food.radius, Math.min(this.WORLD_HEIGHT - food.radius, food.y));
-    });
-    
-    // Reposition dead points
-    Snake.deadPoints.forEach(point => {
-      point.x *= scaleX;
-      point.y *= scaleY;
-      // Ensure dead points stay within world bounds
-      point.x = Math.max(point.radius, Math.min(this.WORLD_WIDTH - point.radius, point.x));
-      point.y = Math.max(point.radius, Math.min(this.WORLD_HEIGHT - point.radius, point.y));
-    });
-    
-    // Update store with resized elements
-    const store = useGameStore.getState();
-    if (this.mySnake) {
-      store.updateMySnake(this.mySnake);
-    }
-    store.updateFoods(this.foods);
-    store.updateOtherSnakes(this.aiSnakes);
+    // No coordinate scaling needed - collision detection and rendering
+    // will work correctly with consistent world coordinates
   }
 
   private initializeGame(): void {
@@ -117,14 +94,9 @@ export class GameEngine {
       console.log('🐍 Using existing snake from server data at position:', store.mySnake.getHead()?.x, store.mySnake.getHead()?.y);
       this.mySnake = store.mySnake;
     } else {
-      // Fallback: Initialize player snake at world center (for offline mode or initial state)
-      console.log('🐍 Creating fallback snake at world center');
-      const centerX = this.WORLD_WIDTH / 2;
-      const centerY = this.WORLD_HEIGHT / 2;
-      this.mySnake = new Snake(centerX, centerY, 25, 'green', 'player');
-      this.mySnake.ai = false;
-      // Update store with the new snake
-      store.updateMySnake(this.mySnake);
+      // Don't create fallback snake immediately - wait for server data
+      console.log('🐍 No snake data from server yet - waiting for gameInit event');
+      this.mySnake = null;
     }
   }
 
@@ -205,7 +177,13 @@ export class GameEngine {
       this.mySnake = store.mySnake;
     }
     
-    if (!store.isPlaying || !this.mySnake) return;
+    if (!store.isPlaying) return;
+    
+    // Wait for snake data from server before starting game loop
+    if (!this.mySnake) {
+      console.log('🐍 [DEBUG] Waiting for snake data from server...');
+      return;
+    }
 
     // Calculate deltaTime for frame-rate independent movement
     const now = Date.now();
@@ -218,26 +196,75 @@ export class GameEngine {
     // Update player snake
     if (this.mySnake.isAlive) {
       this.mySnake.move(store.controls, deltaTime);
-      this.mySnake.checkCollisionsWithBoundary(this.WORLD_WIDTH, this.WORLD_HEIGHT);
+      
+      // Comprehensive debug logging for world dimensions and boundary collision
+      const head = this.mySnake.getHead();
+      const clientWorldWidth = this.getWorldWidth();
+      const clientWorldHeight = this.getWorldHeight();
+      const storeWorldWidth = store.worldWidth;
+      const storeWorldHeight = store.worldHeight;
+      
+      // Log world dimension validation
+      console.log(`[GAMEENGINE] World dimensions - Client: ${clientWorldWidth}x${clientWorldHeight}, Store: ${storeWorldWidth}x${storeWorldHeight}`);
+      
+      // Validate server/client dimension synchronization
+      if (storeWorldWidth && storeWorldHeight) {
+        if (clientWorldWidth !== storeWorldWidth || clientWorldHeight !== storeWorldHeight) {
+          console.warn(`[GAMEENGINE] WARNING: World dimension mismatch! Client: ${clientWorldWidth}x${clientWorldHeight}, Server: ${storeWorldWidth}x${storeWorldHeight}`);
+        }
+      } else {
+        console.warn(`[GAMEENGINE] WARNING: Store world dimensions not set! Using fallback: ${clientWorldWidth}x${clientWorldHeight}`);
+      }
+      
+      // Log snake position before boundary check
+      console.log(`[GAMEENGINE] Snake ${this.mySnake.id.substring(0,6)} position before boundary check: (${head.x.toFixed(2)}, ${head.y.toFixed(2)}) radius: ${head.radius}`);
+      
+      const boundaryCollision = this.mySnake.checkCollisionsWithBoundary(clientWorldWidth, clientWorldHeight);
+      
+      // Log when snake gets close to boundaries
+      const margin = 50;
+      if (head.x < margin || head.y < margin || head.x > clientWorldWidth - margin || head.y > clientWorldHeight - margin) {
+        console.log(`⚠️ [BOUNDARY WARNING] Snake near boundary at (${head.x.toFixed(1)}, ${head.y.toFixed(1)}) - World: ${clientWorldWidth}x${clientWorldHeight}`);
+      }
+      
+      if (boundaryCollision) {
+        console.log(`💀 [BOUNDARY DEATH] Snake died at boundary (${head.x.toFixed(1)}, ${head.y.toFixed(1)}) - World: ${clientWorldWidth}x${clientWorldHeight}`);
+      }
 
       // Food collisions - multiplayer only
-      const foodsToCheck = store.foods;
+       const foodsToCheck = store.foods;
+      
+      // Debug logging for food collision detection
+      if (foodsToCheck.length > 0 && Math.random() < 0.1) { // 10% chance to log for debugging
+        console.log(`🍎 [COLLISION DEBUG] Snake head at (${head.x.toFixed(1)}, ${head.y.toFixed(1)}, r:${head.radius}) checking ${foodsToCheck.length} foods`);
+      }
+      
       for (let i = 0; i < foodsToCheck.length; i++) {
         const food = foodsToCheck[i];
+        
+        // Calculate distance for debugging
+        const distance = Math.hypot(head.x - food.x, head.y - food.y);
+        const requiredDistance = head.radius + (food.radius || 5);
+        
+        // Log near-misses for debugging
+        if (distance < requiredDistance + 10) {
+          console.log(`🍎 [NEAR MISS] Food at (${food.x.toFixed(1)}, ${food.y.toFixed(1)}, r:${food.radius || 5}) - Distance: ${distance.toFixed(2)}, Required: ${requiredDistance.toFixed(2)}`);
+        }
+        
         const collision = this.mySnake.checkCollisionsWithFood(food);
         if (collision) {
           // The checkCollisionsWithFood method already calls eat() internally with the food's color
-          console.log(`[GAME ENGINE] Snake ate food at (${food.x.toFixed(1)}, ${food.y.toFixed(1)})`);
+          console.log(`✅ [FOOD EATEN] Snake ate food at (${food.x.toFixed(1)}, ${food.y.toFixed(1)}) - Distance: ${distance.toFixed(2)}`);
           
           // Remove the food from local store immediately
           store.removeFood(food.id);
           
           // Notify server about food consumption
           try {
-            console.log(`[GAME ENGINE] Sending food eaten event to server for food ID: ${food.id}`);
+            console.log(`📡 [NETWORK] Sending food eaten event to server for food ID: ${food.id}`);
             socketClient.sendFoodEaten(food.id);
           } catch (error) {
-            console.warn('Failed to send food eaten event:', error);
+            console.warn('❌ Failed to send food eaten event:', error);
           }
           break; // Only consume one food per frame for better performance
         }
@@ -323,7 +350,14 @@ export class GameEngine {
     const top = head.y - viewportHeight / 2 - margin;
     const bottom = head.y + viewportHeight / 2 + margin;
     
-    return x >= left && x <= right && y >= top && y <= bottom;
+    const isVisible = x >= left && x <= right && y >= top && y <= bottom;
+    
+    // Debug viewport culling occasionally
+    if (Math.random() < 0.005) { // 0.5% chance to log
+      console.log(`🔍 [VIEWPORT] Object at (${x.toFixed(1)}, ${y.toFixed(1)}) - Head: (${head.x.toFixed(1)}, ${head.y.toFixed(1)}) - Viewport: ${viewportWidth.toFixed(1)}x${viewportHeight.toFixed(1)} - Visible: ${isVisible}`);
+    }
+    
+    return isVisible;
   }
 
   private render(): void {
@@ -338,10 +372,38 @@ export class GameEngine {
       const zoomFactorX = this.canvas.width / 2 / this.zoom;
       const zoomFactorY = this.canvas.height / 2 / this.zoom;
       
+      // Calculate viewport dimensions in world coordinates
+      const viewportWidth = this.canvas.width / this.zoom;
+      const viewportHeight = this.canvas.height / this.zoom;
+      
+      // Calculate desired camera position (centered on snake head)
+      let cameraX = head.x;
+      let cameraY = head.y;
+      
+      // Clamp camera position to ensure viewport stays within world boundaries
+      const minCameraX = viewportWidth / 2;
+      const maxCameraX = this.getWorldWidth() - viewportWidth / 2;
+      const minCameraY = viewportHeight / 2;
+      const maxCameraY = this.getWorldHeight() - viewportHeight / 2;
+      
+      // Only clamp if the world is larger than the viewport
+      if (this.getWorldWidth() > viewportWidth) {
+        cameraX = Math.max(minCameraX, Math.min(maxCameraX, cameraX));
+      }
+      if (this.getWorldHeight() > viewportHeight) {
+        cameraY = Math.max(minCameraY, Math.min(maxCameraY, cameraY));
+      }
+      
+      // Apply clamped camera translation
       this.ctx.translate(
-        zoomFactorX - head.x,
-        zoomFactorY - head.y
+        zoomFactorX - cameraX,
+        zoomFactorY - cameraY
       );
+      
+      // Debug camera bounds occasionally
+      if (Math.random() < 0.01) { // 1% chance to log
+        console.log(`📷 [CAMERA] Head: (${head.x.toFixed(1)}, ${head.y.toFixed(1)}) Camera: (${cameraX.toFixed(1)}, ${cameraY.toFixed(1)}) Viewport: ${viewportWidth.toFixed(1)}x${viewportHeight.toFixed(1)}`);
+      }
     }
 
     this.drawBoundary();
@@ -408,7 +470,7 @@ export class GameEngine {
     this.ctx.strokeStyle = 'red';
     this.ctx.lineWidth = lineWidth;
     // Use world coordinates for boundary instead of canvas dimensions
-    this.ctx.rect(0, 0, this.WORLD_WIDTH, this.WORLD_HEIGHT);
+    this.ctx.rect(0, 0, this.getWorldWidth(), this.getWorldHeight());
     this.ctx.stroke();
   }
 
