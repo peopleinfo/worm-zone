@@ -14,15 +14,10 @@ export const QuitModal: React.FC<QuitModalProps> = ({
   onConfirm,
 }) => {
   const { t } = useTranslation();
-  const handleConfirm = () => {
-    onConfirm();
-    onClose();
-  };
-
   if (!isOpen) return null;
 
   return (
-    <div className="settings-modal-overlay" onClick={handleConfirm}>
+    <div className="settings-modal-overlay">
       <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2 className="modal-title">{t("game:quit.button")}</h2>
@@ -33,7 +28,7 @@ export const QuitModal: React.FC<QuitModalProps> = ({
         <div className="modal-content">
           <p className="quit-description">{t("game:quit.description")}</p>
           <div className="modal-footer">
-            <button className="close-button" onClick={onClose}>
+            <button className="quit-button" onClick={onConfirm}>
               {t("game:quit.confirm")}
             </button> 
           </div>

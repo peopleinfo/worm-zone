@@ -1124,6 +1124,15 @@ canvas:not(#gameCanvas) {
   padding: 0;
 }
 
+.quit-button {
+  cursor: pointer;
+  padding: 8px 20px;
+  border: 0;
+  background: var(--color-primary);
+  border-radius: 8px;
+  color: white;
+}
+
 .close-button:hover {
   background: var(--color-primary-transparent-2);
   border-color: var(--color-primary-light);
