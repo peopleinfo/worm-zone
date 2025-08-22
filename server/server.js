@@ -632,7 +632,7 @@ function adjustFoodCount() {
 
 // Grid-based food distribution system
 function createFoodGrid() {
-  const cellSize = 200; // Each cell is 200x200 pixels (viewport size)
+  const cellSize = 320; // Each cell is 200x200 pixels (viewport size)
   const minFoodsPerCell = 12; // Increased from 8 to 21 for ~500 total foods (24 cells × 21 = 504)
   const maxFoodsPerCell = 25; // Increased proportionally to avoid overcrowding
 
@@ -1241,7 +1241,7 @@ function createBot(id) {
     points: [],
     angle: safeAngle,
     radius: botRadius,
-    speed: 1.8,
+    speed: 2.0,
     color: getRandomColor(),
     score: 1.0,
     alive: true,

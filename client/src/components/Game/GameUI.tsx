@@ -15,6 +15,7 @@ import { useAuthStore } from "../../stores/authStore";
 import { HowToPlayModal } from "./HowToPlayModal";
 import { MuteToggleButton } from "./MuteToggleButton";
 import { QuitModal } from "../QuitModal";
+import { socketClient } from "../../services/socketClient";
 
 export const GameUI: React.FC = React.memo(() => {
   const isPlaying = useGameStore((state) => state.isPlaying);
@@ -54,6 +55,9 @@ export const GameUI: React.FC = React.memo(() => {
 
   // Handle quit confirmation
   const handleQuitConfirm = () => {
+    // Disconnect from socket room first
+    socketClient.leaveRoom();
+    // Then reset the game state
     resetGame();
     setIsQuitModalOpen(false);
   };
