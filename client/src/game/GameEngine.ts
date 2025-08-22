@@ -3,7 +3,7 @@ import { Food } from './Food';
 import { Point } from './Point';
 import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
-import { MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH } from '../config/gameConfig';
+import { MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH, GAME_FPS, FRAME_INTERVAL } from '../config/gameConfig';
 import { PerformanceTracker, type PerformanceStats } from '../utils/PerformanceTracker';
 
 export class GameEngine {
@@ -18,8 +18,8 @@ export class GameEngine {
   private zoom: number = MAP_ZOOM_LEVEL;
   
   // Frame rate limiting with adaptive throttling
-  private readonly FRAME_INTERVAL = 1000 / 20; // 50ms per frame (20 FPS)
-  private readonly THROTTLED_FRAME_INTERVAL = 1000 / 10; // 100ms per frame (10 FPS) when overheating
+  private readonly FRAME_INTERVAL = FRAME_INTERVAL; // Use configurable FPS
+  private readonly THROTTLED_FRAME_INTERVAL = 1000 / (GAME_FPS / 2); // Half FPS when overheating
   private lastRenderTime: number = 0;
   
   // Performance monitoring
@@ -209,11 +209,11 @@ export class GameEngine {
 
     // Calculate deltaTime for frame-rate independent movement
     const now = Date.now();
-    const deltaTime = this.lastFrameTime ? now - this.lastFrameTime : 50; // Default to 20 FPS
+    const deltaTime = this.lastFrameTime ? now - this.lastFrameTime : FRAME_INTERVAL; // Use configurable FPS
     this.lastFrameTime = now;
     
     // Throttle socket updates to reduce network overhead
-    const shouldSendUpdate = now - this.lastSocketUpdate > 50; // 20 FPS for network updates
+    const shouldSendUpdate = now - this.lastSocketUpdate > FRAME_INTERVAL; // Use configurable FPS for network updates
 
     // Update player snake
     if (this.mySnake.isAlive) {

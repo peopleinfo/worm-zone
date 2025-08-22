@@ -2,6 +2,7 @@ import { Point } from './Point';
 import type { Snake as SnakeInterface, Controls } from '../types/game';
 import { getRandomColor, isCollided, coeffD2R, INFINITY, defRad } from '../utils/gameUtils';
 import { PooledObjects } from '../utils/ObjectPool';
+import { GAME_FPS } from '../config/gameConfig';
 
 export class Snake implements SnakeInterface {
   static deadPoints: Point[] = [];
@@ -37,9 +38,9 @@ export class Snake implements SnakeInterface {
   ) {
     this.id = id;
     this.radius = 4;
-    this.speed = 0.5;
+    this.speed = 0.9;
     this.turningSpeed = 7;
-    this.baseSpeed = 0.6; // Base speed for platform consistency (reduced by 3x)
+    this.baseSpeed = 0.8; // Base speed for platform consistency (increased for better gameplay feel)
     this.points = [PooledObjects.createPoint(x, y, this.radius, color)];
     this.velocity = { x: 1, y: 0 };
     this.overPos = { x: 0, y: 0 };
@@ -112,7 +113,7 @@ export class Snake implements SnakeInterface {
     };
 
     // Platform-consistent movement with frame rate normalization
-    const normalizedDeltaTime = deltaTime / 16.67; // Normalize to 60 FPS baseline
+    const normalizedDeltaTime = deltaTime / (1000 / GAME_FPS); // Normalize to configurable FPS baseline
     const platformMultiplier = this.getPlatformSpeedMultiplier();
     const effectiveSpeed = this.baseSpeed * normalizedDeltaTime * platformMultiplier;
 
@@ -220,7 +221,8 @@ export class Snake implements SnakeInterface {
     this.isAlive = false;
     const finalScore = this.points.length;
     
-    const latestDeadPoints = this.points.map(p => PooledObjects.createPoint(p.x, p.y, defRad, getRandomColor()));
+    // Use smaller radius (3) for dead points to match regular food size visually
+    const latestDeadPoints = this.points.map(p => PooledObjects.createPoint(p.x, p.y, 3, getRandomColor()));
     Snake.deadPoints.push(...latestDeadPoints);
     
     // Release the snake's points back to the pool
@@ -239,8 +241,8 @@ export class Snake implements SnakeInterface {
     if (!this.isAlive || this.points.length === 0) return;
 
     // Draw body segments with overlap to create continuous appearance
-    // Use smaller increment to ensure segments overlap and connect seamlessly
-    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.3)); // 30% of radius for more compact segments
+    // Use larger increment to make snake body less compact and wider
+    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.65)); // 65% of radius for even wider, less compact segments
     
     for (let i = 0; i < this.points.length; i += segmentSpacing) {
       this.points[i].draw(ctx, '', this.radius);

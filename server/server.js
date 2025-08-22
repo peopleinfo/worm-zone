@@ -1241,7 +1241,7 @@ function createBot(id) {
     points: [],
     angle: safeAngle,
     radius: botRadius,
-    speed: 0.5, // Consistent speed with human players for fair gameplay (reduced by 3x)
+    speed: 1.2,
     color: getRandomColor(),
     score: 1.0,
     alive: true,
@@ -1256,13 +1256,13 @@ function createBot(id) {
     ).toLocaleTimeString()}`
   );
 
-  // Initialize bot with starting points
-  for (let i = 0; i < 20; i++) {
+  // Initialize bot with starting points (same as user snakes - 25 points)
+  for (let i = 0; i < 25; i++) {
     bot.points.push({
       x: bot.x - i * 2,
       y: bot.y,
       radius: bot.radius,
-      color: getRandomColor(),
+      color: bot.color, // Use bot's main color for consistency like user snakes
     });
   }
 
@@ -1338,12 +1338,12 @@ function handleBotDeath(bot) {
 
   bot.alive = false;
 
-  // Convert bot's body points to dead points
+  // Convert bot's body points to dead points with random colors
   const deadPoints = bot.points.map((point) => ({
     x: point.x,
     y: point.y,
     radius: point.radius,
-    color: point.color,
+    color: getRandomColor(), // Use random colors for colorful food appearance
   }));
 
   // Add dead points to game state
@@ -1775,7 +1775,7 @@ function updateBots() {
             x: tail.x,
             y: tail.y,
             radius: player.radius,
-            color: food.color,
+            color: player.color, // Use bot's main color for consistency
           });
         }
 
@@ -1817,7 +1817,7 @@ function updateBots() {
             x: tail.x,
             y: tail.y,
             radius: player.radius,
-            color: deadPoint.color,
+            color: player.color, // Use bot's main color for consistency
           });
         }
 
@@ -1925,7 +1925,7 @@ io.on("connection", (socket) => {
       points: [],
       angle: safeAngle,
       radius: playerRadius,
-      speed: 0.5,
+      speed: 0.9,
       color: getRandomColor(),
       score: 0,
       alive: true,
