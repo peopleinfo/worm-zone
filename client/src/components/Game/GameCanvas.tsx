@@ -1,43 +1,39 @@
-import React, { useRef, useEffect } from 'react';
-import { useGameStore } from '../../stores/gameStore';
-import { GameEngine } from '../../game/GameEngine';
+import React, { useRef, useEffect } from "react";
+import { useGameStore } from "../../stores/gameStore";
+import { GameEngine } from "../../game/GameEngine";
 
 export const GameCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameEngineRef = useRef<GameEngine | null>(null);
-  const isPlaying = useGameStore(state => state.isPlaying);
-  
+  const isPlaying = useGameStore((state) => state.isPlaying);
+
   useEffect(() => {
     if (canvasRef.current && !gameEngineRef.current) {
       gameEngineRef.current = new GameEngine(canvasRef.current);
-      // Expose GameEngine instance globally for performance monitoring
-      (window as any).gameEngine = gameEngineRef.current;
     }
-    
+
     // Handle window resize and orientation changes
     const handleResize = () => {
       if (gameEngineRef.current) {
         gameEngineRef.current.resize();
       }
     };
-    
+
     // Add resize event listener
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
     // Add orientation change event listener for mobile devices
-    window.addEventListener('orientationchange', handleResize);
-    
+    window.addEventListener("orientationchange", handleResize);
+
     // Cleanup function to prevent memory leaks
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
       if (gameEngineRef.current) {
         gameEngineRef.current.stop();
-        // Clean up global reference
-        (window as any).gameEngine = null;
       }
     };
   }, []);
-  
+
   useEffect(() => {
     if (gameEngineRef.current) {
       if (isPlaying) {
@@ -49,13 +45,13 @@ export const GameCanvas: React.FC = () => {
       }
     }
   }, [isPlaying]);
-  
+
   // const handleCanvasClick = () => {
   //   if (!isPlaying) {
   //     startGame();
   //   }
   // };
-  
+
   return (
     <canvas
       ref={canvasRef}
@@ -63,9 +59,9 @@ export const GameCanvas: React.FC = () => {
       className="game-canvas"
       // onClick={handleCanvasClick}
       style={{
-        display: 'block',
-        cursor: isPlaying ? 'none' : 'pointer',
-        background: 'transparent'
+        display: "block",
+        cursor: isPlaying ? "none" : "pointer",
+        background: "transparent",
       }}
     />
   );

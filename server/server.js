@@ -632,7 +632,7 @@ function adjustFoodCount() {
 
 // Grid-based food distribution system
 function createFoodGrid() {
-  const cellSize = 200; // Each cell is 200x200 pixels (viewport size)
+  const cellSize = 480; // Each cell is 200x200 pixels (viewport size)
   const minFoodsPerCell = 12; // Increased from 8 to 21 for ~500 total foods (24 cells × 21 = 504)
   const maxFoodsPerCell = 25; // Increased proportionally to avoid overcrowding
 
@@ -880,7 +880,7 @@ function getSpawnZones() {
   return zones;
 }
 
-5// Check if position is safe (no collision with existing worms) - enhanced safety checks
+5; // Check if position is safe (no collision with existing worms) - enhanced safety checks
 function isPositionSafe(x, y, radius, minDistance = 250) {
   const alivePlayers = Array.from(gameState.players.values()).filter(
     (p) => p.alive
@@ -1825,7 +1825,7 @@ function updateBots() {
         gameState.deadPoints.splice(i, 1);
 
         // Broadcast dead point removal to all clients
-        io.emit('deadPointsRemoved', { deadPoints: [deadPoint] });
+        io.emit("deadPointsRemoved", { deadPoints: [deadPoint] });
 
         // Broadcast score update
         io.emit("scoreUpdate", {
