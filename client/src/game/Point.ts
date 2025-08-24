@@ -1,54 +1,61 @@
-export class Point {
-  public x: number;
-  public y: number;
-  public radius: number;
-  public color: string;
+// Removed unused import
 
-  constructor(
-    x: number = 0,
-    y: number = 0,
-    radius: number = 5,
-    color: string = 'blue'
-  ) {
+export class Point {
+  x: number;
+  y: number;
+  radius: number;
+  color: string;
+  private static pool: Point[] = [];
+  private static poolSize = 0;
+  private static readonly MAX_POOL_SIZE = 500;
+
+  constructor(x: number = 0, y: number = 0, radius: number = 0, color: string = '') {
     this.x = x;
     this.y = y;
     this.radius = radius;
     this.color = color;
   }
 
-  draw(ctx: CanvasRenderingContext2D, color?: string, radius?: number): void {
-    const drawRadius = radius || this.radius;
-    const drawColor = color || this.color;
+  // Object pooling for better memory management
+  static create(x: number, y: number, radius: number, color: string): Point {
+    let point: Point;
     
-    // Save current context state
-    ctx.save();
+    if (Point.poolSize > 0) {
+      point = Point.pool[--Point.poolSize];
+      point.x = x;
+      point.y = y;
+      point.radius = radius;
+      point.color = color;
+    } else {
+      point = new Point(x, y, radius, color);
+    }
     
-    // Draw shadow
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-    ctx.shadowBlur = 1.5;
-    ctx.shadowOffsetX = 1.5;
-    ctx.shadowOffsetY = 1.5;
-    
-    // Draw main circle
+    return point;
+  }
+
+  static release(point: Point): void {
+    if (Point.poolSize < Point.MAX_POOL_SIZE) {
+      Point.pool[Point.poolSize++] = point;
+    }
+  }
+
+  // Optimized draw method without shadows for better mobile performance
+  draw(ctx: CanvasRenderingContext2D): void {
+    // Simplified rendering - no shadows to prevent device overheating
+    ctx.fillStyle = this.color;
     ctx.beginPath();
-    ctx.fillStyle = drawColor;
-    ctx.arc(this.x, this.y, drawRadius, 0, 2 * Math.PI);
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
-    
-    // Reset shadow for border
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    
-    // Add subtle border for better definition
-    ctx.beginPath();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = 1;
-    ctx.arc(this.x, this.y, drawRadius, 0, 2 * Math.PI);
-    ctx.stroke();
-    
-    // Restore context state
-    ctx.restore();
+  }
+
+  // Check if point is within viewport (for culling)
+  isInViewport(viewX: number, viewY: number, viewWidth: number, viewHeight: number): boolean {
+    const margin = this.radius * 2; // Add some margin for smooth transitions
+    return (
+      this.x + margin >= viewX &&
+      this.x - margin <= viewX + viewWidth &&
+      this.y + margin >= viewY &&
+      this.y - margin <= viewY + viewHeight
+    );
   }
 }

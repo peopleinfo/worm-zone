@@ -723,7 +723,7 @@ function createBot(id) {
     points: [],
     angle: safeAngle,
     radius: botRadius,
-    speed: 1.0, // Consistent speed with human players for fair gameplay
+    speed: 0.8, // Match client snake speed for fair gameplay
     color: getRandomColor(),
     score: 1.0,
     alive: true,
@@ -734,13 +734,13 @@ function createBot(id) {
   
   console.log(`🛡️ DEBUG: Bot ${id} spawn protection enabled until ${new Date(bot.spawnTime + 3000).toLocaleTimeString()}`);
 
-  // Initialize bot with starting points
+  // Initialize bot with starting points using bot's main color
   for (let i = 0; i < 20; i++) {
     bot.points.push({
       x: bot.x - i * 2,
       y: bot.y,
       radius: bot.radius,
-      color: getRandomColor()
+      color: bot.color // Use bot's main color for consistency
     });
   }
 
@@ -799,12 +799,12 @@ function handleBotDeath(bot) {
   
   bot.alive = false;
   
-  // Convert bot's body points to dead points
+  // Convert bot's body points to dead points with random colors
   const deadPoints = bot.points.map(point => ({
     x: point.x,
     y: point.y,
     radius: point.radius,
-    color: point.color
+    color: getRandomColor() // Use random color for multicolored food
   }));
   
   // Add dead points to game state
@@ -1166,14 +1166,14 @@ function updateBots() {
         // Bot eats food - same logic as human players
         player.score++;
         
-        // Add new point to bot's body
+        // Add new point to bot's body using bot's main color
         if (player.points.length > 0) {
           const tail = player.points[player.points.length - 1];
           player.points.push({
             x: tail.x,
             y: tail.y,
             radius: player.radius,
-            color: food.color
+            color: player.color // Use bot's main color instead of food color
           });
         }
         
@@ -1213,14 +1213,14 @@ function updateBots() {
         // Bot eats dead point - award 1 point per dead snake
         player.score += 1;
         
-        // Add new point to bot's body
+        // Add new point to bot's body using bot's main color
         if (player.points.length > 0) {
           const tail = player.points[player.points.length - 1];
           player.points.push({
             x: tail.x,
             y: tail.y,
             radius: player.radius,
-            color: deadPoint.color
+            color: player.color // Use bot's main color for consistency
           });
         }
         
@@ -1301,7 +1301,7 @@ io.on('connection', (socket) => {
       points: [],
       angle: safeAngle,
       radius: playerRadius,
-      speed: 1.0,
+      speed: 0.8,
       color: getRandomColor(),
       score: 0,
       alive: true,
@@ -1313,13 +1313,13 @@ io.on('connection', (socket) => {
     
     console.log(`🛡️ DEBUG: Player ${playerId} spawn protection enabled until ${new Date(newPlayer.spawnTime + 3000).toLocaleTimeString()}`);
 
-    // Initialize player with starting points
+    // Initialize player with starting points using player's main color
     for (let i = 0; i < 25; i++) {
       newPlayer.points.push({
         x: newPlayer.x - i * 2,
         y: newPlayer.y,
         radius: newPlayer.radius,
-        color: getRandomColor()
+        color: newPlayer.color // Use player's main color for consistency
       });
     }
 
@@ -1556,13 +1556,13 @@ io.on('connection', (socket) => {
               spawnTime: spawnTime
             };
             
-            // Initialize respawned player with starting points
+            // Initialize respawned player with starting points using player's main color
             for (let i = 0; i < 25; i++) {
               respawnedPlayer.points.push({
                 x: respawnedPlayer.x - i * 2,
                 y: respawnedPlayer.y,
                 radius: respawnedPlayer.radius,
-                color: getRandomColor()
+                color: respawnedPlayer.color // Use player's main color for consistency
               });
             }
             

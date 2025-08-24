@@ -4,6 +4,7 @@ import { Point } from './Point';
 import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
 import { MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH } from '../config/gameConfig';
+import { performanceManager } from '../utils/performanceUtils';
 
 export class GameEngine {
   private canvas: HTMLCanvasElement;
@@ -14,11 +15,12 @@ export class GameEngine {
   private lastFrameTime: number = 0;
   private aiSnakes: Snake[] = [];
   private foods: Food[] = [];
+  private lastCleanupTime: number = 0;
+  private readonly CLEANUP_INTERVAL = 5000; // Clean up every 5 seconds
   private zoom: number = MAP_ZOOM_LEVEL;
   
-  // Frame rate limiting
-  private readonly FRAME_INTERVAL = 1000 / 20; // 50ms per frame
-  private lastRenderTime: number = 0;
+  // Dynamic frame rate limiting based on device performance
+  private frameStartTime: number = 0;
   
   // World coordinate system - consistent boundaries for collision and rendering
   private readonly WORLD_WIDTH: number = WORLD_WIDTH;
@@ -32,27 +34,66 @@ export class GameEngine {
   }
 
   private setupCanvas(): void {
-    // Use rotated dimensions for landscape mode
-    this.canvas.width = window.innerHeight;
-    this.canvas.height = window.innerWidth;
+    const devicePerf = performanceManager.getDevicePerformance();
+    
+    // Use rotated dimensions for landscape mode with performance scaling
+    const baseWidth = window.innerHeight * devicePerf.canvasScale;
+    const baseHeight = window.innerWidth * devicePerf.canvasScale;
+    
+    this.canvas.width = baseWidth;
+    this.canvas.height = baseHeight;
+    
+    // Scale canvas display size back to full screen
+    this.canvas.style.width = window.innerHeight + 'px';
+    this.canvas.style.height = window.innerWidth + 'px';
+    
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
-    // Optimize canvas for better performance
-    this.ctx.imageSmoothingEnabled = false;
+    
+    // Performance optimizations for mobile devices
+    this.ctx.imageSmoothingEnabled = parseInt(devicePerf.tier.toString()) >= 2; // Only enable on higher-end devices
+    
+    // Enhanced hardware acceleration hints
+    this.canvas.style.willChange = 'transform';
+    this.canvas.style.transform = 'translateZ(0)';
+    this.canvas.style.backfaceVisibility = 'hidden';
+    this.canvas.style.perspective = '1000px';
+    
+    // Additional canvas optimizations for mobile
+    if (devicePerf.isMobile) {
+      // Disable anti-aliasing on mobile for better performance
+      this.ctx.imageSmoothingEnabled = false;
+      // Use faster composite operations
+      this.ctx.globalCompositeOperation = 'source-over';
+    }
+    
+    // Set canvas attributes for hardware acceleration
+    this.canvas.setAttribute('willReadFrequently', 'false');
   }
 
   // Handle canvas resize for orientation changes
   resize(): void {
     const oldWidth = this.canvas.width;
     const oldHeight = this.canvas.height;
+    const devicePerf = performanceManager.getDevicePerformance();
     
-    // Update canvas dimensions for rotated view
-    this.canvas.width = window.innerHeight;
-    this.canvas.height = window.innerWidth;
+    // Update canvas dimensions for rotated view with performance scaling
+    this.canvas.width = window.innerHeight * devicePerf.canvasScale;
+    this.canvas.height = window.innerWidth * devicePerf.canvasScale;
     
-    // Restore canvas context properties
+    // Scale canvas display size back to full screen
+    this.canvas.style.width = window.innerHeight + 'px';
+    this.canvas.style.height = window.innerWidth + 'px';
+    
+    // Restore canvas context properties with performance optimizations
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
+    this.ctx.imageSmoothingEnabled = parseInt(devicePerf.tier.toString()) >= 2 && !devicePerf.isMobile;
+    
+    // Restore mobile-specific optimizations
+    if (devicePerf.isMobile) {
+      this.ctx.globalCompositeOperation = 'source-over';
+    }
     
     // Calculate scale factors for repositioning game elements
     const scaleX = this.canvas.width / oldWidth;
@@ -137,13 +178,16 @@ export class GameEngine {
 
   private gameLoop = (): void => {
     const now = performance.now();
-    const elapsed = now - this.lastRenderTime;
+    this.frameStartTime = now;
     
-    // Only update and render if enough time has passed (20 FPS limiting)
-    if (elapsed >= this.FRAME_INTERVAL) {
+    // Use performance manager to determine if we should skip this frame
+    if (!performanceManager.shouldSkipFrame(now)) {
       this.update();
       this.render();
-      this.lastRenderTime = now - (elapsed % this.FRAME_INTERVAL);
+      
+      // Track frame time for adaptive performance
+      const frameTime = performance.now() - this.frameStartTime;
+      performanceManager.updateFrameTime(frameTime);
     }
     
     this.animationId = requestAnimationFrame(this.gameLoop);
@@ -165,8 +209,16 @@ export class GameEngine {
     const deltaTime = this.lastFrameTime ? now - this.lastFrameTime : 50; // Default to 20 FPS
     this.lastFrameTime = now;
     
-    // Throttle socket updates to reduce network overhead
-    const shouldSendUpdate = now - this.lastSocketUpdate > 50; // 20 FPS for network updates
+    // Periodic cleanup for memory management
+    if (now - this.lastCleanupTime > this.CLEANUP_INTERVAL) {
+      this.performCleanup();
+      this.lastCleanupTime = now;
+    }
+    
+    // Throttle socket updates based on device performance
+    const devicePerf = performanceManager.getDevicePerformance();
+    const socketInterval = devicePerf.isMobile ? 66 : 50; // 15 FPS mobile, 20 FPS desktop
+    const shouldSendUpdate = now - this.lastSocketUpdate > socketInterval;
 
     // Update player snake
     if (this.mySnake.isAlive) {
@@ -192,21 +244,20 @@ export class GameEngine {
           } catch (error) {
             console.warn('Failed to send food eaten event:', error);
           }
-          break; // Only consume one food per frame for better performance
+          break; // Exit loop after eating one food
         }
       }
 
-      // Dead points collisions - multiplayer only
-      const deadPointsToCheck = [...store.deadPoints]; // Create a copy to avoid mutation during iteration
+      // Dead point collisions
       const consumedPoints: Point[] = [];
-      
-      for (let i = 0; i < deadPointsToCheck.length; i++) {
-        const point = deadPointsToCheck[i];
+      for (let i = 0; i < store.deadPoints.length; i++) {
+        const point = store.deadPoints[i];
         const collision = this.mySnake.checkCollisionsWithFood(point);
         if (collision) {
           consumedPoints.push(point);
         }
       }
+      
       if (consumedPoints.length > 0) {
         store.removeDeadPoints(consumedPoints);
         // Notify server about consumed dead points
@@ -217,18 +268,21 @@ export class GameEngine {
         }
       }
 
-      // Collision detection with other snakes
-      const otherSnakes = store.otherSnakes;
-      for (let i = 0; i < otherSnakes.length; i++) {
-        const snake = otherSnakes[i];
-        if (snake.isAlive) {
-          const collision = this.mySnake.checkCollisionsWithOtherSnakes(snake);
-          if (collision.collided) {
-            // Award points to the snake that caused the collision
-            if (collision.collidedWith && collision.points) {
-              collision.collidedWith.eatSnake(collision.points);
+      // Collision detection with other snakes (reduced frequency on mobile)
+      const collisionCheckInterval = devicePerf.isMobile ? 2 : 1;
+      if (Math.floor(now / 16) % collisionCheckInterval === 0) {
+        const otherSnakes = store.otherSnakes;
+        for (let i = 0; i < otherSnakes.length; i++) {
+          const snake = otherSnakes[i];
+          if (snake.isAlive) {
+            const collision = this.mySnake.checkCollisionsWithOtherSnakes(snake);
+            if (collision.collided) {
+              // Award points to the snake that caused the collision
+              if (collision.collidedWith && collision.points) {
+                collision.collidedWith.eatSnake(collision.points);
+              }
+              break; // Stop checking once collision detected
             }
-            break; // Stop checking once collision detected
           }
         }
       }
@@ -267,10 +321,18 @@ export class GameEngine {
     this.ctx.save();
     this.ctx.scale(this.zoom, this.zoom);
 
+    // Calculate viewport bounds for culling
+    let viewX = 0, viewY = 0;
+    const viewWidth = this.canvas.width / this.zoom;
+    const viewHeight = this.canvas.height / this.zoom;
+
     if (this.mySnake && this.mySnake.isAlive) {
       const head = this.mySnake.getHead();
       const zoomFactorX = this.canvas.width / 2 / this.zoom;
       const zoomFactorY = this.canvas.height / 2 / this.zoom;
+      
+      viewX = head.x - zoomFactorX;
+      viewY = head.y - zoomFactorY;
       
       this.ctx.translate(
         zoomFactorX - head.x,
@@ -280,16 +342,20 @@ export class GameEngine {
 
     this.drawBoundary();
 
-    // Render foods
+    // Render foods with viewport culling
     for (let i = 0; i < store.foods.length; i++) {
       const food = store.foods[i];
-      food.draw(this.ctx);
+      if (food.isInViewport(viewX, viewY, viewWidth, viewHeight)) {
+        food.draw(this.ctx);
+      }
     }
 
-    // Render dead points
+    // Render dead points with viewport culling
     for (let i = 0; i < store.deadPoints.length; i++) {
       const point = store.deadPoints[i];
-      point.draw(this.ctx);
+      if (point.isInViewport(viewX, viewY, viewWidth, viewHeight)) {
+        point.draw(this.ctx);
+      }
     }
 
     // Draw player snake
@@ -297,11 +363,25 @@ export class GameEngine {
       this.mySnake.draw(this.ctx);
     }
 
-    // Draw other snakes
+    // Draw other snakes with basic culling
     for (let i = 0; i < store.otherSnakes.length; i++) {
       const snake = store.otherSnakes[i];
       if (snake.isAlive) {
-        snake.draw(this.ctx);
+        if (snake.points.length > 0) {
+          const head = snake.getHead();
+          // Simple distance-based culling for snakes
+          const distanceFromView = Math.sqrt(
+            Math.pow(head.x - (viewX + viewWidth / 2), 2) +
+            Math.pow(head.y - (viewY + viewHeight / 2), 2)
+          );
+          
+          // Only draw snakes within reasonable distance
+          if (distanceFromView < Math.max(viewWidth, viewHeight)) {
+            snake.draw(this.ctx);
+          }
+        } else {
+          snake.draw(this.ctx);
+        }
       }
     }
 
@@ -325,10 +405,31 @@ export class GameEngine {
     // Reset timing
     this.lastSocketUpdate = 0;
     this.lastFrameTime = 0;
-    this.lastRenderTime = 0;
     
     // Reinitialize game
     this.initializeGame();
+  }
+
+  private performCleanup(): void {
+    const devicePerf = performanceManager.getDevicePerformance();
+    const store = useGameStore.getState();
+    
+    // Clean up excess dead points
+    if (store.deadPoints.length > devicePerf.maxDeadPoints * 0.8) {
+      const targetSize = Math.floor(devicePerf.maxDeadPoints * 0.6);
+      const excessPoints = store.deadPoints.length - targetSize;
+      if (excessPoints > 0) {
+        const removedPoints = store.deadPoints.slice(0, excessPoints);
+        store.removeDeadPoints(removedPoints);
+        removedPoints.forEach(point => Point.release && Point.release(point));
+        console.log(`🧹 Cleaned up ${excessPoints} dead points for performance`);
+      }
+    }
+    
+    // Force garbage collection hint (if available)
+    if ((window as any).gc) {
+      (window as any).gc();
+    }
   }
 
   // Cleanup method for proper resource management
@@ -342,6 +443,7 @@ export class GameEngine {
     // Reset timing variables
     this.lastSocketUpdate = 0;
     this.lastFrameTime = 0;
+    this.lastCleanupTime = 0;
     
     // Disconnect socket if connected
     if (socketClient.isSocketConnected()) {
