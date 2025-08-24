@@ -1,10 +1,11 @@
 import { Snake } from './Snake';
 import { Food } from './Food';
-import { Point } from './Point';
+import { Point, optimizePools, getPoolStats, releaseFood, releasePoint } from './Point';
 import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
 import { MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH } from '../config/gameConfig';
 import { performanceManager } from '../utils/performanceUtils';
+import { CollisionDetector } from '../utils/spatialPartitioning';
 
 export class GameEngine {
   private canvas: HTMLCanvasElement;
@@ -18,47 +19,56 @@ export class GameEngine {
   private lastCleanupTime: number = 0;
   private readonly CLEANUP_INTERVAL = 5000; // Clean up every 5 seconds
   private zoom: number = MAP_ZOOM_LEVEL;
-  
+
   // Dynamic frame rate limiting based on device performance
   private frameStartTime: number = 0;
-  
+
   // World coordinate system - consistent boundaries for collision and rendering
   private readonly WORLD_WIDTH: number = WORLD_WIDTH;
   private readonly WORLD_HEIGHT: number = WORLD_HEIGHT;
 
+  // Spatial partitioning for optimized collision detection
+  private collisionDetector: CollisionDetector;
+
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
+
+    // Initialize spatial partitioning system
+    const devicePerf = performanceManager.getDevicePerformance();
+    const gridSize = devicePerf.isMobile ? 150 : 100; // Larger grid cells on mobile for better performance
+    this.collisionDetector = new CollisionDetector(this.WORLD_WIDTH, this.WORLD_HEIGHT, gridSize);
+
     this.setupCanvas();
     this.initializeGame();
   }
 
   private setupCanvas(): void {
     const devicePerf = performanceManager.getDevicePerformance();
-    
+
     // Use rotated dimensions for landscape mode with performance scaling
     const baseWidth = window.innerHeight * devicePerf.canvasScale;
     const baseHeight = window.innerWidth * devicePerf.canvasScale;
-    
+
     this.canvas.width = baseWidth;
     this.canvas.height = baseHeight;
-    
+
     // Scale canvas display size back to full screen
     this.canvas.style.width = window.innerHeight + 'px';
     this.canvas.style.height = window.innerWidth + 'px';
-    
+
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
-    
+
     // Performance optimizations for mobile devices
     this.ctx.imageSmoothingEnabled = parseInt(devicePerf.tier.toString()) >= 2; // Only enable on higher-end devices
-    
+
     // Enhanced hardware acceleration hints
     this.canvas.style.willChange = 'transform';
     this.canvas.style.transform = 'translateZ(0)';
     this.canvas.style.backfaceVisibility = 'hidden';
     this.canvas.style.perspective = '1000px';
-    
+
     // Additional canvas optimizations for mobile
     if (devicePerf.isMobile) {
       // Disable anti-aliasing on mobile for better performance
@@ -66,7 +76,7 @@ export class GameEngine {
       // Use faster composite operations
       this.ctx.globalCompositeOperation = 'source-over';
     }
-    
+
     // Set canvas attributes for hardware acceleration
     this.canvas.setAttribute('willReadFrequently', 'false');
   }
@@ -76,29 +86,29 @@ export class GameEngine {
     const oldWidth = this.canvas.width;
     const oldHeight = this.canvas.height;
     const devicePerf = performanceManager.getDevicePerformance();
-    
+
     // Update canvas dimensions for rotated view with performance scaling
     this.canvas.width = window.innerHeight * devicePerf.canvasScale;
     this.canvas.height = window.innerWidth * devicePerf.canvasScale;
-    
+
     // Scale canvas display size back to full screen
     this.canvas.style.width = window.innerHeight + 'px';
     this.canvas.style.height = window.innerWidth + 'px';
-    
+
     // Restore canvas context properties with performance optimizations
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
     this.ctx.imageSmoothingEnabled = parseInt(devicePerf.tier.toString()) >= 2 && !devicePerf.isMobile;
-    
+
     // Restore mobile-specific optimizations
     if (devicePerf.isMobile) {
       this.ctx.globalCompositeOperation = 'source-over';
     }
-    
+
     // Calculate scale factors for repositioning game elements
     const scaleX = this.canvas.width / oldWidth;
     const scaleY = this.canvas.height / oldHeight;
-    
+
     // Reposition player snake if it exists
     if (this.mySnake && this.mySnake.isAlive) {
       this.mySnake.points.forEach(point => {
@@ -106,7 +116,7 @@ export class GameEngine {
         point.y *= scaleY;
       });
     }
-    
+
     // Reposition AI snakes
     this.aiSnakes.forEach(snake => {
       if (snake.isAlive) {
@@ -116,7 +126,7 @@ export class GameEngine {
         });
       }
     });
-    
+
     // Reposition foods
     this.foods.forEach(food => {
       food.x *= scaleX;
@@ -125,7 +135,7 @@ export class GameEngine {
       food.x = Math.max(food.radius, Math.min(this.WORLD_WIDTH - food.radius, food.x));
       food.y = Math.max(food.radius, Math.min(this.WORLD_HEIGHT - food.radius, food.y));
     });
-    
+
     // Reposition dead points
     Snake.deadPoints.forEach(point => {
       point.x *= scaleX;
@@ -134,7 +144,7 @@ export class GameEngine {
       point.x = Math.max(point.radius, Math.min(this.WORLD_WIDTH - point.radius, point.x));
       point.y = Math.max(point.radius, Math.min(this.WORLD_HEIGHT - point.radius, point.y));
     });
-    
+
     // Update store with resized elements
     const store = useGameStore.getState();
     if (this.mySnake) {
@@ -146,7 +156,7 @@ export class GameEngine {
 
   private initializeGame(): void {
     const store = useGameStore.getState();
-    
+
     // Check if snake already exists from server data
     if (store.mySnake) {
       console.log('🐍 Using existing snake from server data at position:', store.mySnake.getHead()?.x, store.mySnake.getHead()?.y);
@@ -179,42 +189,47 @@ export class GameEngine {
   private gameLoop = (): void => {
     const now = performance.now();
     this.frameStartTime = now;
-    
+
+
     // Use performance manager to determine if we should skip this frame
     if (!performanceManager.shouldSkipFrame(now)) {
       this.update();
       this.render();
-      
+
       // Track frame time for adaptive performance
       const frameTime = performance.now() - this.frameStartTime;
       performanceManager.updateFrameTime(frameTime);
     }
-    
+
+
+
     this.animationId = requestAnimationFrame(this.gameLoop);
   };
 
+
+
   private update(): void {
     const store = useGameStore.getState();
-    
+
     // Sync with store's mySnake if it has been updated from socket events
     if (store.mySnake && this.mySnake !== store.mySnake) {
       console.log('🔄 Syncing GameEngine snake with store snake');
       this.mySnake = store.mySnake;
     }
-    
+
     if (!store.isPlaying || !this.mySnake) return;
 
     // Calculate deltaTime for frame-rate independent movement
     const now = Date.now();
     const deltaTime = this.lastFrameTime ? now - this.lastFrameTime : 50; // Default to 20 FPS
     this.lastFrameTime = now;
-    
+
     // Periodic cleanup for memory management
     if (now - this.lastCleanupTime > this.CLEANUP_INTERVAL) {
       this.performCleanup();
       this.lastCleanupTime = now;
     }
-    
+
     // Throttle socket updates based on device performance
     const devicePerf = performanceManager.getDevicePerformance();
     const socketInterval = devicePerf.isMobile ? 66 : 50; // 15 FPS mobile, 20 FPS desktop
@@ -233,10 +248,10 @@ export class GameEngine {
         if (collision) {
           // The checkCollisionsWithFood method already calls eat() internally with the food's color
           console.log(`[GAME ENGINE] Snake ate food at (${food.x.toFixed(1)}, ${food.y.toFixed(1)})`);
-          
+
           // Remove the food from local store immediately
           store.removeFood(food.id);
-          
+
           // Notify server about food consumption
           try {
             console.log(`[GAME ENGINE] Sending food eaten event to server for food ID: ${food.id}`);
@@ -257,7 +272,7 @@ export class GameEngine {
           consumedPoints.push(point);
         }
       }
-      
+
       if (consumedPoints.length > 0) {
         store.removeDeadPoints(consumedPoints);
         // Notify server about consumed dead points
@@ -316,7 +331,7 @@ export class GameEngine {
 
   private render(): void {
     const store = useGameStore.getState();
-    
+
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.save();
     this.ctx.scale(this.zoom, this.zoom);
@@ -330,10 +345,10 @@ export class GameEngine {
       const head = this.mySnake.getHead();
       const zoomFactorX = this.canvas.width / 2 / this.zoom;
       const zoomFactorY = this.canvas.height / 2 / this.zoom;
-      
+
       viewX = head.x - zoomFactorX;
       viewY = head.y - zoomFactorY;
-      
+
       this.ctx.translate(
         zoomFactorX - head.x,
         zoomFactorY - head.y
@@ -358,29 +373,30 @@ export class GameEngine {
       }
     }
 
-    // Draw player snake
+    // Draw player snake with LOD parameters
     if (this.mySnake && this.mySnake.isAlive) {
-      this.mySnake.draw(this.ctx);
+      this.mySnake.draw(this.ctx, viewX, viewY, viewWidth, viewHeight);
     }
 
-    // Draw other snakes with basic culling
+    // Draw other snakes with LOD and enhanced culling
     for (let i = 0; i < store.otherSnakes.length; i++) {
       const snake = store.otherSnakes[i];
       if (snake.isAlive) {
         if (snake.points.length > 0) {
           const head = snake.getHead();
-          // Simple distance-based culling for snakes
+          // Enhanced distance-based culling for snakes
           const distanceFromView = Math.sqrt(
             Math.pow(head.x - (viewX + viewWidth / 2), 2) +
             Math.pow(head.y - (viewY + viewHeight / 2), 2)
           );
-          
-          // Only draw snakes within reasonable distance
-          if (distanceFromView < Math.max(viewWidth, viewHeight)) {
-            snake.draw(this.ctx);
+
+          // Increased culling distance for better performance
+          const cullDistance = Math.max(viewWidth, viewHeight) * 2;
+          if (distanceFromView < cullDistance) {
+            snake.draw(this.ctx, viewX, viewY, viewWidth, viewHeight);
           }
         } else {
-          snake.draw(this.ctx);
+          snake.draw(this.ctx, viewX, viewY, viewWidth, viewHeight);
         }
       }
     }
@@ -401,11 +417,11 @@ export class GameEngine {
 
   resetGame(): void {
     console.log('[GAME ENGINE] Resetting game');
-    
+
     // Reset timing
     this.lastSocketUpdate = 0;
     this.lastFrameTime = 0;
-    
+
     // Reinitialize game
     this.initializeGame();
   }
@@ -413,22 +429,61 @@ export class GameEngine {
   private performCleanup(): void {
     const devicePerf = performanceManager.getDevicePerformance();
     const store = useGameStore.getState();
-    
-    // Clean up excess dead points
+
+    // Clean up excess dead points and return them to pool
     if (store.deadPoints.length > devicePerf.maxDeadPoints * 0.8) {
       const targetSize = Math.floor(devicePerf.maxDeadPoints * 0.6);
       const excessPoints = store.deadPoints.length - targetSize;
       if (excessPoints > 0) {
         const removedPoints = store.deadPoints.slice(0, excessPoints);
         store.removeDeadPoints(removedPoints);
-        removedPoints.forEach(point => Point.release && Point.release(point));
+        // Return points to object pool
+        removedPoints.forEach(point => {
+          releasePoint(point);
+          if (typeof (window as any).releaseSegment === 'function') {
+            (window as any).releaseSegment(point);
+          }
+        });
         console.log(`🧹 Cleaned up ${excessPoints} dead points for performance`);
       }
     }
-    
+
+    // Clean up excess foods if any (should be handled by server, but safety check)
+    const maxFoodItems = devicePerf.maxFoodItems || 200;
+    if (store.foods.length > maxFoodItems * 0.9) {
+      const targetSize = Math.floor(maxFoodItems * 0.7);
+      const excessFoods = store.foods.length - targetSize;
+      if (excessFoods > 0) {
+        const removedFoods = store.foods.slice(0, excessFoods);
+        // Return foods to object pool
+        removedFoods.forEach(food => releaseFood(food));
+        console.log(`🧹 Cleaned up ${excessFoods} excess foods for performance`);
+      }
+    }
+
+    // Optimize object pools
+    optimizePools();
+
+    // Clean up segment pools periodically
+    this.cleanupSegmentPools();
+
+    // Log pool statistics for debugging (only in development)
+    if (process.env.NODE_ENV === 'development') {
+      const poolStats = getPoolStats();
+      const segmentPoolSize = (window as any).getSegmentPoolSize ? (window as any).getSegmentPoolSize() : 'N/A';
+      console.log(`📊 Pool Stats - Points: ${poolStats.points}, Foods: ${poolStats.foods}, Segments: ${poolStats.segments}, Segment Pool: ${segmentPoolSize}`);
+    }
+
     // Force garbage collection hint (if available)
     if ((window as any).gc) {
       (window as any).gc();
+    }
+  }
+
+  private cleanupSegmentPools(): void {
+    // Clean up segment pools if available
+    if (typeof (window as any).cleanupSegmentPools === 'function') {
+      (window as any).cleanupSegmentPools();
     }
   }
 
@@ -436,20 +491,20 @@ export class GameEngine {
   cleanup(): void {
     // Stop animation loop
     this.stop();
-    
+
     // Clear game objects
     this.mySnake = null;
-    
+
     // Reset timing variables
     this.lastSocketUpdate = 0;
     this.lastFrameTime = 0;
     this.lastCleanupTime = 0;
-    
+
     // Disconnect socket if connected
     if (socketClient.isSocketConnected()) {
       socketClient.disconnect();
     }
-    
+
     // Clear canvas
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }

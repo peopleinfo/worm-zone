@@ -1,4 +1,4 @@
-import { Point } from './Point';
+import { Point, getPooledSegment, releaseSegment } from './Point';
 import type { Snake as SnakeInterface, Controls } from '../types/game';
 import { getRandomColor, isCollided, coeffD2R, INFINITY, defRad } from '../utils/gameUtils';
 
@@ -49,12 +49,13 @@ export class Snake implements SnakeInterface {
     this.isAlive = true;
 
     for (let i = 1; i < length; i++) {
-      this.points.push(new Point(INFINITY, INFINITY, this.radius, color));
+      this.points.push(new Point(INFINITY, INFINITY, defRad, color));
     }
   }
 
   eat(color: string = 'red'): void {
-    const newPoint = new Point(INFINITY, INFINITY, this.radius, color);
+    // Use segment pooling for better memory management
+    const newPoint = getPooledSegment(INFINITY, INFINITY, this.radius, color);
     this.points.push(newPoint);
     this.radius = Math.min(10, Math.max(4, this.points.length * this.fatScaler));
   }
@@ -65,6 +66,16 @@ export class Snake implements SnakeInterface {
       const tail = this.points[this.points.length - 1];
       const newPoint = new Point(tail.x, tail.y, tail.radius, this.color);
       this.points.push(newPoint);
+    }
+  }
+
+  shrink(): void {
+    if (this.points.length > 1) {
+      const removedSegment = this.points.pop();
+      if (removedSegment) {
+        // Return segment to pool for reuse
+        releaseSegment(removedSegment);
+      }
     }
   }
 
@@ -165,14 +176,7 @@ export class Snake implements SnakeInterface {
     const enhancedRequiredDistance = requiredDistance + collisionTolerance;
     const collisionDetected = distance <= enhancedRequiredDistance;
 
-    // Debug logging for collision detection
-    // if (distance < requiredDistance + 8) { // Log near-misses too
-    //   console.log(`[COLLISION DEBUG] Snake ${this.id.substring(0,6)} - Distance: ${distance.toFixed(2)}, Required: ${requiredDistance.toFixed(2)}, Enhanced: ${enhancedRequiredDistance.toFixed(2)}, Collision: ${collisionDetected}`);
-    //   console.log(`[COLLISION DEBUG] Head: (${head.x.toFixed(1)}, ${head.y.toFixed(1)}, r:${head.radius}) Food: (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}, r:${targetPoint.radius})`);
-    // }
-
     if (collisionDetected) {
-      // console.log(`[FOOD EATEN] Snake ${this.id.substring(0,6)} ate food at (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}) - Distance: ${distance.toFixed(2)}`);
       this.eat(target.color);
       return target;
     }
@@ -216,25 +220,67 @@ export class Snake implements SnakeInterface {
     this.isAlive = false;
     const finalScore = this.points.length;
 
-    const latestDeadPoints = this.points.map(p => new Point(p.x, p.y, defRad, getRandomColor()));
+    // Create dead points using segment pooling for better memory management
+    const latestDeadPoints = this.points.map(p => getPooledSegment(p.x, p.y, defRad, getRandomColor()));
     Snake.deadPoints.push(...latestDeadPoints);
 
     const head = this.getHead();
     this.overPos.x = head.x;
     this.overPos.y = head.y;
 
+    // Return snake segments to pool before clearing
+    this.points.forEach(segment => releaseSegment(segment));
     this.points.length = 0;
 
     this.finalScore = finalScore;
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
+  draw(ctx: CanvasRenderingContext2D, viewX?: number, viewY?: number, viewWidth?: number, viewHeight?: number): void {
     if (!this.isAlive || this.points.length === 0) return;
 
-    // Draw body segments with overlap to create continuous appearance
-    // Use smaller increment to ensure segments overlap and connect seamlessly
-    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.7)); // 70% of radius for tighter, more compact segments
+    // Get performance settings for LOD rendering
+    const performanceManager = (window as any).performanceManager;
+    const devicePerf = performanceManager?.getDevicePerformance() || { enableLOD: false, renderQuality: 'high' };
 
+    // Calculate distance from viewport center for LOD
+    let distanceFromView = 0;
+    let isDistant = false;
+
+    if (viewX !== undefined && viewY !== undefined && viewWidth !== undefined && viewHeight !== undefined) {
+      const head = this.getHead();
+      const viewCenterX = viewX + viewWidth / 2;
+      const viewCenterY = viewY + viewHeight / 2;
+      distanceFromView = Math.sqrt(
+        Math.pow(head.x - viewCenterX, 2) + Math.pow(head.y - viewCenterY, 2)
+      );
+
+      // Consider snake distant if it's more than 1.5 viewport widths away
+      const distanceThreshold = Math.max(viewWidth, viewHeight) * 1.5;
+      isDistant = distanceFromView > distanceThreshold;
+    }
+
+    // Apply LOD-based segment spacing
+    let segmentSpacing = Math.max(1, Math.floor(this.radius * 0.7)); // Default: 70% of radius
+
+    if (devicePerf.enableLOD) {
+      if (isDistant) {
+        // For distant snakes, draw fewer segments (every 3rd-4th segment)
+        segmentSpacing = Math.max(segmentSpacing * 3, Math.floor(this.radius * 1.5));
+      } else if (this.points.length > 100) {
+        // For very long snakes, reduce segment density to improve performance
+        const lengthFactor = Math.min(3, Math.floor(this.points.length / 50));
+        segmentSpacing = Math.max(segmentSpacing, Math.floor(this.radius * (0.7 + lengthFactor * 0.3)));
+      }
+
+      // Additional performance-based adjustments
+      if (devicePerf.renderQuality === 'low') {
+        segmentSpacing = Math.max(segmentSpacing, Math.floor(this.radius * 1.2));
+      } else if (devicePerf.renderQuality === 'medium') {
+        segmentSpacing = Math.max(segmentSpacing, Math.floor(this.radius * 0.9));
+      }
+    }
+
+    // Draw body segments with optimized spacing
     for (let i = 0; i < this.points.length; i += segmentSpacing) {
       this.points[i].draw(ctx);
     }
@@ -243,14 +289,19 @@ export class Snake implements SnakeInterface {
     if (this.points.length > 1) {
       const lastIndex = this.points.length - 1;
       if (lastIndex % segmentSpacing !== 0) {
-        // this.points[lastIndex].draw(ctx, '', this.radius);
         this.points[lastIndex].draw(ctx);
       }
     }
 
-    this.drawEye(ctx);
-    this.drawEar(ctx);
-    this.drawMouth(ctx);
+    // Apply LOD to facial features for distant snakes
+    if (!devicePerf.enableLOD || !isDistant) {
+      this.drawEye(ctx);
+      this.drawEar(ctx);
+      this.drawMouth(ctx);
+    } else {
+      // For distant snakes, only draw simplified eyes
+      this.drawSimplifiedEye(ctx);
+    }
   }
 
   private drawEye(ctx: CanvasRenderingContext2D): void {
@@ -318,6 +369,32 @@ export class Snake implements SnakeInterface {
     const max = this.radius / 2;
     const min = this.radius / 8;
     ctx.ellipse(mouth.x, mouth.y, min, max, -this.angle * Math.PI / 180, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  private drawSimplifiedEye(ctx: CanvasRenderingContext2D): void {
+    // Simplified eyes for distant snakes - just two small white dots
+    const head = this.getHead();
+    const eyeGapCoeff = 2.5; // Slightly wider gap for visibility
+    const eyeRadius = this.radius / 6; // Smaller eyes for distant view
+
+    const eyeRight = new Point(
+      head.x - this.radius / eyeGapCoeff * this.velocity.y,
+      head.y + this.radius / eyeGapCoeff * this.velocity.x,
+      eyeRadius
+    );
+
+    const eyeLeft = new Point(
+      head.x + this.radius / eyeGapCoeff * this.velocity.y,
+      head.y - this.radius / eyeGapCoeff * this.velocity.x,
+      eyeRadius
+    );
+
+    // Just draw white circles without pupils for performance
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(eyeRight.x, eyeRight.y, eyeRight.radius, 0, 2 * Math.PI);
+    ctx.arc(eyeLeft.x, eyeLeft.y, eyeLeft.radius, 0, 2 * Math.PI);
     ctx.fill();
   }
 }

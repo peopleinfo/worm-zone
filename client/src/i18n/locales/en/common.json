@@ -30,12 +30,37 @@
     "sensitivity": "Sensitivity",
     "profile": "Profile",
     "username": "Username",
-    "avatar": "Avatar"
+    "avatar": "Avatar",
+    "performance": "Performance"
   },
   "languages": {
     "en": "English",
     "kh": "Khmer",
     "cn": "Chinese"
+  },
+  "performance": {
+    "title": "Performance Settings",
+    "mode": "Performance Mode",
+    "auto": "Auto",
+    "performance": "Performance",
+    "battery": "Battery Saver",
+    "thermalWarnings": "Thermal Warnings",
+    "deviceInfo": "Device Information",
+    "tier": "Performance Tier",
+    "thermalState": "Thermal State",
+    "targetFps": "Target FPS",
+    "batteryLevel": "Battery Level",
+    "tips": "Performance Tips",
+    "tip1": "Auto mode adjusts settings based on device performance",
+    "tip2": "Performance mode prioritizes smooth gameplay",
+    "tip3": "Battery saver mode reduces power consumption",
+    "tip4": "Enable thermal warnings to prevent overheating",
+    "states": {
+      "normal": "Normal",
+      "warm": "Warm",
+      "hot": "Hot",
+      "critical": "Critical"
+    }
   },
   "profile": {
     "title": "Profile",

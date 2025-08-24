@@ -1,6 +1,14 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
+const {
+  getPooledFood,
+  releaseFood,
+  getPooledPoint,
+  releasePoint,
+  optimizePools,
+  logPoolMetrics,
+} = require("./utils/objectPool");
 
 const app = express();
 const server = http.createServer(app);
@@ -88,7 +96,7 @@ const MAX_BOTS = 5;
 // Bot management throttling
 let lastBotSpawnAttempt = 0;
 let lastBotLimitLog = 0;
-const BOT_SPAWN_COOLDOWN = 2000; // 2 seconds between spawn attempts
+const BOT_SPAWN_COOLDOWN = 3000; // 2 seconds between spawn attempts
 const BOT_LOG_THROTTLE = 5000; // 5 seconds between limit logs
 
 // ===== SERVER PERFORMANCE OPTIMIZATION CONFIGURATION =====
@@ -205,9 +213,11 @@ function startMemoryMonitoring() {
       performMemoryCleanup();
     }
 
-    // Log memory stats every 5 minutes
+    // Log memory stats and optimize pools every 5 minutes
     if (Date.now() - performanceMetrics.lastMetricsLog > 300000) {
       logMemoryStats();
+      logPoolMetrics();
+      optimizePools();
       performanceMetrics.lastMetricsLog = Date.now();
     }
   }, 10000); // Check every 10 seconds
@@ -227,6 +237,9 @@ function performMemoryCleanup() {
   // Remove old disconnected players
   cleanupDisconnectedPlayers();
 
+  // Optimize object pools
+  optimizePools();
+
   // Trigger garbage collection if available
   if (global.gc) {
     global.gc();
@@ -241,9 +254,13 @@ function performMemoryCleanup() {
 function performAggressiveCleanup() {
   console.log("🚨 MEMORY: Starting aggressive cleanup");
 
-  // Remove 50% of dead points immediately
+  // Remove 50% of dead points immediately with object pooling
   const deadPointsToRemove = Math.floor(gameState.deadPoints.length * 0.5);
   if (deadPointsToRemove > 0) {
+    // Return dead points to pool before removing
+    for (let i = 0; i < deadPointsToRemove; i++) {
+      releasePoint(gameState.deadPoints[i]);
+    }
     gameState.deadPoints.splice(0, deadPointsToRemove);
     performanceMetrics.deadPointsCleanedUp += deadPointsToRemove;
     console.log(
@@ -257,6 +274,9 @@ function performAggressiveCleanup() {
   for (let i = 0; i < botsToRemove; i++) {
     gameState.players.delete(bots[i].id);
   }
+
+  // Optimize object pools aggressively
+  optimizePools();
 
   // Force garbage collection multiple times
   if (global.gc) {
@@ -457,7 +477,7 @@ const gameState = {
   worldHeight: 800,
 };
 
-// Initialize food
+// Initialize food with object pooling
 function initializeFoods() {
   gameState.foods = [];
   console.log(
@@ -465,13 +485,13 @@ function initializeFoods() {
   );
 
   for (let i = 0; i < gameState.maxFoods; i++) {
-    const food = {
-      id: i,
-      x: Math.random() * gameState.worldWidth,
-      y: Math.random() * gameState.worldHeight,
-      radius: 5,
-      color: getRandomColor(),
-    };
+    const food = getPooledFood(
+      i,
+      Math.random() * gameState.worldWidth,
+      Math.random() * gameState.worldHeight,
+      5,
+      getRandomColor()
+    );
     gameState.foods.push(food);
 
     if (i < 5) {
@@ -1286,6 +1306,9 @@ function performSmartDeadPointCleanup(forceCleanup = false) {
     .slice(0, pointsToRemove)
     .map((item) => item.point);
 
+  // Return selected points to object pool before removing
+  pointsToRemoveList.forEach((point) => releasePoint(point));
+
   // Remove selected points
   gameState.deadPoints = gameState.deadPoints.filter(
     (point) => !pointsToRemoveList.includes(point)
@@ -1307,15 +1330,10 @@ function performSmartDeadPointCleanup(forceCleanup = false) {
   }
 }
 
-// Enhanced dead point creation with timestamp
+// Enhanced dead point creation with timestamp and object pooling
 function createDeadPoint(x, y, radius, color) {
-  const deadPoint = {
-    x,
-    y,
-    radius,
-    color,
-    createdAt: Date.now(),
-  };
+  const deadPoint = getPooledPoint(x, y, radius, color);
+  deadPoint.createdAt = Date.now();
 
   gameState.deadPoints.push(deadPoint);
   performanceMetrics.deadPointsCreated++;
@@ -1750,7 +1768,8 @@ function updateBots() {
         // Store the consumed dead point for broadcast before removing it
         const consumedDeadPoint = { ...deadPoint };
 
-        // Remove consumed dead point
+        // Return dead point to object pool and remove from game state
+        releasePoint(deadPoint);
         gameState.deadPoints.splice(i, 1);
 
         // Broadcast dead point removal to all clients (same as human players)
@@ -1983,27 +2002,41 @@ io.on("connection", (socket) => {
       if (!player.isBot) {
         updatePlayerActivity();
       }
-      // Regenerate food with logging
+      // Regenerate food using object pooling
       const oldPos = { x: food.x, y: food.y };
-      food.x = Math.random() * gameState.worldWidth;
-      food.y = Math.random() * gameState.worldHeight;
-      food.color = getRandomColor();
+      const newX = Math.random() * gameState.worldWidth;
+      const newY = Math.random() * gameState.worldHeight;
+      const newColor = getRandomColor();
+
+      // Release old food to pool and get a new one
+      const foodIndex = gameState.foods.findIndex((f) => f.id === foodId);
+      if (foodIndex !== -1) {
+        releaseFood(gameState.foods[foodIndex]);
+        gameState.foods[foodIndex] = getPooledFood(
+          foodId,
+          newX,
+          newY,
+          5,
+          newColor
+        );
+      }
 
       player.score++;
       performanceMetrics.foodEaten++;
 
+      const regeneratedFood = gameState.foods[foodIndex];
       console.log(
         `🍎 Player ${playerId} ate food ${foodId}: regenerated from (${oldPos.x.toFixed(
           2
-        )}, ${oldPos.y.toFixed(2)}) to (${food.x.toFixed(2)}, ${food.y.toFixed(
+        )}, ${oldPos.y.toFixed(2)}) to (${regeneratedFood.x.toFixed(
           2
-        )})`
+        )}, ${regeneratedFood.y.toFixed(2)})`
       );
 
       // Score persistence now handled client-side
 
       // Broadcast food regeneration to all players
-      io.emit("foodRegenerated", food);
+      io.emit("foodRegenerated", regeneratedFood);
 
       // Broadcast score update
       io.emit("scoreUpdate", {
@@ -2031,7 +2064,7 @@ io.on("connection", (socket) => {
       if (!player.isBot) {
         updatePlayerActivity();
       }
-      // Remove consumed dead points from game state
+      // Remove consumed dead points from game state with object pooling
       deadPoints.forEach((consumedPoint) => {
         const index = gameState.deadPoints.findIndex(
           (dp) =>
@@ -2040,6 +2073,8 @@ io.on("connection", (socket) => {
             dp.color === consumedPoint.color
         );
         if (index !== -1) {
+          // Return dead point to object pool before removing
+          releasePoint(gameState.deadPoints[index]);
           gameState.deadPoints.splice(index, 1);
         }
       });
@@ -2143,7 +2178,7 @@ io.on("connection", (socket) => {
               angle: safeAngle,
               points: [],
               alive: true,
-              score: 0,
+              score: player.score, // Preserve existing score instead of resetting to 0
               spawnProtection: true,
               spawnTime: spawnTime,
             };

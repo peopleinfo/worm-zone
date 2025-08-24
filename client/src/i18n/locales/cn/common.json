@@ -30,12 +30,37 @@
     "sensitivity": "灵敏度",
     "profile": "个人资料",
     "username": "用户名",
-    "avatar": "头像"
+    "avatar": "头像",
+    "performance": "性能"
   },
   "languages": {
     "en": "英语",
     "kh": "高棉语",
     "cn": "中文"
+  },
+  "performance": {
+    "title": "性能设置",
+    "mode": "性能模式",
+    "auto": "自动",
+    "performance": "性能",
+    "battery": "省电",
+    "thermalWarnings": "温度警告",
+    "deviceInfo": "设备信息",
+    "tier": "性能等级",
+    "thermalState": "温度状态",
+    "targetFps": "目标帧率",
+    "batteryLevel": "电池电量",
+    "tips": "性能提示",
+    "tip1": "自动模式根据设备性能调整设置",
+    "tip2": "性能模式优先保证游戏流畅度",
+    "tip3": "省电模式降低功耗",
+    "tip4": "启用温度警告以防止过热",
+    "states": {
+      "normal": "正常",
+      "warm": "温热",
+      "hot": "过热",
+      "critical": "危险"
+    }
   },
   "profile": {
     "title": "个人资料",

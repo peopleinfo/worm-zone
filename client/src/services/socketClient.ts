@@ -223,19 +223,39 @@ class SocketClient {
 
     // Score update
     this.socket.on('scoreUpdate', (data: { playerId: string; score: number }) => {
-      // console.log('🎯 scoreUpdate received:', data);
+      console.log('[SocketClient.scoreUpdate] Received scoreUpdate event:', {
+        playerId: data.playerId,
+        score: data.score,
+        isCurrentPlayer: data.playerId === this.playerId,
+        timestamp: new Date().toISOString()
+      });
+      
       if (data.playerId === this.playerId) {
         const store = useGameStore.getState();
+        const previousScore = store.score;
         
         // Don't process score updates if the game is over
         if (store.isGameOver) {
-          console.log('🚫 Ignoring scoreUpdate - game is over');
+          console.log('[SocketClient.scoreUpdate] 🚫 Ignoring scoreUpdate - game is over');
           return;
         }
         
-        console.log('🎯 Current player scoreUpdate - before:', store.score, 'after:', data.score);
+        console.log('[SocketClient.scoreUpdate] Processing current player score update:', {
+          previousScore,
+          newScore: data.score,
+          scoreDifference: data.score - previousScore
+        });
+        
         store.setGameState({ score: data.score });
-        console.log('🎯 Score updated in store:', store.score);
+        
+        const updatedScore = store.score;
+        console.log('[SocketClient.scoreUpdate] Score update completed:', {
+          expectedScore: data.score,
+          actualStoreScore: updatedScore,
+          updateSuccessful: updatedScore === data.score
+        });
+      } else {
+        console.log('[SocketClient.scoreUpdate] Score update for other player:', data.playerId);
       }
     });
 

@@ -4,6 +4,7 @@ import type { GameState, Controls } from "../types/game";
 import type { Snake } from "../game/Snake";
 import type { Food } from "../game/Food";
 import type { Point } from "../game/Point";
+import { releaseFood, releasePoint } from "../game/Point";
 import { useAuthStore } from "./authStore";
 
 // Leaderboard player interface
@@ -116,9 +117,16 @@ export const useGameStore = create<GameStore>()(
       updateFoods: (foods) => set({ foods }),
 
       removeFood: (foodId) =>
-        set((state) => ({
-          foods: state.foods.filter((food) => food.id !== foodId),
-        })),
+        set((state) => {
+          // Find the food to remove and return it to the pool
+          const foodToRemove = state.foods.find((food) => food.id === foodId);
+          if (foodToRemove) {
+            releaseFood(foodToRemove);
+          }
+          return {
+            foods: state.foods.filter((food) => food.id !== foodId),
+          };
+        }),
 
       addDeadPoints: (points) =>
         set((state) => ({
@@ -126,11 +134,19 @@ export const useGameStore = create<GameStore>()(
         })),
 
       removeDeadPoints: (points) =>
-        set((state) => ({
-          deadPoints: state.deadPoints.filter(
-            (dp) => !points.some((p) => p.x === dp.x && p.y === dp.y)
-          ),
-        })),
+        set((state) => {
+          // Find dead points to remove and return them to the pool
+          const pointsToRemove = state.deadPoints.filter(
+            (dp) => points.some((p) => p.x === dp.x && p.y === dp.y)
+          );
+          pointsToRemove.forEach((point) => releasePoint(point));
+
+          return {
+            deadPoints: state.deadPoints.filter(
+              (dp) => !points.some((p) => p.x === dp.x && p.y === dp.y)
+            ),
+          };
+        }),
 
       updateControls: (controls) =>
         set((state) => ({
@@ -172,7 +188,7 @@ export const useGameStore = create<GameStore>()(
           }).catch((error) => {
             console.error('Failed to play background music on reset:', error);
           });
-          
+
           return {
             ...initialState,
             currentPlayerId: prev.currentPlayerId, // Preserve player ID
@@ -187,7 +203,7 @@ export const useGameStore = create<GameStore>()(
           }).catch((error) => {
             console.error('Failed to play background music on start:', error);
           });
-          
+
           return {
             isPlaying: true,
             isGameOver: false,
