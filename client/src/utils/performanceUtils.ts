@@ -102,9 +102,9 @@ export class PerformanceManager {
 
   private getMaxDeadPoints(tier: 'low' | 'medium' | 'high'): number {
     switch (tier) {
-      case 'low': return 100;
-      case 'medium': return 200;
-      case 'high': return 300;
+      case 'low': return 200;
+      case 'medium': return 300;
+      case 'high': return 350;
     }
   }
 

@@ -1713,8 +1713,16 @@ function updateBots() {
           });
         }
 
+        // Store the consumed dead point for broadcast before removing it
+        const consumedDeadPoint = { ...deadPoint };
+
         // Remove consumed dead point
         gameState.deadPoints.splice(i, 1);
+
+        // Broadcast dead point removal to all clients (same as human players)
+        io.emit("deadPointsRemoved", {
+          deadPoints: [consumedDeadPoint],
+        });
 
         // Broadcast score update
         io.emit("scoreUpdate", {
