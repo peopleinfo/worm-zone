@@ -233,7 +233,7 @@ export class Snake implements SnakeInterface {
 
     // Draw body segments with overlap to create continuous appearance
     // Use smaller increment to ensure segments overlap and connect seamlessly
-    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.4)); // 40% of radius for tighter, more compact segments
+    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.7)); // 70% of radius for tighter, more compact segments
 
     for (let i = 0; i < this.points.length; i += segmentSpacing) {
       this.points[i].draw(ctx);
@@ -243,7 +243,8 @@ export class Snake implements SnakeInterface {
     if (this.points.length > 1) {
       const lastIndex = this.points.length - 1;
       if (lastIndex % segmentSpacing !== 0) {
-        this.points[lastIndex].draw(ctx, '', this.radius);
+        // this.points[lastIndex].draw(ctx, '', this.radius);
+        this.points[lastIndex].draw(ctx);
       }
     }
 

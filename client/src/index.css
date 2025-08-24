@@ -957,6 +957,23 @@ canvas:not(#gameCanvas) {
   font-weight: normal;
 }
 
+/* Quit Modal Styles */
+.quit-description {
+  color: rgba(var(--color-light-rgb), 0.8);
+  font-size: 16px;
+  text-align: center;
+  margin: 20px 0;
+  line-height: 1.5;
+}
+.quit-button {
+  cursor: pointer;
+  padding: 8px 20px;
+  border: 0;
+  background: var(--color-primary);
+  border-radius: 8px;
+  color: white;
+}
+
 /* Top Right Buttons Container */
 .top-right-buttons {
   position: absolute;

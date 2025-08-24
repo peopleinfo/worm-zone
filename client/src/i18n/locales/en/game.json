@@ -52,5 +52,11 @@
   "audio": {
     "muteMusic": "Mute music",
     "unmuteMusic": "Unmute music"
+  },
+  "quit": {
+    "button": "Quit Game",
+    "title": "Do you want to quit this match?",
+    "description": "You will lose all rewards for this match",
+    "confirm": "Quit"
   }
 }

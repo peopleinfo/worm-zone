@@ -50,7 +50,7 @@ const defaultSettings = {
     master: 0.8,
     music: 0.6,
     effects: 0.8,
-    muted: true,
+    muted: false,
   },
 };
 
@@ -92,7 +92,7 @@ export const useSettingsStore = create<SettingsState>()(
       updateSoundSettings: (settings) =>
         set((state) => {
           const newSound = { ...state.sound, ...settings };
-          
+
           // Sync with audio service - use dynamic import to avoid circular dependency
           import("../services/audioService").then(({ audioService }) => {
             if (settings.music !== undefined) {
@@ -104,14 +104,14 @@ export const useSettingsStore = create<SettingsState>()(
           }).catch((error) => {
             console.error('Failed to sync with audio service:', error);
           });
-          
+
           return { sound: newSound };
         }),
-      
+
       setActiveSettingsTab: (tab) => {
         set({ activeSettingsTab: tab });
       },
-      
+
       resetSettings: () => set(defaultSettings),
     }),
     {
