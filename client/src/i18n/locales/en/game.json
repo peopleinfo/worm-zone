@@ -58,5 +58,13 @@
     "title": "Do you want to quit this match?",
     "description": "You will lose all rewards for this match",
     "confirm": "Quit"
+  },
+  "battle": {
+    "connecting": "Connecting...",
+    "startingIn": "Starting in {{count}}...",
+    "battleButton": "Battle!",
+    "howToPlay": "How to Play",
+    "connectionFailed": "Error: Connection failed",
+    "getReady": "Get Ready!"
   }
 }

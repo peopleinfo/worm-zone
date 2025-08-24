@@ -58,5 +58,13 @@
     "title": "你想要退出这场比赛吗？",
     "description": "你将失去这场比赛的所有奖励",
     "confirm": "退出"
+  },
+  "battle": {
+    "connecting": "连接中...",
+    "startingIn": "{{count}}秒后开始...",
+    "battleButton": "战斗！",
+    "howToPlay": "游戏说明",
+    "connectionFailed": "错误：连接失败",
+    "getReady": "准备好！"
   }
 }
