@@ -37,16 +37,16 @@ export class PerformanceManager {
   private detectDevicePerformance(): DevicePerformance {
     const userAgent = navigator.userAgent.toLowerCase();
     const isMobile = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(userAgent);
-    
+
     // Get device memory if available (Chrome only)
     const deviceMemory = (navigator as any).deviceMemory || 4;
-    
+
     // Get hardware concurrency (number of CPU cores)
     const cores = navigator.hardwareConcurrency || 4;
-    
+
     // Detect device tier based on available information
     let tier: 'low' | 'medium' | 'high' = 'medium';
-    
+
     if (isMobile) {
       // Mobile device detection
       if (deviceMemory <= 2 || cores <= 4) {
@@ -56,7 +56,7 @@ export class PerformanceManager {
       } else {
         tier = 'high';
       }
-      
+
       // iOS devices tend to have better performance optimization
       if (/iphone|ipad|ipod/.test(userAgent)) {
         if (tier === 'low') tier = 'medium';
@@ -82,12 +82,14 @@ export class PerformanceManager {
   private getTargetFPS(tier: 'low' | 'medium' | 'high', isMobile: boolean): number {
     if (isMobile) {
       switch (tier) {
-        case 'low': return 12;
-        case 'medium': return 15;
-        case 'high': return 18;
+        case 'low': return 15;
+        case 'medium': return 25;
+        case 'high': return 30;
       }
     }
-    return 20; // Desktop
+    console.log("tier", tier);
+
+    return 30; // Desktop
   }
 
   private getCanvasScale(tier: 'low' | 'medium' | 'high'): number {
@@ -117,7 +119,7 @@ export class PerformanceManager {
   // Adaptive frame rate based on performance
   updateFrameTime(frameTime: number): void {
     this.frameTimeHistory.push(frameTime);
-    
+
     // Keep only last 60 frame times (3-4 seconds at 15-20 FPS)
     if (this.frameTimeHistory.length > 60) {
       this.frameTimeHistory.shift();
@@ -127,7 +129,7 @@ export class PerformanceManager {
     if (this.frameTimeHistory.length >= 30) {
       const avgFrameTime = this.frameTimeHistory.reduce((a, b) => a + b, 0) / this.frameTimeHistory.length;
       const targetFrameTime = this.getFrameInterval();
-      
+
       // If average frame time is significantly higher than target, reduce FPS
       if (avgFrameTime > targetFrameTime * 1.5 && !this.thermalThrottleDetected) {
         console.log('🔥 Thermal throttling detected, reducing performance');
@@ -150,7 +152,7 @@ export class PerformanceManager {
   shouldSkipFrame(currentTime: number): boolean {
     const frameInterval = this.getFrameInterval();
     const elapsed = currentTime - this.lastFrameTime;
-    
+
     if (elapsed >= frameInterval) {
       this.lastFrameTime = currentTime - (elapsed % frameInterval);
       return false;
@@ -166,7 +168,7 @@ export class PerformanceManager {
     if ('getBattery' in navigator) {
       (navigator as any).getBattery().then((battery: any) => {
         this.updateBatteryInfo(battery);
-        
+
         // Listen for battery events
         battery.addEventListener('levelchange', () => this.updateBatteryInfo(battery));
         battery.addEventListener('chargingchange', () => this.updateBatteryInfo(battery));
