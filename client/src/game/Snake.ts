@@ -28,6 +28,8 @@ export class Snake implements SnakeInterface {
   private overPos: { x: number; y: number };
   finalScore?: number;
   finalRank?: number;
+  spawnProtection: boolean;
+  spawnTime: number;
 
   constructor(
     x: number = 0,
@@ -49,6 +51,8 @@ export class Snake implements SnakeInterface {
     this.angle = 0;
     this.ai = true;
     this.isAlive = true;
+    this.spawnProtection = false;
+    this.spawnTime = 0;
 
     for (let i = 1; i < length; i++) {
       this.points.push(PooledObjects.createPoint(INFINITY, INFINITY, this.radius, getRandomColor()));
@@ -156,6 +160,21 @@ export class Snake implements SnakeInterface {
     if (this.angle < 0) this.angle += 360;
   }
 
+  isSpawnProtected(): boolean {
+    if (!this.spawnProtection) return false;
+    
+    const currentTime = Date.now();
+    const protectionDuration = 3000; // 3 seconds in milliseconds
+    
+    // Check if spawn protection has expired
+    if (currentTime - this.spawnTime > protectionDuration) {
+      this.spawnProtection = false;
+      return false;
+    }
+    
+    return true;
+  }
+
   checkCollisionsWithFood(target: Point | { x: number; y: number; radius: number; color: string }): Point | { x: number; y: number; radius: number; color: string } | undefined {
     const head = this.getHead();
     // Create a temporary Point object for collision detection if target is not a Point
@@ -186,13 +205,25 @@ export class Snake implements SnakeInterface {
 
   checkCollisionsWithOtherSnakes(snake: Snake): { collided: boolean; collidedWith?: Snake; points?: number } {
     if (snake === this || !this.isAlive) return { collided: false };
+    
+    // Skip collision detection if this snake has spawn protection
+    if (this.isSpawnProtected()) {
+      return { collided: false };
+    }
 
     const head = this.getHead();
     const collided = snake.points.find(p => isCollided(head, p));
     
     if (collided) {
       const points = this.points.length; // Points to award to the other snake
-      this.over();
+      
+      this.over('snake_collision', {
+        collidedWithSnake: snake.id.substring(0,6),
+        collidedWithSnakeLength: snake.points.length,
+        collisionPoint: { x: collided.x, y: collided.y },
+        pointsAwarded: points
+      });
+      
       return { collided: true, collidedWith: snake, points };
     }
     return { collided: false };
@@ -201,35 +232,97 @@ export class Snake implements SnakeInterface {
   checkCollisionsWithBoundary(worldWidth: number, worldHeight: number): boolean {
     if (!this.isAlive) return false;
     
+    // Skip boundary collision detection if this snake has spawn protection
+    if (this.isSpawnProtected()) {
+      return false;
+    }
+    
+    // SAFETY CHECK: Ensure world dimensions are valid and synchronized from server
+    // Prevent boundary collision when using fallback dimensions
+    if (!worldWidth || !worldHeight || worldWidth <= 0 || worldHeight <= 0) {
+      console.warn(`[BOUNDARY SAFETY] Invalid world dimensions: ${worldWidth}x${worldHeight} - skipping boundary check`);
+      return false;
+    }
+    
+    // SAFETY CHECK: Ensure world dimensions are reasonable (not fallback values during initialization)
+    // The server uses 1200x800, so we expect these exact values or similar
+    const expectedWidth = 1200;
+    const expectedHeight = 800;
+    const dimensionTolerance = 100; // Allow some variation
+    
+    if (Math.abs(worldWidth - expectedWidth) > dimensionTolerance || 
+        Math.abs(worldHeight - expectedHeight) > dimensionTolerance) {
+      console.warn(`[BOUNDARY SAFETY] Unexpected world dimensions: ${worldWidth}x${worldHeight} (expected ~${expectedWidth}x${expectedHeight}) - skipping boundary check`);
+      return false;
+    }
+    
     const head = this.getHead();
     
-    // Debug logging for boundary collision detection
-    const leftBoundary = head.x - head.radius < 0;
-    const topBoundary = head.y - head.radius < 0;
-    const rightBoundary = head.x + head.radius > worldWidth;
-    const bottomBoundary = head.y + head.radius > worldHeight;
+    // Add tolerance/buffer to boundary collision to prevent edge cases
+    const boundaryTolerance = 5; // 5 pixel buffer to prevent false positives
+    
+    // Enhanced boundary collision detection with tolerance
+    const leftBoundary = head.x - head.radius < -boundaryTolerance;
+    const topBoundary = head.y - head.radius < -boundaryTolerance;
+    const rightBoundary = head.x + head.radius > worldWidth + boundaryTolerance;
+    const bottomBoundary = head.y + head.radius > worldHeight + boundaryTolerance;
     
     const hasCollision = leftBoundary || topBoundary || rightBoundary || bottomBoundary;
     
-    // Log detailed boundary information
-    console.log(`[BOUNDARY CHECK] Snake ${this.id.substring(0,6)} - Head: (${head.x.toFixed(2)}, ${head.y.toFixed(2)}) Radius: ${head.radius}`);
-    console.log(`[BOUNDARY CHECK] World: ${worldWidth}x${worldHeight}`);
-    console.log(`[BOUNDARY CHECK] Boundaries - Left: ${(head.x - head.radius).toFixed(2)} < 0 = ${leftBoundary}`);
-    console.log(`[BOUNDARY CHECK] Boundaries - Top: ${(head.y - head.radius).toFixed(2)} < 0 = ${topBoundary}`);
-    console.log(`[BOUNDARY CHECK] Boundaries - Right: ${(head.x + head.radius).toFixed(2)} > ${worldWidth} = ${rightBoundary}`);
-    console.log(`[BOUNDARY CHECK] Boundaries - Bottom: ${(head.y + head.radius).toFixed(2)} > ${worldHeight} = ${bottomBoundary}`);
+    // Only log when there's a potential collision or snake is very close to boundary
+    const margin = 20;
+    const nearBoundary = head.x < margin || head.y < margin || 
+                        head.x > worldWidth - margin || head.y > worldHeight - margin;
+    
+    if (hasCollision || nearBoundary) {
+      console.log(`[BOUNDARY CHECK] Snake ${this.id.substring(0,6)} - Head: (${head.x.toFixed(2)}, ${head.y.toFixed(2)}) Radius: ${head.radius}`);
+      console.log(`[BOUNDARY CHECK] World: ${worldWidth}x${worldHeight} (tolerance: ${boundaryTolerance})`);
+      console.log(`[BOUNDARY CHECK] Boundaries - Left: ${(head.x - head.radius).toFixed(2)} < ${-boundaryTolerance} = ${leftBoundary}`);
+      console.log(`[BOUNDARY CHECK] Boundaries - Top: ${(head.y - head.radius).toFixed(2)} < ${-boundaryTolerance} = ${topBoundary}`);
+      console.log(`[BOUNDARY CHECK] Boundaries - Right: ${(head.x + head.radius).toFixed(2)} > ${worldWidth + boundaryTolerance} = ${rightBoundary}`);
+      console.log(`[BOUNDARY CHECK] Boundaries - Bottom: ${(head.y + head.radius).toFixed(2)} > ${worldHeight + boundaryTolerance} = ${bottomBoundary}`);
+    }
     
     if (hasCollision) {
-      console.log(`[BOUNDARY DEATH] Snake ${this.id.substring(0,6)} died due to boundary collision!`);
-      console.log(`[BOUNDARY DEATH] Collision reasons: Left=${leftBoundary}, Top=${topBoundary}, Right=${rightBoundary}, Bottom=${bottomBoundary}`);
-      this.over();
+      console.error(`[BOUNDARY DEATH] Snake ${this.id.substring(0,6)} died due to boundary collision!`);
+      console.error(`[BOUNDARY DEATH] Head position: (${head.x.toFixed(2)}, ${head.y.toFixed(2)}) with radius ${head.radius}`);
+      console.error(`[BOUNDARY DEATH] World dimensions: ${worldWidth}x${worldHeight}`);
+      console.error(`[BOUNDARY DEATH] Collision reasons: Left=${leftBoundary}, Top=${topBoundary}, Right=${rightBoundary}, Bottom=${bottomBoundary}`);
+      
+      // Determine which boundary was hit
+      let hitBoundary = '';
+      if (leftBoundary) hitBoundary = 'left';
+      else if (rightBoundary) hitBoundary = 'right';
+      else if (topBoundary) hitBoundary = 'top';
+      else if (bottomBoundary) hitBoundary = 'bottom';
+      
+      this.over('boundary_collision', {
+        worldDimensions: `${worldWidth}x${worldHeight}`,
+        hitBoundary,
+        boundaries: { left: leftBoundary, right: rightBoundary, top: topBoundary, bottom: bottomBoundary },
+        tolerance: boundaryTolerance
+      });
       return true;
     }
     return false;
   }
 
-  over(): void {
+  over(cause: string = 'unknown', details: any = {}): void {
     if (this.points.length === 0 || !this.isAlive) return;
+    
+    const head = this.getHead();
+    const timestamp = new Date().toISOString();
+    
+    console.error(`[SNAKE DEATH] ==========================================`);
+    console.error(`[SNAKE DEATH] Snake ${this.id.substring(0,6)} DIED`);
+    console.error(`[SNAKE DEATH] Time: ${timestamp}`);
+    console.error(`[SNAKE DEATH] Cause: ${cause}`);
+    console.error(`[SNAKE DEATH] Position: (${head.x.toFixed(2)}, ${head.y.toFixed(2)})`);
+    console.error(`[SNAKE DEATH] Radius: ${head.radius}`);
+    console.error(`[SNAKE DEATH] Speed: ${this.speed}`);
+    console.error(`[SNAKE DEATH] Angle: ${this.angle}`);
+    console.error(`[SNAKE DEATH] Details:`, details);
+    console.error(`[SNAKE DEATH] ==========================================`);
     
     this.isAlive = false;
     const finalScore = this.points.length;
@@ -241,7 +334,6 @@ export class Snake implements SnakeInterface {
     // Release the snake's points back to the pool
     this.points.forEach(point => PooledObjects.releasePoint(point));
 
-    const head = this.getHead();
     this.overPos.x = head.x;
     this.overPos.y = head.y;
     
@@ -252,6 +344,11 @@ export class Snake implements SnakeInterface {
 
   draw(ctx: CanvasRenderingContext2D): void {
     if (!this.isAlive || this.points.length === 0) return;
+
+    // Draw spawn protection shield if active
+    if (this.isSpawnProtected()) {
+      this.drawSpawnProtectionShield(ctx);
+    }
 
     // Draw body segments with overlap to create continuous appearance
     // Use larger increment to make snake body less compact and wider
@@ -340,5 +437,45 @@ export class Snake implements SnakeInterface {
     const min = this.radius / 8;
     ctx.ellipse(mouth.x, mouth.y, min, max, -this.angle * Math.PI / 180, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  private drawSpawnProtectionShield(ctx: CanvasRenderingContext2D): void {
+    const head = this.getHead();
+    const currentTime = Date.now();
+    const protectionElapsed = currentTime - this.spawnTime;
+    const protectionRemaining = 3000 - protectionElapsed;
+    
+    // Create pulsing effect based on remaining time
+    const pulseSpeed = 0.005; // Pulse frequency
+    const pulseIntensity = Math.sin(currentTime * pulseSpeed) * 0.3 + 0.7; // 0.4 to 1.0
+    
+    // Shield color changes from blue to yellow as protection expires
+    const timeRatio = protectionRemaining / 3000;
+    const red = Math.floor(255 * (1 - timeRatio));
+    const green = Math.floor(255 * (1 - timeRatio));
+    const blue = Math.floor(255 * timeRatio);
+    
+    // Draw outer glow
+    const glowRadius = this.radius * 2.5 * pulseIntensity;
+    const gradient = ctx.createRadialGradient(head.x, head.y, this.radius, head.x, head.y, glowRadius);
+    gradient.addColorStop(0, `rgba(${red}, ${green}, ${blue}, 0.3)`);
+    gradient.addColorStop(1, `rgba(${red}, ${green}, ${blue}, 0)`);
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(head.x, head.y, glowRadius, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Draw shield ring
+    ctx.strokeStyle = `rgba(${red}, ${green}, ${blue}, ${pulseIntensity})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(head.x, head.y, this.radius * 1.8, 0, 2 * Math.PI);
+    ctx.stroke();
+    
+    // Log protection status occasionally
+    if (Math.random() < 0.01) { // 1% chance to log
+      console.log(`🛡️ [VISUAL] Snake ${this.id.substring(0,6)} spawn protection: ${protectionRemaining}ms remaining`);
+    }
   }
 }

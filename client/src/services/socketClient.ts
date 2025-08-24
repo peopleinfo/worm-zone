@@ -18,6 +18,8 @@ interface ServerPlayer {
   color: string;
   score: number;
   alive: boolean;
+  spawnProtection?: boolean;
+  spawnTime?: number;
 }
 
 interface GameInitData {
@@ -469,7 +471,9 @@ class SocketClient {
     snake.speed = player.speed;
     snake.color = player.color;
     snake.isAlive = player.alive;
-    snake.ai = true;
+    snake.ai = false; // Player snakes are not AI controlled
+    snake.spawnProtection = player.spawnProtection || false;
+    snake.spawnTime = player.spawnTime || 0;
     
     // Debug logging for created snake
     const head = snake.getHead();

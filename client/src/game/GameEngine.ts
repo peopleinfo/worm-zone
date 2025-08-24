@@ -185,6 +185,9 @@ export class GameEngine {
       return;
     }
 
+    // Update spawn protection status for all snakes
+    this.updateSpawnProtectionStatus(store);
+
     // Calculate deltaTime for frame-rate independent movement
     const now = Date.now();
     const deltaTime = this.lastFrameTime ? now - this.lastFrameTime : FRAME_INTERVAL; // Use configurable FPS
@@ -197,29 +200,36 @@ export class GameEngine {
     if (this.mySnake.isAlive) {
       this.mySnake.move(store.controls, deltaTime);
       
-      // Comprehensive debug logging for world dimensions and boundary collision
+      // CRITICAL FIX: Ensure world dimensions are properly synchronized before boundary checking
       const head = this.mySnake.getHead();
-      const clientWorldWidth = this.getWorldWidth();
-      const clientWorldHeight = this.getWorldHeight();
       const storeWorldWidth = store.worldWidth;
       const storeWorldHeight = store.worldHeight;
       
-      // Log world dimension validation
-      console.log(`[GAMEENGINE] World dimensions - Client: ${clientWorldWidth}x${clientWorldHeight}, Store: ${storeWorldWidth}x${storeWorldHeight}`);
+      // RACE CONDITION FIX: Only perform boundary collision if world dimensions are confirmed from server
+      // This prevents using fallback dimensions that could cause false boundary collisions
+      let boundaryCollision = false;
       
-      // Validate server/client dimension synchronization
-      if (storeWorldWidth && storeWorldHeight) {
+      // Declare these variables outside the if block to avoid scope issues
+      const clientWorldWidth = this.getWorldWidth();
+      const clientWorldHeight = this.getWorldHeight();
+      
+      if (storeWorldWidth && storeWorldHeight && storeWorldWidth > 0 && storeWorldHeight > 0) {
+        // World dimensions are properly set from server - safe to check boundaries
+        
+        // Validate server/client dimension synchronization
         if (clientWorldWidth !== storeWorldWidth || clientWorldHeight !== storeWorldHeight) {
           console.warn(`[GAMEENGINE] WARNING: World dimension mismatch! Client: ${clientWorldWidth}x${clientWorldHeight}, Server: ${storeWorldWidth}x${storeWorldHeight}`);
+          // Use server dimensions as they are authoritative
+          boundaryCollision = this.mySnake.checkCollisionsWithBoundary(storeWorldWidth, storeWorldHeight);
+        } else {
+          // Dimensions are synchronized - proceed with boundary check
+          boundaryCollision = this.mySnake.checkCollisionsWithBoundary(clientWorldWidth, clientWorldHeight);
         }
       } else {
-        console.warn(`[GAMEENGINE] WARNING: Store world dimensions not set! Using fallback: ${clientWorldWidth}x${clientWorldHeight}`);
+        // World dimensions not yet received from server - skip boundary check to prevent false deaths
+        console.warn(`[GAMEENGINE] RACE CONDITION PREVENTED: World dimensions not set from server (${storeWorldWidth}x${storeWorldHeight}) - skipping boundary check`);
+        console.log(`[GAMEENGINE] Snake ${this.mySnake.id.substring(0,6)} position: (${head.x.toFixed(2)}, ${head.y.toFixed(2)}) - waiting for server sync`);
       }
-      
-      // Log snake position before boundary check
-      console.log(`[GAMEENGINE] Snake ${this.mySnake.id.substring(0,6)} position before boundary check: (${head.x.toFixed(2)}, ${head.y.toFixed(2)}) radius: ${head.radius}`);
-      
-      const boundaryCollision = this.mySnake.checkCollisionsWithBoundary(clientWorldWidth, clientWorldHeight);
       
       // Log when snake gets close to boundaries
       const margin = 50;
@@ -486,6 +496,33 @@ export class GameEngine {
     
     // Reinitialize game
     this.initializeGame();
+  }
+
+  // Update spawn protection status for all snakes
+  private updateSpawnProtectionStatus(store: any): void {
+    const currentTime = Date.now();
+    
+    // Update spawn protection for player's snake
+    if (this.mySnake && this.mySnake.spawnProtection) {
+      const protectionElapsed = currentTime - this.mySnake.spawnTime;
+      if (protectionElapsed >= 3000) { // 3 seconds
+        this.mySnake.spawnProtection = false;
+        console.log(`🛡️ [SPAWN PROTECTION] Player snake protection expired after ${protectionElapsed}ms`);
+      } else {
+        console.log(`🛡️ [SPAWN PROTECTION] Player snake protected for ${(3000 - protectionElapsed)}ms more`);
+      }
+    }
+    
+    // Update spawn protection for other snakes
+    store.otherSnakes.forEach((snake: any) => {
+      if (snake.spawnProtection) {
+        const protectionElapsed = currentTime - snake.spawnTime;
+        if (protectionElapsed >= 3000) { // 3 seconds
+          snake.spawnProtection = false;
+          console.log(`🛡️ [SPAWN PROTECTION] Other snake ${snake.id.substring(0,6)} protection expired`);
+        }
+      }
+    });
   }
 
   // Cleanup method for proper resource management
