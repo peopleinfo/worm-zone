@@ -82,8 +82,8 @@ export class PerformanceManager {
   private getTargetFPS(tier: 'low' | 'medium' | 'high', isMobile: boolean): number {
     if (isMobile) {
       switch (tier) {
-        case 'low': return 15;
-        case 'medium': return 25;
+        case 'low': return 25;
+        case 'medium': return 28;
         case 'high': return 30;
       }
     }

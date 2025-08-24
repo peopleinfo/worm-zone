@@ -452,7 +452,7 @@ const gameState = {
   players: new Map(),
   foods: [],
   deadPoints: [],
-  maxFoods: 400,
+  maxFoods: 300,
   worldWidth: 1200,
   worldHeight: 800,
 };
@@ -1323,6 +1323,16 @@ function createDeadPoint(x, y, radius, color) {
 }
 
 function updateBots() {
+  // Check if there are any human players in the room
+  const humanPlayers = Array.from(gameState.players.values()).filter(
+    (p) => !p.isBot && p.alive
+  );
+
+  // If no human players, don't update bots at all
+  if (humanPlayers.length === 0) {
+    return;
+  }
+
   // Iterate over all players and filter for bots
   gameState.players.forEach((player) => {
     if (!player.isBot || !player.alive) return;
@@ -1345,11 +1355,13 @@ function updateBots() {
     let isStuck = false;
     if (player.movementHistory.length >= 8) {
       const positions = player.movementHistory.slice(-8);
-      const avgX = positions.reduce((sum, pos) => sum + pos.x, 0) / positions.length;
-      const avgY = positions.reduce((sum, pos) => sum + pos.y, 0) / positions.length;
-      const maxDistance = Math.max(...positions.map(pos => 
-        Math.hypot(pos.x - avgX, pos.y - avgY)
-      ));
+      const avgX =
+        positions.reduce((sum, pos) => sum + pos.x, 0) / positions.length;
+      const avgY =
+        positions.reduce((sum, pos) => sum + pos.y, 0) / positions.length;
+      const maxDistance = Math.max(
+        ...positions.map((pos) => Math.hypot(pos.x - avgX, pos.y - avgY))
+      );
       isStuck = maxDistance < player.radius * 4; // If moving in very small area
     }
 
@@ -1363,28 +1375,35 @@ function updateBots() {
     const centerX = gameState.worldWidth / 2;
     const centerY = gameState.worldHeight / 2;
     let boundaryAvoidanceApplied = false;
-    
+
     // Check if approaching any boundary
     const approachingLeft = nextX < boundaryBuffer;
     const approachingRight = nextX > gameState.worldWidth - boundaryBuffer;
     const approachingTop = nextY < boundaryBuffer;
     const approachingBottom = nextY > gameState.worldHeight - boundaryBuffer;
-    
-    if (approachingLeft || approachingRight || approachingTop || approachingBottom) {
+
+    if (
+      approachingLeft ||
+      approachingRight ||
+      approachingTop ||
+      approachingBottom
+    ) {
       // Calculate angle toward center with strong randomization
       let escapeAngle = Math.atan2(centerY - player.y, centerX - player.x);
-      
+
       // Add strong randomization to prevent predictable patterns
       const randomOffset = (Math.random() - 0.5) * Math.PI * 0.8;
       escapeAngle += randomOffset;
-      
+
       // Special handling for corners - add extra randomization
-      const isInCorner = (approachingLeft || approachingRight) && (approachingTop || approachingBottom);
+      const isInCorner =
+        (approachingLeft || approachingRight) &&
+        (approachingTop || approachingBottom);
       if (isInCorner) {
         // Force a more dramatic escape from corners
         const cornerEscapeBoost = (Math.random() - 0.5) * Math.PI * 0.6;
         escapeAngle += cornerEscapeBoost;
-        
+
         // Ensure we're moving away from the corner
         if (approachingLeft && approachingTop) {
           escapeAngle = Math.PI * 0.25 + (Math.random() - 0.5) * Math.PI * 0.3; // Southeast-ish
@@ -1396,12 +1415,12 @@ function updateBots() {
           escapeAngle = -Math.PI * 0.75 + (Math.random() - 0.5) * Math.PI * 0.3; // Northwest-ish
         }
       }
-      
+
       // Apply the escape angle with some smoothing to prevent jerky movement
       let angleDiff = escapeAngle - player.angle;
       while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
       while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-      
+
       // Use a stronger turn rate for boundary avoidance
       const boundaryTurnRate = 0.3 + Math.random() * 0.2;
       if (Math.abs(angleDiff) > boundaryTurnRate) {
@@ -1409,9 +1428,9 @@ function updateBots() {
       } else {
         player.angle = escapeAngle;
       }
-      
+
       boundaryAvoidanceApplied = true;
-      
+
       // Mark as exploring to prevent getting stuck
       player.lastExploreTime = Date.now();
       player.stuckCounter = 0;
@@ -1483,7 +1502,7 @@ function updateBots() {
     } else if (!boundaryAvoidanceApplied) {
       // Enhanced random movement and exploration behavior (only if not avoiding boundaries)
       const currentTime = Date.now();
-      
+
       // Force exploration if stuck
       if (isStuck || currentTime - player.lastExploreTime > 8000) {
         // Major direction change for exploration
@@ -1492,7 +1511,8 @@ function updateBots() {
         player.stuckCounter = 0;
       } else {
         // Regular random movement - increased frequency and variation
-        if (Math.random() < 0.04) { // 5x more frequent than before
+        if (Math.random() < 0.04) {
+          // 5x more frequent than before
           // Varied random movement patterns
           const movementType = Math.random();
           if (movementType < 0.3) {
@@ -1506,25 +1526,34 @@ function updateBots() {
             player.angle += (Math.random() - 0.5) * Math.PI;
           }
         }
-        
+
         // Encourage movement toward less crowded areas
         if (Math.random() < 0.02) {
-          const distanceFromCenter = Math.hypot(player.x - centerX, player.y - centerY);
-          
+          const distanceFromCenter = Math.hypot(
+            player.x - centerX,
+            player.y - centerY
+          );
+
           // If too close to center, move outward; if too far, move inward
           if (distanceFromCenter < gameState.worldWidth * 0.2) {
             // Move away from center
-            const awayAngle = Math.atan2(player.y - centerY, player.x - centerX);
+            const awayAngle = Math.atan2(
+              player.y - centerY,
+              player.x - centerX
+            );
             player.angle = awayAngle + (Math.random() - 0.5) * Math.PI * 0.4;
           } else if (distanceFromCenter > gameState.worldWidth * 0.4) {
             // Move toward center area
-            const towardAngle = Math.atan2(centerY - player.y, centerX - player.x);
+            const towardAngle = Math.atan2(
+              centerY - player.y,
+              centerX - player.x
+            );
             player.angle = towardAngle + (Math.random() - 0.5) * Math.PI * 0.4;
           }
         }
       }
     }
-    
+
     // Add occasional random direction changes even when following targets (but not during boundary avoidance)
     if (targetFound && !boundaryAvoidanceApplied && Math.random() < 0.015) {
       player.angle += (Math.random() - 0.5) * 0.4; // Small deviation from target path
@@ -2305,38 +2334,54 @@ function startBotIntervals() {
   // Bot update interval (movement and AI)
   botUpdateInterval = setInterval(() => {
     if (serverState !== SERVER_STATES.PAUSED) {
-      updateBots();
+      // Check if there are any human players before updating bots
+      const humanPlayers = Array.from(gameState.players.values()).filter(
+        (p) => !p.isBot && p.alive
+      );
 
-      // Broadcast bot movements to all players
-      gameState.players.forEach((player) => {
-        if (player.isBot && player.alive) {
-          const currentTime = Date.now();
-          const spawnProtectionDuration = 3000;
-          const hasSpawnProtection =
-            player.spawnProtection &&
-            currentTime - player.spawnTime < spawnProtectionDuration;
+      // Only update bots if there are human players in the room
+      if (humanPlayers.length > 0) {
+        updateBots();
 
-          io.emit("playerMoved", {
-            playerId: player.id,
-            x: player.x,
-            y: player.y,
-            angle: player.angle,
-            points: player.points,
-            spawnProtection: hasSpawnProtection,
-          });
-        }
-      });
+        // Broadcast bot movements to all players
+        gameState.players.forEach((player) => {
+          if (player.isBot && player.alive) {
+            const currentTime = Date.now();
+            const spawnProtectionDuration = 3000;
+            const hasSpawnProtection =
+              player.spawnProtection &&
+              currentTime - player.spawnTime < spawnProtectionDuration;
 
-      // Update performance metrics
-      performanceMetrics.botUpdates++;
+            io.emit("playerMoved", {
+              playerId: player.id,
+              x: player.x,
+              y: player.y,
+              angle: player.angle,
+              points: player.points,
+              spawnProtection: hasSpawnProtection,
+            });
+          }
+        });
+
+        // Update performance metrics
+        performanceMetrics.botUpdates++;
+      }
     }
   }, updateFreq);
 
   // Bot maintenance interval (spawning, cleanup)
   botMaintenanceInterval = setInterval(() => {
     if (serverState !== SERVER_STATES.PAUSED) {
-      maintainOptimizedBots();
-      performanceMetrics.botMaintenanceCycles++;
+      // Check if there are any human players before maintaining bots
+      const humanPlayers = Array.from(gameState.players.values()).filter(
+        (p) => !p.isBot && p.alive
+      );
+
+      // Only maintain bots if there are human players in the room
+      if (humanPlayers.length > 0) {
+        maintainOptimizedBots();
+        performanceMetrics.botMaintenanceCycles++;
+      }
     }
   }, maintenanceFreq);
 }
@@ -2350,6 +2395,32 @@ function maintainOptimizedBots() {
     (p) => p.isBot && p.alive
   );
   const allBots = Array.from(gameState.players.values()).filter((p) => p.isBot);
+
+  // If no human players, remove all bots to completely pause bot activity
+  if (humanPlayers === 0) {
+    if (allBots.length > 0) {
+      console.log(
+        `🤖 CLEANUP: Removing all ${allBots.length} bots - no human players in room`
+      );
+      allBots.forEach((bot) => {
+        if (bot.alive) {
+          handleBotDeath(bot);
+        } else {
+          gameState.players.delete(bot.id);
+          io.emit("playerDisconnected", bot.id);
+        }
+      });
+
+      // Update leaderboard after removing all bots
+      const leaderboard = generateLeaderboard();
+      const fullLeaderboard = generateFullLeaderboard();
+      io.emit("leaderboardUpdate", {
+        leaderboard: leaderboard,
+        fullLeaderboard: fullLeaderboard,
+      });
+    }
+    return; // Exit early - no need to spawn bots
+  }
 
   // Dynamic bot scaling based on server state and player count
   let minBots, maxBots;
