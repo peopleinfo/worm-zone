@@ -1,5 +1,6 @@
 import React from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface HowToPlayModalProps {
   isOpen: boolean;
@@ -10,13 +11,15 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { t } = useTranslation();
+  
   if (!isOpen) return null;
 
   return (
     <div className="settings-modal-overlay" onClick={onClose}>
       <div className="how-to-play-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>How to Play</h2>
+          <h2>{t('game:howToPlay.title')}</h2>
           <button className="close-button" onClick={onClose}>
             <X size={24} />
           </button>
@@ -25,36 +28,36 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
         <div className="modal-content">
           <div className="rule-section">
             <div style={{ display: "flex", gap: 4 }}>
-              <h3>Game Objective & Controls</h3>
+              <h3>{t('game:howToPlay.gameObjective')}</h3>
             </div>
             <ul>
-              <li>Play with friends in the same match</li>
-              <li>Control your worm to eat food and grow longer</li>
-              <li>Use touch controls or arrow keys to move</li>
-              <li>Avoid hitting other worms or the walls</li>
-              <li>Become the longest worm to dominate the arena!</li>
+              <li>{t('game:howToPlay.rules.playWithFriends')}</li>
+              <li>{t('game:howToPlay.rules.controlWorm')}</li>
+              <li>{t('game:howToPlay.rules.useControls')}</li>
+              <li>{t('game:howToPlay.rules.avoidHitting')}</li>
+              <li>{t('game:howToPlay.rules.becomeLongest')}</li>
             </ul>
           </div>
           <div className="rule-section">
             <div style={{ display: "flex", gap: 4 }}>
        
-              <h3>Scoring System</h3>
+              <h3>{t('game:howToPlay.scoringSystem')}</h3>
             </div>
             <ul>
-              <li>Eat food to increase your score and length</li>
-              <li>Larger worms give more points when eliminated</li>
-              <li>Compete for the highest score on the leaderboard</li>
-              <li>Your best score is saved every game ends</li>
+              <li>{t('game:howToPlay.rules.eatFood')}</li>
+              <li>{t('game:howToPlay.rules.largerWorms')}</li>
+              <li>{t('game:howToPlay.rules.competeScore')}</li>
+              <li>{t('game:howToPlay.rules.bestScoreSaved')}</li>
             </ul>
           </div>
           <div className="rule-section">
             <div style={{ display: "flex", gap: 4 }}>
-              <h3>Death & Restart</h3>
+              <h3>{t('game:howToPlay.deathRestart')}</h3>
             </div>
             <ul>
-              <li>Game ends when you hit another worm or wall</li>
-              <li>View your score and highest score in the game over modal</li>
-              <li>Your score resets to zero on restart</li>
+              <li>{t('game:howToPlay.rules.gameEnds')}</li>
+              <li>{t('game:howToPlay.rules.viewScore')}</li>
+              <li>{t('game:howToPlay.rules.scoreResets')}</li>
             </ul>
           </div>
         </div>

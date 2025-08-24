@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { supportedLanguages, type SupportedLanguage } from '../../i18n';
 
 export const LanguageSelector: React.FC = () => {
+  const { t } = useTranslation();
   const { language, setLanguage } = useSettingsStore();
 
   const handleLanguageChange = (langCode: SupportedLanguage) => {
@@ -11,7 +13,7 @@ export const LanguageSelector: React.FC = () => {
 
   return (
     <div className="language-selector">
-      <div className="language-label">Language</div>
+      <div className="language-label">{t('common:settings.language')}</div>
       <div className="language-options">
         {supportedLanguages.map((lang) => (
           <button

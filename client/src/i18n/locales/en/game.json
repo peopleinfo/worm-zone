@@ -66,5 +66,33 @@
     "howToPlay": "How to Play",
     "connectionFailed": "Error: Connection failed",
     "getReady": "Get Ready!"
+  },
+  "gameOver": {
+    "title": "Game Over!",
+    "currentScore": "Current Score:",
+    "bestScore": "Best Score:",
+    "ranking": "Ranking:",
+    "newRecord": "New Record! +{{points}} points!",
+    "loading": "Loading..."
+  },
+  "howToPlay": {
+    "title": "How to Play",
+    "gameObjective": "Game Objective & Controls",
+    "scoringSystem": "Scoring System",
+    "deathRestart": "Death & Restart",
+    "rules": {
+      "playWithFriends": "Play with friends in the same match",
+      "controlWorm": "Control your worm to eat food and grow longer",
+      "useControls": "Use touch controls or arrow keys to move",
+      "avoidHitting": "Avoid hitting other worms or the walls",
+      "becomeLongest": "Become the longest worm to dominate the arena!",
+      "eatFood": "Eat food to increase your score and length",
+      "largerWorms": "Larger worms give more points when eliminated",
+      "competeScore": "Compete for the highest score on the leaderboard",
+      "bestScoreSaved": "Your best score is saved every game ends",
+      "gameEnds": "Game ends when you hit another worm or wall",
+      "viewScore": "View your score and highest score in the game over modal",
+      "scoreResets": "Your score resets to zero on restart"
+    }
   }
 }

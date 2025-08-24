@@ -3,12 +3,14 @@ import { useAuthStore } from "../../stores/authStore";
 import { socketClient } from "../../services/socketClient";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { audioService } from "../../services/audioService";
+import { useTranslation } from "react-i18next";
 
 
 // Configuration constants
 const MIN_PLAYERS_FOR_BATTLE = 5;
 
 export const ToBattleButton = () => {
+  const { t } = useTranslation('game');
   // Use centralized connection state from authStore
   const isConnecting = useAuthStore((state) => state.isConnecting);
   const connectionError = useAuthStore((state) => state.connectionError);
@@ -53,7 +55,7 @@ export const ToBattleButton = () => {
       await startCountdown();
     } catch (error) {
       setConnectionError(
-        error instanceof Error ? error.message : "Failed to connect to server"
+        error instanceof Error ? error.message : t('battle.connectionFailed')
       );
       stopCountdown();
     } finally {
@@ -87,11 +89,11 @@ export const ToBattleButton = () => {
   };
 
   const getButtonText = () => {
-    if (isConnecting) return "Connecting...";
+    if (isConnecting) return t('battle.connecting');
     if (isCountingDown && countdownValue)
-      return `Starting in ${countdownValue}...`;
+      return t('battle.startingIn', { count: countdownValue });
     // if (isConnected && playerCount < MIN_PLAYERS_FOR_BATTLE) return `Waiting for players (${playerCount}/${MIN_PLAYERS_FOR_BATTLE})`;
-    return "Battle!";
+    return t('battle.battleButton');
   };
 
   const isButtonDisabled = () => {
@@ -115,15 +117,15 @@ export const ToBattleButton = () => {
 
       {/* How to Play Link */}
       <a onClick={toggleHowToPlay} className="how-to-play-link">
-        How to Play
+        {t('battle.howToPlay')}
       </a>
       {connectionError && (
-        <div className="connection-error">Error: Connection failed</div>
+        <div className="connection-error">{connectionError}</div>
       )}
       {isCountingDown && countdownValue && (
         <div className="countdown-overlay">
           <div className="countdown-number">{countdownValue}</div>
-          <div className="countdown-text">Get Ready!</div>
+          <div className="countdown-text">{t('battle.getReady')}</div>
         </div>
       )}
     </div>

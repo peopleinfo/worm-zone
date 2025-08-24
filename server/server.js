@@ -945,13 +945,15 @@ function createBot(id) {
     points: [],
     angle: safeAngle,
     radius: botRadius,
-    speed: 1.7,
+    speed: 1.1,
     color: getRandomColor(),
     score: 1.0,
     alive: true,
     isBot: true,
     spawnProtection: true,
     spawnTime: Date.now(),
+    lastDirectionChange: Date.now(), // Timer for straight movement preference
+    straightMovementDuration: 2000 + Math.random() * 1000, // 2-3 seconds of straight movement
   };
 
   console.log(
@@ -1439,7 +1441,7 @@ function updateBots() {
     // Enhanced AI movement - seek nearby food and dead points
     let targetFound = false;
     let targetAngle = player.angle;
-    const seekRadius = 100; // Distance within which bot will seek targets
+    const seekRadius = 60; // Distance within which bot will seek targets
 
     // Find nearest dead point within seek radius
     let nearestDeadPoint = null;
@@ -1469,14 +1471,14 @@ function updateBots() {
     }
 
     // Prioritize dead points over regular food (more valuable)
-    if (nearestDeadPoint && nearestDeadDistance < 80) {
+    if (nearestDeadPoint && nearestDeadDistance < 50) {
       // Steer towards nearest dead point
       targetAngle = Math.atan2(
         nearestDeadPoint.y - player.y,
         nearestDeadPoint.x - player.x
       );
       targetFound = true;
-    } else if (nearestFood && nearestFoodDistance < 60) {
+    } else if (nearestFood && nearestFoodDistance < 40) {
       // Steer towards nearest food if no close dead points
       targetAngle = Math.atan2(
         nearestFood.y - player.y,
@@ -1486,14 +1488,14 @@ function updateBots() {
     }
 
     if (targetFound) {
-      // Smoothly adjust angle towards target
+      // More direct angle adjustment towards target
       let angleDiff = targetAngle - player.angle;
       // Normalize angle difference to [-π, π]
       while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
       while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
 
-      // Gradually turn towards target with some variation
-      const maxTurnRate = 0.15 + Math.random() * 0.05; // Slightly varied turn rate
+      // Reduced turn rate for smoother, more human-like movement
+      const maxTurnRate = 0.08 + Math.random() * 0.02; // 0.08-0.10 radians per update (reduced from 0.15-0.20)
       if (Math.abs(angleDiff) > maxTurnRate) {
         player.angle += Math.sign(angleDiff) * maxTurnRate;
       } else {
@@ -1503,60 +1505,92 @@ function updateBots() {
       // Enhanced random movement and exploration behavior (only if not avoiding boundaries)
       const currentTime = Date.now();
 
-      // Force exploration if stuck
-      if (isStuck || currentTime - player.lastExploreTime > 8000) {
-        // Major direction change for exploration
-        player.angle += (Math.random() - 0.5) * Math.PI * 1.2; // Much larger angle change
+      // Force exploration if stuck - much longer interval for extended straight movements
+      if (isStuck || currentTime - player.lastExploreTime > 20000) {
+        // Major direction change for exploration - limited angle change
+        const maxAngleChange = Math.PI * 0.6; // Reduced from 1.2 to 0.6
+        player.angle += (Math.random() - 0.5) * maxAngleChange;
         player.lastExploreTime = currentTime;
         player.stuckCounter = 0;
+
+        // Set longer straight movement duration after exploration
+        player.lastDirectionChange = currentTime;
+        player.straightMovementDuration = 5000 + Math.random() * 3000; // 5-8 seconds
       } else {
-        // Regular random movement - increased frequency and variation
-        if (Math.random() < 0.04) {
-          // 5x more frequent than before
-          // Varied random movement patterns
+        // Check if bot should continue moving straight - much longer durations
+        const timeSinceLastChange =
+          currentTime - (player.lastDirectionChange || currentTime);
+        const shouldMovestraight =
+          timeSinceLastChange < (player.straightMovementDuration || 5000);
+
+        // Much reduced random movement frequency for longer straight paths
+        if (!shouldMovestraight && Math.random() < 0.001) {
+          // Very infrequent random movement for human-like behavior
+          // Simplified movement patterns with limited angle changes
           const movementType = Math.random();
-          if (movementType < 0.3) {
-            // Small adjustment
-            player.angle += (Math.random() - 0.5) * 0.8;
-          } else if (movementType < 0.6) {
-            // Medium turn
-            player.angle += (Math.random() - 0.5) * Math.PI * 0.6;
+          const maxAngleChange = Math.PI * 0.15; // Much smaller maximum angle change
+
+          if (movementType < 0.7) {
+            // Small adjustment - very limited angle
+            player.angle += (Math.random() - 0.5) * 0.1;
           } else {
-            // Large exploration turn
-            player.angle += (Math.random() - 0.5) * Math.PI;
+            // Medium turn - still limited
+            player.angle += (Math.random() - 0.5) * maxAngleChange;
           }
+
+          // Set longer straight movement duration after any direction change
+          player.lastDirectionChange = currentTime;
+          player.straightMovementDuration = 5000 + Math.random() * 3000; // 5-8 seconds
         }
 
-        // Encourage movement toward less crowded areas
-        if (Math.random() < 0.02) {
+        // Simplified area movement - much less frequent and smaller angle changes
+        if (!shouldMovestraight && Math.random() < 0.005) {
           const distanceFromCenter = Math.hypot(
             player.x - centerX,
             player.y - centerY
           );
 
-          // If too close to center, move outward; if too far, move inward
-          if (distanceFromCenter < gameState.worldWidth * 0.2) {
-            // Move away from center
+          // Gentler area-based movement with smaller angle variations
+          if (distanceFromCenter < gameState.worldWidth * 0.15) {
+            // Move away from center with limited angle change
             const awayAngle = Math.atan2(
               player.y - centerY,
               player.x - centerX
             );
-            player.angle = awayAngle + (Math.random() - 0.5) * Math.PI * 0.4;
-          } else if (distanceFromCenter > gameState.worldWidth * 0.4) {
-            // Move toward center area
+            player.angle = awayAngle + (Math.random() - 0.5) * Math.PI * 0.1;
+          } else if (distanceFromCenter > gameState.worldWidth * 0.45) {
+            // Move toward center area with limited angle change
             const towardAngle = Math.atan2(
               centerY - player.y,
               centerX - player.x
             );
-            player.angle = towardAngle + (Math.random() - 0.5) * Math.PI * 0.4;
+            player.angle = towardAngle + (Math.random() - 0.5) * Math.PI * 0.1;
           }
+
+          // Set longer straight movement duration
+          player.lastDirectionChange = currentTime;
+          player.straightMovementDuration = 5000 + Math.random() * 3000; // 5-8 seconds
         }
       }
     }
 
-    // Add occasional random direction changes even when following targets (but not during boundary avoidance)
-    if (targetFound && !boundaryAvoidanceApplied && Math.random() < 0.015) {
-      player.angle += (Math.random() - 0.5) * 0.4; // Small deviation from target path
+    // Minimal random direction changes when following targets to maintain straighter paths
+    const timeSinceLastChange =
+      Date.now() - (player.lastDirectionChange || Date.now());
+    const shouldMovestraight =
+      timeSinceLastChange < (player.straightMovementDuration || 5000);
+
+    if (
+      targetFound &&
+      !boundaryAvoidanceApplied &&
+      !shouldMovestraight &&
+      Math.random() < 0.003
+    ) {
+      player.angle += (Math.random() - 0.5) * 0.03; // Very small deviation from target path (reduced from 0.1)
+
+      // Set longer straight movement duration after direction change
+      player.lastDirectionChange = Date.now();
+      player.straightMovementDuration = 5000 + Math.random() * 3000; // 5-8 seconds (increased from 2-3)
     }
 
     // Move bot
@@ -1817,7 +1851,7 @@ io.on("connection", (socket) => {
       points: [],
       angle: safeAngle,
       radius: playerRadius,
-      speed: 0.8,
+      speed: 0.7,
       color: getRandomColor(),
       score: 0,
       alive: true,

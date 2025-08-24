@@ -36,9 +36,9 @@ export class Snake implements SnakeInterface {
   ) {
     this.id = id;
     this.radius = 4;
-    this.speed = 0.8;
+    this.speed = 0.6;
     this.turningSpeed = 6;
-    this.baseSpeed = 0.5; // Base speed for platform consistency
+    this.baseSpeed = 0.4; // Base speed for platform consistency
     this.points = [new Point(x, y, this.radius, color)];
     this.velocity = { x: 1, y: 0 };
     this.overPos = { x: 0, y: 0 };
