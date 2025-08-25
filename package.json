@@ -6,6 +6,7 @@
     "zip-build": "node script/zip-build.mjs",
     "start-client": "cd client && npm run dev",
     "build-client": "cd client && npm run build && cd .. && npm run zip-build",
+    "build-client-prod": "cd client && build-prod && cd .. && npm run zip-build",
     "start-server": "node server/server.js",
     "kill-dev": "npx kill-port 9000 5174",
     "dev": "npm run kill-dev && concurrently \"nodemon server/server.js\" \"npm run start-client\""
