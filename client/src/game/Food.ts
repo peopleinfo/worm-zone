@@ -27,12 +27,12 @@ export class Food extends Point {
       food.y = y;
       food.radius = radius;
       food.color = getRandomColor();
+      // Don't overwrite the ID - it should be set when the food is created from server data
     } else {
       const id = `food_${++Food.idCounter}`;
       food = new Food(id, x, y, radius, getRandomColor());
     }
 
-    food.id = `food_${++Food.idCounter}`;
     return food;
   }
 

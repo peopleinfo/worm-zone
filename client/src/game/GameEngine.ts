@@ -242,22 +242,33 @@ export class GameEngine {
 
       // Food collisions - multiplayer only
       const foodsToCheck = store.foods;
+      console.log(`[GAME ENGINE DEBUG] Checking ${foodsToCheck.length} foods for collision`);
+      
       for (let i = 0; i < foodsToCheck.length; i++) {
         const food = foodsToCheck[i];
+        const head = this.mySnake.getHead();
+        const distance = Math.hypot(head.x - food.x, head.y - food.y);
+        const requiredDistance = head.radius + food.radius;
+        
+        console.log(`[GAME ENGINE DEBUG] Food ${food.id}: distance=${distance.toFixed(2)}, required=${requiredDistance.toFixed(2)}, head=(${head.x.toFixed(1)},${head.y.toFixed(1)}), food=(${food.x.toFixed(1)},${food.y.toFixed(1)})`);
+        
         const collision = this.mySnake.checkCollisionsWithFood(food);
         if (collision) {
           // The checkCollisionsWithFood method already calls eat() internally with the food's color
-          console.log(`[GAME ENGINE] Snake ate food at (${food.x.toFixed(1)}, ${food.y.toFixed(1)})`);
+          console.log(`[GAME ENGINE] ✅ Snake ate food at (${food.x.toFixed(1)}, ${food.y.toFixed(1)}) - Food ID: ${food.id}`);
+          console.log(`[GAME ENGINE] Player ID: ${socketClient.playerId}, Socket connected: ${socketClient.isConnected}`);
 
           // Remove the food from local store immediately
           store.removeFood(food.id);
+          console.log(`[GAME ENGINE] Food ${food.id} removed from local store`);
 
           // Notify server about food consumption
           try {
-            console.log(`[GAME ENGINE] Sending food eaten event to server for food ID: ${food.id}`);
+            console.log(`[GAME ENGINE] 📤 Sending food eaten event to server for food ID: ${food.id}`);
             socketClient.sendFoodEaten(food.id);
+            console.log(`[GAME ENGINE] ✅ Food eaten event sent successfully`);
           } catch (error) {
-            console.warn('Failed to send food eaten event:', error);
+            console.error('❌ Failed to send food eaten event:', error);
           }
           break; // Exit loop after eating one food
         }

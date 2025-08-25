@@ -1348,10 +1348,12 @@ function updateBots() {
     (p) => !p.isBot && p.alive
   );
 
-  // If no human players, don't update bots at all
-  if (humanPlayers.length === 0) {
-    return;
-  }
+  // Allow bots to update even without human players for testing and demonstration
+  // This ensures the game remains active and bots can eat food to test the scoring system
+  console.log(`[SERVER] 🤖 Updating bots: ${humanPlayers.length} human players, ${Array.from(gameState.players.values()).filter(p => p.isBot && p.alive).length} active bots`);
+
+  // Original condition: if (humanPlayers.length === 0) { return; }
+  // Commented out to allow bot activity for testing
 
   // Iterate over all players and filter for bots
   gameState.players.forEach((player) => {
@@ -1705,7 +1707,10 @@ function updateBots() {
       const food = gameState.foods[i];
       if (isCollided(botHead, food)) {
         // Bot eats food - same logic as human players
+        const oldScore = player.score;
         player.score++;
+        performanceMetrics.foodEaten++; // Increment performance metrics counter
+        console.log(`[SERVER] 🤖 Bot ${player.id} ate food ${food.id}: Score ${oldScore} -> ${player.score} (performance metric: ${performanceMetrics.foodEaten})`);
 
         // Add new point to bot's body using bot's main color
         if (player.points.length > 0) {
@@ -1724,7 +1729,7 @@ function updateBots() {
         food.y = Math.random() * gameState.worldHeight;
         food.color = getRandomColor();
 
-        // console.log(`🍎 Bot ${player.id} ate food ${food.id}: regenerated from (${oldPos.x.toFixed(2)}, ${oldPos.y.toFixed(2)}) to (${food.x.toFixed(2)}, ${food.y.toFixed(2)})`);
+        console.log(`🍎 Bot ${player.id} ate food ${food.id}: regenerated from (${oldPos.x.toFixed(2)}, ${oldPos.y.toFixed(2)}) to (${food.x.toFixed(2)}, ${food.y.toFixed(2)})`);
 
         // Broadcast food regeneration to all players
         io.emit("foodRegenerated", food);
@@ -1993,11 +1998,19 @@ io.on("connection", (socket) => {
 
   // Handle food consumption
   socket.on("foodEaten", (data) => {
+    console.log(`[SERVER] 🍎 foodEaten event received:`, data);
     const { playerId, foodId } = data;
+    
+    console.log(`[SERVER] Looking for player: ${playerId}`);
     const player = gameState.players.get(playerId);
+    console.log(`[SERVER] Player found:`, player ? `${player.id} (bot: ${player.isBot}, alive: ${player.alive}, score: ${player.score})` : 'null');
+    
+    console.log(`[SERVER] Looking for food: ${foodId}`);
     const food = gameState.foods.find((f) => f.id === foodId);
+    console.log(`[SERVER] Food found:`, food ? `${food.id} at (${food.x.toFixed(2)}, ${food.y.toFixed(2)})` : 'null');
 
     if (player && food) {
+      console.log(`[SERVER] ✅ Processing food consumption for player ${playerId} eating food ${foodId}`);
       // Update player activity for server state management
       if (!player.isBot) {
         updatePlayerActivity();
@@ -2021,8 +2034,10 @@ io.on("connection", (socket) => {
         );
       }
 
+      const oldScore = player.score;
       player.score++;
       performanceMetrics.foodEaten++;
+      console.log(`[SERVER] 📈 Score updated: ${oldScore} -> ${player.score} (performance metric: ${performanceMetrics.foodEaten})`);
 
       const regeneratedFood = gameState.foods[foodIndex];
       console.log(
@@ -2036,21 +2051,35 @@ io.on("connection", (socket) => {
       // Score persistence now handled client-side
 
       // Broadcast food regeneration to all players
+      console.log(`[SERVER] 📤 Broadcasting foodRegenerated event`);
       io.emit("foodRegenerated", regeneratedFood);
 
       // Broadcast score update
-      io.emit("scoreUpdate", {
+      const scoreUpdateData = {
         playerId: playerId,
         score: Math.round(player.score * 10) / 10,
-      });
+      };
+      console.log(`[SERVER] 📤 Broadcasting scoreUpdate event:`, scoreUpdateData);
+      io.emit("scoreUpdate", scoreUpdateData);
 
       // Broadcast updated leaderboard
       const leaderboard = generateLeaderboard();
       const fullLeaderboard = generateFullLeaderboard();
+      console.log(`[SERVER] 📤 Broadcasting leaderboardUpdate event (top 10: ${leaderboard.length}, full: ${fullLeaderboard.length})`);
       io.emit("leaderboardUpdate", {
         leaderboard: leaderboard,
         fullLeaderboard: fullLeaderboard,
       });
+    } else {
+      console.error(`[SERVER] ❌ Cannot process foodEaten: player=${player ? 'found' : 'NOT FOUND'}, food=${food ? 'found' : 'NOT FOUND'}`);
+      if (!player) {
+        console.error(`[SERVER] ❌ Player ${playerId} not found in gameState.players`);
+        console.log(`[SERVER] Current players:`, Array.from(gameState.players.keys()));
+      }
+      if (!food) {
+        console.error(`[SERVER] ❌ Food ${foodId} not found in gameState.foods`);
+        console.log(`[SERVER] Current foods count:`, gameState.foods.length);
+      }
     }
   });
 

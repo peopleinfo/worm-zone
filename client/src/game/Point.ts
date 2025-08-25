@@ -86,8 +86,8 @@ export async function getPooledFood(id: string, x: number, y: number, radius: nu
 
 export function releaseFood(food: any): void {
   if (foodPool.length < MAX_FOOD_POOL_SIZE) {
-    // Reset food properties to default state
-    food.id = '';
+    // Reset food properties to default state but preserve ID
+    // Don't reset ID as it should be managed by server
     food.x = 0;
     food.y = 0;
     food.radius = 5;

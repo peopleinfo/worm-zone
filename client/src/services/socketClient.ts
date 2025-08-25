@@ -154,9 +154,9 @@ class SocketClient {
         .map(p => this.convertServerPlayerToSnake(p));
       
       // Convert server foods to client foods
-      const foods = data.gameState.foods.map(f => {
-        const food = new Food(f.id, f.x, f.y, f.radius, f.color);
-        return food;
+      const foods = data.gameState.foods.map((food: any) => {
+        console.log(`[SOCKET CLIENT] 🍎 Creating food from server data:`, food);
+        return new Food(food.id, food.x, food.y, food.radius, food.color);
       });
       
       store.updateOtherSnakes(otherSnakes);
@@ -210,11 +210,16 @@ class SocketClient {
         return;
       }
       
+      console.log(`[SOCKET CLIENT] 🍎 foodRegenerated received:`, food);
+      
       const updatedFoods = store.foods.map(f => {
         if (f.id === food.id) {
+          console.log(`[SOCKET CLIENT] 🔄 Updating food ${f.id} -> position: (${food.x}, ${food.y}), color: ${food.color}`);
           f.x = food.x;
           f.y = food.y;
           f.color = food.color;
+          // Note: ID should already match, but ensuring consistency
+          f.id = food.id;
         }
         return f;
       });
@@ -372,14 +377,17 @@ class SocketClient {
         store.updateFullLeaderboard(data.fullLeaderboard);
       }
       
-      // Update current player's rank and score
+      // Update current player's rank, but preserve the current score to avoid overriding scoreUpdate events
       if (currentPlayer) {
-        // console.log('📊 leaderboardUpdate - current player score:', currentPlayer.score, 'rank:', currentPlayer.rank);
+        console.log('📊 leaderboardUpdate - current player leaderboard score:', currentPlayer.score, 'current store score:', store.score, 'rank:', currentPlayer.rank);
+        
+        // Only update rank, don't override the score as it should be managed by scoreUpdate events
         store.setGameState({ 
-          rank: currentPlayer.rank,
-          score: currentPlayer.score
+          rank: currentPlayer.rank
+          // Removed score update to prevent overriding scoreUpdate events
         });
-        // console.log('📊 Updated store score from leaderboard:', store.score);
+        
+        console.log('📊 Updated rank from leaderboard, preserved score:', store.score);
       }
     });
 
@@ -439,16 +447,38 @@ class SocketClient {
 
   // Send food eaten event
   sendFoodEaten(foodId: string): void {
-    if (!this.socket || !this.isConnected || !this.playerId) return;
+    console.log(`[SOCKET CLIENT] 🍎 sendFoodEaten called with foodId: ${foodId}`);
+    console.log(`[SOCKET CLIENT] Socket status: connected=${this.socket?.connected}, isConnected=${this.isConnected}, playerId=${this.playerId}`);
+    
+    if (!this.socket) {
+      console.error('❌ [SOCKET CLIENT] Cannot send food eaten: socket is null');
+      return;
+    }
+    
+    if (!this.isConnected) {
+      console.error('❌ [SOCKET CLIENT] Cannot send food eaten: socket not connected');
+      return;
+    }
+    
+    if (!this.playerId) {
+      console.error('❌ [SOCKET CLIENT] Cannot send food eaten: no player ID');
+      return;
+    }
+    
+    const eventData = {
+      playerId: this.playerId,
+      foodId: foodId
+    };
+    
+    console.log(`[SOCKET CLIENT] 📤 Emitting foodEaten event with data:`, eventData);
     
     try {
-      this.socket.emit('foodEaten', {
-        playerId: this.playerId,
-        foodId: foodId
-      });
+      this.socket.emit('foodEaten', eventData);
+      console.log(`[SOCKET CLIENT] ✅ foodEaten event emitted successfully`);
     } catch (error) {
-      console.error('Error sending food eaten event:', error);
+      console.error('❌ [SOCKET CLIENT] Error sending food eaten event:', error);
       if (!this.socket?.connected) {
+        console.error('❌ [SOCKET CLIENT] Socket disconnected, updating connection status');
         this.isConnected = false;
       }
     }
