@@ -155,18 +155,14 @@ class SocketClient {
       
       // Convert server foods to client foods
       const foods = data.gameState.foods.map(f => {
-        const food = new Food(f.radius, data.gameState.worldWidth, data.gameState.worldHeight);
-        food.id = f.id;
-        food.x = f.x;
-        food.y = f.y;
-        food.color = f.color;
+        const food = new Food(f.id, f.x, f.y, f.radius, f.color);
         return food;
       });
       
       store.updateOtherSnakes(otherSnakes);
       store.updateFoods(foods);
       // Convert server deadPoints to client Point instances
-      const deadPoints = data.gameState.deadPoints.map((p: any) => new Point(p.x, p.y, p.radius, p.color));
+      const deadPoints = data.gameState.deadPoints.map((p: any) => Point.create(p.x, p.y, p.radius, p.color));
       store.addDeadPoints(deadPoints);
       store.setGameState({ 
         mode: 'multiplayer',
@@ -384,7 +380,7 @@ class SocketClient {
 
   private convertServerPlayerToSnake(player: ServerPlayer): Snake {
     const snake = new Snake(player.x, player.y, player.points.length, player.color, player.id);
-    snake.points = player.points.map(p => new Point(p.x, p.y, p.radius, p.color));
+    snake.points = player.points.map(p => Point.create(p.x, p.y, p.radius, p.color));
     snake.angle = player.angle;
     snake.radius = player.radius;
     snake.speed = player.speed;

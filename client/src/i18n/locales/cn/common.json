@@ -63,5 +63,10 @@
     "benefit1": "保存游戏进度",
     "benefit2": "个性化资料",
     "benefit3": "与朋友连接"
+  },
+  "errorBoundary": {
+    "title": "出现了问题",
+    "description": "渲染此组件时发生错误。",
+    "tryAgain": "重试"
   }
 }

@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
+import { withTranslation } from 'react-i18next';
+import type { WithTranslation } from 'react-i18next';
 
-interface Props {
+interface Props extends WithTranslation {
   children: ReactNode;
   fallback?: ReactNode;
 }
@@ -11,7 +13,7 @@ interface State {
   error?: Error;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundaryComponent extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
@@ -33,13 +35,13 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         this.props.fallback || (
           <div className="error-boundary">
-            <h2>Something went wrong</h2>
-            <p>An error occurred while rendering this component.</p>
+            <h2>{this.props.t('common:errorBoundary.title')}</h2>
+            <p>{this.props.t('common:errorBoundary.message')}</p>
             <button 
               onClick={() => this.setState({ hasError: false, error: undefined })}
               className="retry-button"
             >
-              Try Again
+              {this.props.t('common:errorBoundary.tryAgain')}
             </button>
           </div>
         )
@@ -49,6 +51,9 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
+// Export the translated ErrorBoundary
+export const ErrorBoundary = withTranslation()(ErrorBoundaryComponent);
 
 // Functional component wrapper for easier usage
 export const withErrorBoundary = <P extends object>(

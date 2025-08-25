@@ -86,5 +86,10 @@
     "backgroundMusic": "Background Music",
     "mute": "Mute",
     "unmute": "Unmute"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "description": "An error occurred while rendering this component.",
+    "tryAgain": "Try Again"
   }
 }

@@ -36,9 +36,9 @@ export class Snake implements SnakeInterface {
   ) {
     this.id = id;
     this.radius = 4;
-    this.speed = 1.0;
-    this.turningSpeed = 7;
-    this.baseSpeed = 1.0; // Base speed for platform consistency
+    this.speed = 0.6;
+    this.turningSpeed = 6;
+    this.baseSpeed = 0.4; // Base speed for platform consistency
     this.points = [new Point(x, y, this.radius, color)];
     this.velocity = { x: 1, y: 0 };
     this.overPos = { x: 0, y: 0 };
@@ -49,7 +49,7 @@ export class Snake implements SnakeInterface {
     this.isAlive = true;
 
     for (let i = 1; i < length; i++) {
-      this.points.push(new Point(INFINITY, INFINITY, this.radius, getRandomColor()));
+      this.points.push(new Point(INFINITY, INFINITY, this.radius, color));
     }
   }
 
@@ -127,7 +127,7 @@ export class Snake implements SnakeInterface {
   private getPlatformSpeedMultiplier(): number {
     // Detect platform and apply consistent speed multipliers
     const userAgent = navigator.userAgent.toLowerCase();
-    
+
     if (/iphone|ipad|ipod/.test(userAgent)) {
       return 1.0; // iOS baseline
     } else if (/android/.test(userAgent)) {
@@ -155,22 +155,22 @@ export class Snake implements SnakeInterface {
     const head = this.getHead();
     // Create a temporary Point object for collision detection if target is not a Point
     const targetPoint = target instanceof Point ? target : new Point(target.x, target.y, target.radius, target.color);
-    
+
     // Calculate distance for debugging
     const distance = Math.hypot(head.x - targetPoint.x, head.y - targetPoint.y);
     const requiredDistance = head.radius + targetPoint.radius;
-    
+
     // Enhanced collision detection with tolerance for better reliability
     const collisionTolerance = 2; // Add 2 pixels tolerance for better collision detection
     const enhancedRequiredDistance = requiredDistance + collisionTolerance;
     const collisionDetected = distance <= enhancedRequiredDistance;
-    
+
     // Debug logging for collision detection
     // if (distance < requiredDistance + 8) { // Log near-misses too
     //   console.log(`[COLLISION DEBUG] Snake ${this.id.substring(0,6)} - Distance: ${distance.toFixed(2)}, Required: ${requiredDistance.toFixed(2)}, Enhanced: ${enhancedRequiredDistance.toFixed(2)}, Collision: ${collisionDetected}`);
     //   console.log(`[COLLISION DEBUG] Head: (${head.x.toFixed(1)}, ${head.y.toFixed(1)}, r:${head.radius}) Food: (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}, r:${targetPoint.radius})`);
     // }
-    
+
     if (collisionDetected) {
       // console.log(`[FOOD EATEN] Snake ${this.id.substring(0,6)} ate food at (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}) - Distance: ${distance.toFixed(2)}`);
       this.eat(target.color);
@@ -184,7 +184,7 @@ export class Snake implements SnakeInterface {
 
     const head = this.getHead();
     const collided = snake.points.find(p => isCollided(head, p));
-    
+
     if (collided) {
       const points = this.points.length; // Points to award to the other snake
       this.over();
@@ -195,7 +195,7 @@ export class Snake implements SnakeInterface {
 
   checkCollisionsWithBoundary(worldWidth: number, worldHeight: number): boolean {
     if (!this.isAlive) return false;
-    
+
     const head = this.getHead();
 
     if (
@@ -212,19 +212,19 @@ export class Snake implements SnakeInterface {
 
   over(): void {
     if (this.points.length === 0 || !this.isAlive) return;
-    
+
     this.isAlive = false;
     const finalScore = this.points.length;
-    
+
     const latestDeadPoints = this.points.map(p => new Point(p.x, p.y, defRad, getRandomColor()));
     Snake.deadPoints.push(...latestDeadPoints);
 
     const head = this.getHead();
     this.overPos.x = head.x;
     this.overPos.y = head.y;
-    
+
     this.points.length = 0;
-    
+
     this.finalScore = finalScore;
   }
 
@@ -233,17 +233,18 @@ export class Snake implements SnakeInterface {
 
     // Draw body segments with overlap to create continuous appearance
     // Use smaller increment to ensure segments overlap and connect seamlessly
-    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.6)); // 60% of radius for overlap
-    
+    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.7)); // 70% of radius for tighter, more compact segments
+
     for (let i = 0; i < this.points.length; i += segmentSpacing) {
-      this.points[i].draw(ctx, '', this.radius);
+      this.points[i].draw(ctx);
     }
-    
+
     // Always draw the last segment to ensure tail is visible
     if (this.points.length > 1) {
       const lastIndex = this.points.length - 1;
       if (lastIndex % segmentSpacing !== 0) {
-        this.points[lastIndex].draw(ctx, '', this.radius);
+        // this.points[lastIndex].draw(ctx, '', this.radius);
+        this.points[lastIndex].draw(ctx);
       }
     }
 

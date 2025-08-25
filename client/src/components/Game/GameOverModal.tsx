@@ -1,9 +1,12 @@
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useGameStore } from "../../stores/gameStore";
 import { useAuthStore } from "../../stores/authStore";
 
 export const GameOverModal = React.memo(() => {
+  const { t } = useTranslation();
+  
   // Use selective subscriptions to minimize re-renders
   const isGameOver = useGameStore((state) => state.isGameOver);
   const score = useGameStore((state) => state.finalScore);
@@ -42,7 +45,7 @@ export const GameOverModal = React.memo(() => {
     <div className="settings-modal">
       {/* Modal Header */}
       <div className="modal-header">
-        <h2 className="modal-title">Game Over!</h2>
+        <h2 className="modal-title">{t('game:gameOver.title')}</h2>
         <button className="close-button" onClick={handleClose}>
           <X size={24} />
         </button>
@@ -61,7 +64,7 @@ export const GameOverModal = React.memo(() => {
                 justifyContent: "center",
               }}
             >
-              <span className="stat-label">Current Score:</span>
+              <span className="stat-label">{t('game:gameOver.currentScore')}</span>
               <span className="stat-value">{score}</span>
             </div>
           </div>
@@ -79,9 +82,9 @@ export const GameOverModal = React.memo(() => {
                   textAlign: "left",
                 }}
               >
-                <span className="stat-label">Best Score:</span>
+                <span className="stat-label">{t('game:gameOver.bestScore')}</span>
                 <div className="stat-value highlight">
-                  {isLoadingScores ? "Loading..." : userHighestScore}
+                  {isLoadingScores ? t('game:gameOver.loading') : userHighestScore}
                 </div>
               </div>
             </div>
@@ -98,14 +101,14 @@ export const GameOverModal = React.memo(() => {
                   textAlign: "left",
                 }}
               >
-                <span className="stat-label">Ranking:</span>
+                <span className="stat-label">{t('game:gameOver.ranking')}</span>
                 <div className="stat-value">#{rank}</div>
               </div>
             </div>
           </div>
           {isNewRecord && (
             <div className="new-record">
-              🎉 New Record! +{scoreUpdateData?.scoreChange} points! 🎉
+              🎉 {t('game:gameOver.newRecord', { points: scoreUpdateData?.scoreChange })} 🎉
             </div>
           )}
         </div>

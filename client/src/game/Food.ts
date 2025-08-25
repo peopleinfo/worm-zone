@@ -1,21 +1,24 @@
-import type { Food as FoodInterface } from '../types/game';
-import { getRandomColor, getRandX, getRandY, defRad, lerp } from '../utils/gameUtils';
+import { getRandomColor, getRandX, getRandY, lerp } from '../utils/gameUtils';
+import { Point } from './Point';
 
-export class Food implements FoodInterface {
-  static i = 0;
-  
+export class Food extends Point {
+  static i: number = 0;
   id: string;
-  x: number;
-  y: number;
-  radius: number;
-  color: string;
 
-  constructor(radius: number = defRad, canvasWidth: number = 800, canvasHeight: number = 600) {
-    this.x = getRandX(canvasWidth);
-    this.y = getRandY(canvasHeight);
-    this.radius = radius;
-    this.color = getRandomColor();
-    this.id = Math.random().toString(36).substr(2, 9);
+  constructor(id: string, x: number, y: number, radius: number, color: string) {
+    super(x, y, radius, color);
+    this.id = id;
+  }
+
+  // Override isInViewport to include food-specific logic if needed
+  isInViewport(viewX: number, viewY: number, viewWidth: number, viewHeight: number): boolean {
+    const margin = this.radius * 2; // Add some margin for smooth transitions
+    return (
+      this.x + margin >= viewX &&
+      this.x - margin <= viewX + viewWidth &&
+      this.y + margin >= viewY &&
+      this.y - margin <= viewY + viewHeight
+    );
   }
 
   regenerate(canvasWidth: number = 800, canvasHeight: number = 600): void {
@@ -30,85 +33,20 @@ export class Food implements FoodInterface {
   }
 
   draw(ctx: CanvasRenderingContext2D, color?: string): void {
-    // this.animate(); // Uncomment if animation is desired
+    // Optimized rendering for mobile performance - no shadows or gradients
     const drawColor = color || this.color;
     
-    // Save current context state
-    ctx.save();
-    
-    // Draw shadow
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
-    ctx.shadowBlur = 1;
-    ctx.shadowOffsetX = 1;
-    ctx.shadowOffsetY = 1;
-    
-    // Create radial gradient for food
-    const gradient = ctx.createRadialGradient(
-      this.x - this.radius * 0.2, 
-      this.y - this.radius * 0.2, 
-      0,
-      this.x, 
-      this.y, 
-      this.radius
-    );
-    
-    // Add gradient stops for a more appealing look
-    gradient.addColorStop(0, this.lightenColor(drawColor, 0.4));
-    gradient.addColorStop(0.7, drawColor);
-    gradient.addColorStop(1, this.darkenColor(drawColor, 0.3));
-    
-    // Draw main food circle with gradient
+    // Simple solid circle for better performance
+    ctx.fillStyle = drawColor;
     ctx.beginPath();
-    ctx.fillStyle = gradient;
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
     
-    // Reset shadow for border
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    
-    // Add glowing border
-    ctx.beginPath();
-    ctx.strokeStyle = this.lightenColor(drawColor, 0.3);
+    // Optional simple border for visibility
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.lineWidth = 1;
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.stroke();
-    
-    // Add inner highlight
-    ctx.beginPath();
-    ctx.fillStyle = `rgba(255, 255, 255, 0.3)`;
-    ctx.arc(this.x - this.radius * 0.3, this.y - this.radius * 0.3, this.radius * 0.3, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Restore context state
-    ctx.restore();
   }
   
-  private lightenColor(color: string, amount: number): string {
-    // Handle different color formats
-    if (color.startsWith('#')) {
-      const hex = color.replace('#', '');
-      const r = Math.min(255, parseInt(hex.substr(0, 2), 16) + Math.floor(255 * amount));
-      const g = Math.min(255, parseInt(hex.substr(2, 2), 16) + Math.floor(255 * amount));
-      const b = Math.min(255, parseInt(hex.substr(4, 2), 16) + Math.floor(255 * amount));
-      return `rgb(${r}, ${g}, ${b})`;
-    }
-    // For named colors or other formats, return a lighter version
-    return `rgba(255, 255, 255, ${0.3 + amount})`;
-  }
-  
-  private darkenColor(color: string, amount: number): string {
-    // Handle different color formats
-    if (color.startsWith('#')) {
-      const hex = color.replace('#', '');
-      const r = Math.max(0, parseInt(hex.substr(0, 2), 16) - Math.floor(255 * amount));
-      const g = Math.max(0, parseInt(hex.substr(2, 2), 16) - Math.floor(255 * amount));
-      const b = Math.max(0, parseInt(hex.substr(4, 2), 16) - Math.floor(255 * amount));
-      return `rgb(${r}, ${g}, ${b})`;
-    }
-    // For named colors or other formats, return a darker version
-    return `rgba(0, 0, 0, ${0.2 + amount})`;
-  }
+  // Removed unused color manipulation methods for performance
 }

@@ -52,5 +52,47 @@
   "audio": {
     "muteMusic": "静音音乐",
     "unmuteMusic": "取消静音音乐"
+  },
+  "quit": {
+    "button": "退出游戏",
+    "title": "你想要退出这场比赛吗？",
+    "description": "你将失去这场比赛的所有奖励",
+    "confirm": "退出"
+  },
+  "battle": {
+    "connecting": "连接中...",
+    "startingIn": "{{count}}秒后开始...",
+    "battleButton": "战斗！",
+    "howToPlay": "游戏说明",
+    "connectionFailed": "错误：连接失败",
+    "getReady": "准备好！"
+  },
+  "gameOver": {
+    "title": "游戏结束！",
+    "currentScore": "当前得分：",
+    "bestScore": "最佳得分：",
+    "ranking": "排名：",
+    "newRecord": "新纪录！+{{points}} 分！",
+    "loading": "加载中..."
+  },
+  "howToPlay": {
+    "title": "游戏说明",
+    "gameObjective": "游戏目标和控制",
+    "scoringSystem": "计分系统",
+    "deathRestart": "死亡和重新开始",
+    "rules": {
+      "playWithFriends": "与朋友在同一场比赛中游戏",
+      "controlWorm": "控制你的蠕虫吃食物并变得更长",
+      "useControls": "使用触摸控制或方向键移动",
+      "avoidHitting": "避免撞到其他蠕虫或墙壁",
+      "becomeLongest": "成为最长的蠕虫来统治竞技场！",
+      "eatFood": "吃食物来增加你的得分和长度",
+      "largerWorms": "较大的蠕虫被消灭时给予更多分数",
+      "competeScore": "在排行榜上争夺最高分",
+      "bestScoreSaved": "每次游戏结束时都会保存你的最佳得分",
+      "gameEnds": "当你撞到另一条蠕虫或墙壁时游戏结束",
+      "viewScore": "在游戏结束模态框中查看你的得分和最高分",
+      "scoreResets": "重新开始时你的得分重置为零"
+    }
   }
 }

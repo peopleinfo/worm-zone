@@ -1,5 +1,5 @@
-export const MINI_MAP_WIDTH = 150;
-export const MINI_MAP_HEIGHT = 100;
-export const WORLD_WIDTH = 1500;
-export const WORLD_HEIGHT = 1000;
-export const MAP_ZOOM_LEVEL = 4;
+export const MINI_MAP_WIDTH = 110;
+export const MINI_MAP_HEIGHT = 80;
+export const WORLD_WIDTH = 1200;
+export const WORLD_HEIGHT = 800;
+export const MAP_ZOOM_LEVEL = 3.5;
