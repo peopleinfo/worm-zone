@@ -70,7 +70,7 @@ body {
   left: 0;
   overflow: hidden;
   background: var(--color-dark);
-  background-image: url("/bg.png");
+  background-image: url("/bg-black.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
