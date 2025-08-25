@@ -585,7 +585,7 @@ function getSpawnZones() {
 }
 
 // Check if position is safe (no collision with existing worms) - enhanced safety checks
-function isPositionSafe(x, y, radius, minDistance = 150) {
+function isPositionSafe(x, y, radius, minDistance = 200) {
   const alivePlayers = Array.from(gameState.players.values()).filter(
     (p) => p.alive
   );
@@ -597,8 +597,8 @@ function isPositionSafe(x, y, radius, minDistance = 150) {
     } alive players, minDistance: ${minDistance}px`
   );
 
-  // Check boundaries with extra buffer
-  const boundaryBuffer = 50;
+  // Check boundaries with increased buffer for better safety
+  const boundaryBuffer = 80;
   if (
     x < boundaryBuffer ||
     x > gameState.worldWidth - boundaryBuffer ||
@@ -642,7 +642,7 @@ function isPositionSafe(x, y, radius, minDistance = 150) {
   // Check distance from dead points to avoid spawning on food
   for (const deadPoint of gameState.deadPoints) {
     const deadDistance = Math.hypot(x - deadPoint.x, y - deadPoint.y);
-    if (deadDistance < 30 + radius) {
+    if (deadDistance < 40 + radius) {
       console.log(
         `❌ DEBUG: Position unsafe - too close to dead point (distance: ${deadDistance.toFixed(
           2
@@ -652,8 +652,53 @@ function isPositionSafe(x, y, radius, minDistance = 150) {
     }
   }
 
+  // Check distance from food to avoid spawning in food clusters
+  let nearbyFoodCount = 0;
+  for (const food of gameState.foods) {
+    const foodDistance = Math.hypot(x - food.x, y - food.y);
+    if (foodDistance < 60) {
+      nearbyFoodCount++;
+      if (nearbyFoodCount >= 3) {
+        console.log(
+          `❌ DEBUG: Position unsafe - too many nearby foods (${nearbyFoodCount})`
+        );
+        return false;
+      }
+    }
+  }
+
+  // Additional safety check: ensure spawn direction is clear
+  const testAngles = [0, Math.PI/2, Math.PI, 3*Math.PI/2];
+  let clearDirections = 0;
+  for (const angle of testAngles) {
+    const testDistance = 100;
+    const testX = x + Math.cos(angle) * testDistance;
+    const testY = y + Math.sin(angle) * testDistance;
+    
+    if (testX >= boundaryBuffer && testX <= gameState.worldWidth - boundaryBuffer &&
+        testY >= boundaryBuffer && testY <= gameState.worldHeight - boundaryBuffer) {
+      let directionClear = true;
+      for (const [playerId, player] of gameState.players.entries()) {
+        if (!player.alive) continue;
+        const distToPlayer = Math.hypot(testX - player.x, testY - player.y);
+        if (distToPlayer < minDistance * 0.7) {
+          directionClear = false;
+          break;
+        }
+      }
+      if (directionClear) clearDirections++;
+    }
+  }
+  
+  if (clearDirections < 2) {
+    console.log(
+      `❌ DEBUG: Position unsafe - insufficient clear directions (${clearDirections}/4)`
+    );
+    return false;
+  }
+
   console.log(
-    `✅ DEBUG: Position is safe at (${x.toFixed(2)}, ${y.toFixed(2)})`
+    `✅ DEBUG: Position is safe at (${x.toFixed(2)}, ${y.toFixed(2)}) with ${clearDirections} clear directions`
   );
   return true;
 }
@@ -662,8 +707,9 @@ function isPositionSafe(x, y, radius, minDistance = 150) {
 function findSafeSpawnPosition(radius) {
   console.log(`🎯 DEBUG: Finding safe spawn position for radius ${radius}`);
   const spawnZones = getSpawnZones();
-  const maxZoneAttempts = 30; // Reduced per-zone attempts
-  const maxFallbackAttempts = 100; // Increased fallback attempts
+  const maxZoneAttempts = 50; // Increased per-zone attempts for better success rate
+  const maxFallbackAttempts = 150; // Further increased fallback attempts
+  const maxRetries = 3; // Multiple retry attempts with different strategies
 
   // Prioritize zones with fewer nearby players for better distribution
   const zonesWithPlayerCount = spawnZones.map((zone) => {
@@ -748,40 +794,65 @@ function findSafeSpawnPosition(radius) {
   }
 
   console.log(
-    `🚨 DEBUG: Enhanced fallback failed, using emergency scatter spawn`
+    `🚨 DEBUG: Enhanced fallback failed, trying emergency strategies`
   );
-  // Emergency scatter spawn: find the most isolated position possible
-  let bestPosition = null;
-  let maxMinDistance = 0;
+  
+  // Strategy 1: Emergency scatter spawn with relaxed safety requirements
+  for (let retry = 0; retry < maxRetries; retry++) {
+    console.log(`🔄 DEBUG: Emergency retry ${retry + 1}/${maxRetries}`);
+    let bestPosition = null;
+    let maxMinDistance = 0;
+    const relaxedMinDistance = Math.max(50, 150 - (retry * 30)); // Gradually relax requirements
 
-  for (let attempt = 0; attempt < 50; attempt++) {
-    const margin = 100;
-    const x = margin + Math.random() * (gameState.worldWidth - 2 * margin);
-    const y = margin + Math.random() * (gameState.worldHeight - 2 * margin);
+    for (let attempt = 0; attempt < 75; attempt++) {
+      const margin = 120 - (retry * 20); // Gradually reduce margin
+      const x = margin + Math.random() * (gameState.worldWidth - 2 * margin);
+      const y = margin + Math.random() * (gameState.worldHeight - 2 * margin);
 
-    // Find minimum distance to any existing player
-    let minDistance = Infinity;
-    for (const player of gameState.players.values()) {
-      if (!player.alive) continue;
-      const distance = Math.hypot(x - player.x, y - player.y);
-      minDistance = Math.min(minDistance, distance);
+      // Find minimum distance to any existing player
+      let minDistance = Infinity;
+      for (const player of gameState.players.values()) {
+        if (!player.alive) continue;
+        const distance = Math.hypot(x - player.x, y - player.y);
+        minDistance = Math.min(minDistance, distance);
+      }
+
+      if (minDistance > maxMinDistance && minDistance >= relaxedMinDistance) {
+        maxMinDistance = minDistance;
+        bestPosition = { x, y };
+      }
     }
 
-    if (minDistance > maxMinDistance) {
-      maxMinDistance = minDistance;
-      bestPosition = { x, y };
+    if (bestPosition && isPositionSafe(bestPosition.x, bestPosition.y, radius, relaxedMinDistance)) {
+      console.log(
+        `🚨 DEBUG: Found emergency position at (${bestPosition.x.toFixed(
+          2
+        )}, ${bestPosition.y.toFixed(
+          2
+        )}) with min distance ${maxMinDistance.toFixed(2)} on retry ${retry + 1}`
+      );
+      return bestPosition;
     }
   }
-
-  if (bestPosition) {
-    console.log(
-      `🚨 DEBUG: Using emergency scatter position at (${bestPosition.x.toFixed(
-        2
-      )}, ${bestPosition.y.toFixed(
-        2
-      )}) with min distance ${maxMinDistance.toFixed(2)}`
-    );
-    return bestPosition;
+  
+  // Strategy 2: Grid-based systematic search
+  console.log(`🔍 DEBUG: Trying systematic grid search`);
+  const gridSize = 8;
+  const stepX = (gameState.worldWidth - 200) / gridSize;
+  const stepY = (gameState.worldHeight - 200) / gridSize;
+  
+  for (let gx = 0; gx < gridSize; gx++) {
+    for (let gy = 0; gy < gridSize; gy++) {
+      const x = 100 + gx * stepX + Math.random() * stepX * 0.5;
+      const y = 100 + gy * stepY + Math.random() * stepY * 0.5;
+      
+      if (isPositionSafe(x, y, radius, 80)) {
+        console.log(
+          `🔍 DEBUG: Found grid position at (${x.toFixed(2)}, ${y.toFixed(2)})`
+        );
+        return { x, y };
+      }
+    }
   }
 
   console.log(`🚨 DEBUG: All methods failed, using safe edge position`);
@@ -816,7 +887,8 @@ function findSafeSpawnPosition(radius) {
 
 // Calculate safe spawn direction that avoids borders and obstacles
 function calculateSafeSpawnDirection(x, y, radius) {
-  const borderBuffer = 200; // Distance to avoid from borders
+  const borderBuffer = 250; // Increased distance to avoid from borders
+  const playerAvoidanceRadius = 180; // Distance to avoid other players
   const mapCenterX = gameState.worldWidth / 2;
   const mapCenterY = gameState.worldHeight / 2;
 
@@ -847,20 +919,31 @@ function calculateSafeSpawnDirection(x, y, radius) {
     return angleToCenter + randomOffset;
   }
 
-  // Generate safe angle ranges avoiding problematic borders
-  for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
-    const testDistance = 150; // Distance to test in this direction
+  // Generate safe angle ranges avoiding problematic borders and players
+  for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 12) { // More precise angle testing
+    const testDistance = 200; // Increased distance to test in this direction
     const testX = x + Math.cos(angle) * testDistance;
     const testY = y + Math.sin(angle) * testDistance;
 
-    // Check if this direction leads to safe territory
+    // Check if this direction leads to safe territory (borders)
     const wouldHitBorder =
       testX < borderBuffer ||
       testX > gameState.worldWidth - borderBuffer ||
       testY < borderBuffer ||
       testY > gameState.worldHeight - borderBuffer;
 
-    if (!wouldHitBorder) {
+    // Check if this direction would lead too close to other players
+    let tooCloseToPlayer = false;
+    for (const player of gameState.players.values()) {
+      if (!player.alive) continue;
+      const playerDistance = Math.hypot(testX - player.x, testY - player.y);
+      if (playerDistance < playerAvoidanceRadius) {
+        tooCloseToPlayer = true;
+        break;
+      }
+    }
+
+    if (!wouldHitBorder && !tooCloseToPlayer) {
       safeAngles.push(angle);
     }
   }
@@ -937,6 +1020,10 @@ function createBot(id) {
     )} radians (${((safeAngle * 180) / Math.PI).toFixed(1)}°)`
   );
 
+  // Bot personality types for diverse behavior
+  const personalityTypes = ['explorer', 'hunter', 'wanderer'];
+  const personality = personalityTypes[Math.floor(Math.random() * personalityTypes.length)];
+  
   const bot = {
     id: id,
     socketId: null, // Bots don't have socket connections
@@ -953,7 +1040,20 @@ function createBot(id) {
     spawnProtection: true,
     spawnTime: Date.now(),
     lastDirectionChange: Date.now(), // Timer for straight movement preference
-    straightMovementDuration: 2000 + Math.random() * 1000, // 2-3 seconds of straight movement
+    straightMovementDuration: 4000 + Math.random() * 4000, // 4-8 seconds of straight movement
+    
+    // Enhanced bot properties for improved movement
+    personality: personality,
+    explorationRadius: 120 + Math.random() * 30, // 120-150 pixels
+    currentSector: null,
+    visitedSectors: new Set(),
+    lastSectorChange: Date.now(),
+    movementPattern: 'straight',
+    patternStartTime: Date.now(),
+    patternDuration: 3000 + Math.random() * 2000,
+    momentum: { x: 0, y: 0 },
+    wanderTarget: null,
+    lastWanderTime: Date.now()
   };
 
   console.log(
@@ -1438,48 +1538,69 @@ function updateBots() {
       player.stuckCounter = 0;
     }
 
-    // Enhanced AI movement - seek nearby food and dead points
+    // Enhanced AI movement with personality-based behavior
     let targetFound = false;
     let targetAngle = player.angle;
-    const seekRadius = 60; // Distance within which bot will seek targets
-
-    // Find nearest dead point within seek radius
+    const seekRadius = player.explorationRadius; // Use bot's individual exploration radius (120-150)
+    
+    // Update current sector for sector-based exploration
+    const sectorsPerRow = 4;
+    const sectorWidth = gameState.worldWidth / sectorsPerRow;
+    const sectorHeight = gameState.worldHeight / sectorsPerRow;
+    const currentSectorX = Math.floor(player.x / sectorWidth);
+    const currentSectorY = Math.floor(player.y / sectorHeight);
+    const currentSector = `${currentSectorX}-${currentSectorY}`;
+    
+    if (player.currentSector !== currentSector) {
+      player.currentSector = currentSector;
+      player.visitedSectors.add(currentSector);
+      player.lastSectorChange = Date.now();
+    }
+    
+    // Personality-based target seeking
     let nearestDeadPoint = null;
     let nearestDeadDistance = Infinity;
-
-    for (const deadPoint of gameState.deadPoints) {
-      const distance = Math.hypot(
-        deadPoint.x - player.x,
-        deadPoint.y - player.y
-      );
-      if (distance < seekRadius && distance < nearestDeadDistance) {
-        nearestDeadPoint = deadPoint;
-        nearestDeadDistance = distance;
-      }
-    }
-
-    // Find nearest food within seek radius
     let nearestFood = null;
     let nearestFoodDistance = Infinity;
-
-    for (const food of gameState.foods) {
-      const distance = Math.hypot(food.x - player.x, food.y - player.y);
-      if (distance < seekRadius && distance < nearestFoodDistance) {
-        nearestFood = food;
-        nearestFoodDistance = distance;
+    
+    // Reduce food-seeking frequency based on personality
+    const seekingChance = player.personality === 'hunter' ? 0.8 : 
+                         player.personality === 'explorer' ? 0.3 : 0.5;
+    
+    if (Math.random() < seekingChance) {
+      // Find nearest dead point within seek radius
+      for (const deadPoint of gameState.deadPoints) {
+        const distance = Math.hypot(
+          deadPoint.x - player.x,
+          deadPoint.y - player.y
+        );
+        if (distance < seekRadius && distance < nearestDeadDistance) {
+          nearestDeadPoint = deadPoint;
+          nearestDeadDistance = distance;
+        }
+      }
+      
+      // Find nearest food within seek radius
+      for (const food of gameState.foods) {
+        const distance = Math.hypot(food.x - player.x, food.y - player.y);
+        if (distance < seekRadius && distance < nearestFoodDistance) {
+          nearestFood = food;
+          nearestFoodDistance = distance;
+        }
       }
     }
-
-    // Prioritize dead points over regular food (more valuable)
-    if (nearestDeadPoint && nearestDeadDistance < 50) {
-      // Steer towards nearest dead point
+    
+    // Personality-based target prioritization
+    const deadPointThreshold = player.personality === 'hunter' ? 80 : 50;
+    const foodThreshold = player.personality === 'hunter' ? 60 : 40;
+    
+    if (nearestDeadPoint && nearestDeadDistance < deadPointThreshold) {
       targetAngle = Math.atan2(
         nearestDeadPoint.y - player.y,
         nearestDeadPoint.x - player.x
       );
       targetFound = true;
-    } else if (nearestFood && nearestFoodDistance < 40) {
-      // Steer towards nearest food if no close dead points
+    } else if (nearestFood && nearestFoodDistance < foodThreshold) {
       targetAngle = Math.atan2(
         nearestFood.y - player.y,
         nearestFood.x - player.x
@@ -1502,75 +1623,104 @@ function updateBots() {
         player.angle = targetAngle;
       }
     } else if (!boundaryAvoidanceApplied) {
-      // Enhanced random movement and exploration behavior (only if not avoiding boundaries)
+      // Enhanced movement patterns with personality-based behavior
       const currentTime = Date.now();
-
-      // Force exploration if stuck - much longer interval for extended straight movements
-      if (isStuck || currentTime - player.lastExploreTime > 20000) {
-        // Major direction change for exploration - limited angle change
-        const maxAngleChange = Math.PI * 0.6; // Reduced from 1.2 to 0.6
-        player.angle += (Math.random() - 0.5) * maxAngleChange;
-        player.lastExploreTime = currentTime;
-        player.stuckCounter = 0;
-
-        // Set longer straight movement duration after exploration
-        player.lastDirectionChange = currentTime;
-        player.straightMovementDuration = 5000 + Math.random() * 3000; // 5-8 seconds
-      } else {
-        // Check if bot should continue moving straight - much longer durations
-        const timeSinceLastChange =
-          currentTime - (player.lastDirectionChange || currentTime);
-        const shouldMovestraight =
-          timeSinceLastChange < (player.straightMovementDuration || 5000);
-
-        // Much reduced random movement frequency for longer straight paths
-        if (!shouldMovestraight && Math.random() < 0.001) {
-          // Very infrequent random movement for human-like behavior
-          // Simplified movement patterns with limited angle changes
-          const movementType = Math.random();
-          const maxAngleChange = Math.PI * 0.15; // Much smaller maximum angle change
-
-          if (movementType < 0.7) {
-            // Small adjustment - very limited angle
-            player.angle += (Math.random() - 0.5) * 0.1;
-          } else {
-            // Medium turn - still limited
+      
+      // Update movement pattern based on duration
+      if (currentTime - player.patternStartTime > player.patternDuration) {
+        const patterns = ['straight', 'spiral', 'zigzag', 'wander'];
+        const personalityWeights = {
+          explorer: [0.3, 0.2, 0.2, 0.3],
+          hunter: [0.5, 0.1, 0.2, 0.2],
+          wanderer: [0.2, 0.3, 0.2, 0.3]
+        };
+        
+        const weights = personalityWeights[player.personality] || [0.25, 0.25, 0.25, 0.25];
+        const rand = Math.random();
+        let cumulative = 0;
+        
+        for (let i = 0; i < patterns.length; i++) {
+          cumulative += weights[i];
+          if (rand < cumulative) {
+            player.movementPattern = patterns[i];
+            break;
+          }
+        }
+        
+        player.patternStartTime = currentTime;
+        player.patternDuration = 3000 + Math.random() * 4000; // 3-7 seconds
+      }
+      
+      // Long-distance wandering for explorers
+      if (player.personality === 'explorer' && (!player.wanderTarget || 
+          Math.hypot(player.x - player.wanderTarget.x, player.y - player.wanderTarget.y) < 50)) {
+        // Set new wander target in unexplored or less visited sectors
+        const unvisitedSectors = [];
+        for (let x = 0; x < 4; x++) {
+          for (let y = 0; y < 4; y++) {
+            const sector = `${x}-${y}`;
+            if (!player.visitedSectors.has(sector)) {
+              unvisitedSectors.push({x: x * sectorWidth + sectorWidth/2, y: y * sectorHeight + sectorHeight/2});
+            }
+          }
+        }
+        
+        if (unvisitedSectors.length > 0) {
+          player.wanderTarget = unvisitedSectors[Math.floor(Math.random() * unvisitedSectors.length)];
+        } else {
+          // All sectors visited, pick random distant point
+          player.wanderTarget = {
+            x: Math.random() * gameState.worldWidth,
+            y: Math.random() * gameState.worldHeight
+          };
+        }
+      }
+      
+      // Apply movement pattern
+      switch (player.movementPattern) {
+        case 'spiral':
+          const spiralTime = (currentTime - player.patternStartTime) / 1000;
+          player.angle += 0.1 + Math.sin(spiralTime) * 0.05;
+          break;
+          
+        case 'zigzag':
+          if (currentTime - player.lastDirectionChange > 1000) {
+            player.angle += (Math.random() - 0.5) * Math.PI * 0.5;
+            player.lastDirectionChange = currentTime;
+          }
+          break;
+          
+        case 'wander':
+          if (player.wanderTarget) {
+            const wanderAngle = Math.atan2(
+              player.wanderTarget.y - player.y,
+              player.wanderTarget.x - player.x
+            );
+            let angleDiff = wanderAngle - player.angle;
+            while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+            while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+            
+            player.angle += Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), 0.05);
+          }
+          break;
+          
+        default: // straight
+          // Force exploration if stuck or haven't explored for long
+          if (isStuck || currentTime - player.lastExploreTime > 15000) {
+            const maxAngleChange = Math.PI * 0.8;
             player.angle += (Math.random() - 0.5) * maxAngleChange;
+            player.lastExploreTime = currentTime;
+            player.stuckCounter = 0;
+            player.lastDirectionChange = currentTime;
+            player.straightMovementDuration = 6000 + Math.random() * 4000; // 6-10 seconds
+          } else {
+            // Infrequent small adjustments for natural movement
+            if (Math.random() < 0.002) {
+              player.angle += (Math.random() - 0.5) * 0.2;
+              player.lastDirectionChange = currentTime;
+              player.straightMovementDuration = 6000 + Math.random() * 4000;
+            }
           }
-
-          // Set longer straight movement duration after any direction change
-          player.lastDirectionChange = currentTime;
-          player.straightMovementDuration = 5000 + Math.random() * 3000; // 5-8 seconds
-        }
-
-        // Simplified area movement - much less frequent and smaller angle changes
-        if (!shouldMovestraight && Math.random() < 0.005) {
-          const distanceFromCenter = Math.hypot(
-            player.x - centerX,
-            player.y - centerY
-          );
-
-          // Gentler area-based movement with smaller angle variations
-          if (distanceFromCenter < gameState.worldWidth * 0.15) {
-            // Move away from center with limited angle change
-            const awayAngle = Math.atan2(
-              player.y - centerY,
-              player.x - centerX
-            );
-            player.angle = awayAngle + (Math.random() - 0.5) * Math.PI * 0.1;
-          } else if (distanceFromCenter > gameState.worldWidth * 0.45) {
-            // Move toward center area with limited angle change
-            const towardAngle = Math.atan2(
-              centerY - player.y,
-              centerX - player.x
-            );
-            player.angle = towardAngle + (Math.random() - 0.5) * Math.PI * 0.1;
-          }
-
-          // Set longer straight movement duration
-          player.lastDirectionChange = currentTime;
-          player.straightMovementDuration = 5000 + Math.random() * 3000; // 5-8 seconds
-        }
       }
     }
 
@@ -1618,9 +1768,9 @@ function updateBots() {
     player.x = newX;
     player.y = newY;
 
-    // Check spawn protection (3 seconds)
+    // Check spawn protection (5 seconds)
     const currentTime = Date.now();
-    const spawnProtectionDuration = 3000; // 3 seconds
+    const spawnProtectionDuration = 5000; // 5 seconds
     const hasSpawnProtection =
       player.spawnProtection &&
       currentTime - player.spawnTime < spawnProtectionDuration;
@@ -1944,9 +2094,9 @@ io.on("connection", (socket) => {
       player.y = data.y;
       player.points = data.points;
 
-      // Check and remove spawn protection after 3 seconds
+      // Check and remove spawn protection after 5 seconds
       const currentTime = Date.now();
-      const spawnProtectionDuration = 3000;
+      const spawnProtectionDuration = 5000;
       if (
         player.spawnProtection &&
         currentTime - player.spawnTime >= spawnProtectionDuration
@@ -2389,7 +2539,7 @@ function startBotIntervals() {
         gameState.players.forEach((player) => {
           if (player.isBot && player.alive) {
             const currentTime = Date.now();
-            const spawnProtectionDuration = 3000;
+            const spawnProtectionDuration = 5000;
             const hasSpawnProtection =
               player.spawnProtection &&
               currentTime - player.spawnTime < spawnProtectionDuration;
