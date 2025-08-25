@@ -5,7 +5,7 @@ import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
 import { MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH } from '../config/gameConfig';
 import { performanceManager } from '../utils/performanceUtils';
-import { CollisionDetector } from '../utils/spatialPartitioning';
+
 
 export class GameEngine {
   private canvas: HTMLCanvasElement;
@@ -27,17 +27,11 @@ export class GameEngine {
   private readonly WORLD_WIDTH: number = WORLD_WIDTH;
   private readonly WORLD_HEIGHT: number = WORLD_HEIGHT;
 
-  // Spatial partitioning for optimized collision detection
-  private collisionDetector: CollisionDetector;
+
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
-
-    // Initialize spatial partitioning system
-    const devicePerf = performanceManager.getDevicePerformance();
-    const gridSize = devicePerf.isMobile ? 150 : 100; // Larger grid cells on mobile for better performance
-    this.collisionDetector = new CollisionDetector(this.WORLD_WIDTH, this.WORLD_HEIGHT, gridSize);
 
     this.setupCanvas();
     this.initializeGame();
@@ -256,7 +250,7 @@ export class GameEngine {
         if (collision) {
           // The checkCollisionsWithFood method already calls eat() internally with the food's color
           console.log(`[GAME ENGINE] ✅ Snake ate food at (${food.x.toFixed(1)}, ${food.y.toFixed(1)}) - Food ID: ${food.id}`);
-          console.log(`[GAME ENGINE] Player ID: ${socketClient.playerId}, Socket connected: ${socketClient.isConnected}`);
+          console.log(`[GAME ENGINE] Player ID: ${socketClient.getPlayerId()}, Socket connected: ${socketClient.isSocketConnected()}`);
 
           // Remove the food from local store immediately
           store.removeFood(food.id);

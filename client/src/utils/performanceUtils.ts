@@ -7,6 +7,7 @@ export interface DevicePerformance {
   canvasScale: number;
   enableShadows: boolean;
   maxDeadPoints: number;
+  maxFoodItems: number;
   batteryLevel?: number;
   isCharging?: boolean;
   thermalState: 'normal' | 'warm' | 'hot' | 'critical';
@@ -45,7 +46,7 @@ export class PerformanceManager {
     const cores = navigator.hardwareConcurrency || 4;
 
     // Detect device tier based on available information
-    let tier: 'low' | 'medium' | 'high' = 'medium';
+    let tier: 'low' | 'medium' = 'medium';
 
     if (isMobile) {
       // Mobile device detection
@@ -54,7 +55,7 @@ export class PerformanceManager {
       } else if (deviceMemory <= 4 || cores <= 6) {
         tier = 'medium';
       } else {
-        tier = 'high';
+        tier = 'medium';
       }
 
       // iOS devices tend to have better performance optimization
@@ -63,7 +64,7 @@ export class PerformanceManager {
       }
     } else {
       // Desktop - generally higher performance
-      tier = 'high';
+      tier = 'medium';
     }
 
     return {
@@ -71,8 +72,9 @@ export class PerformanceManager {
       isMobile,
       targetFPS: this.getTargetFPS(tier, isMobile),
       canvasScale: this.getCanvasScale(tier),
-      enableShadows: tier === 'high' && !isMobile,
+      enableShadows: tier === 'medium' && !isMobile,
       maxDeadPoints: this.getMaxDeadPoints(tier),
+      maxFoodItems: this.getMaxFoodItems(tier),
       batteryLevel: undefined,
       isCharging: undefined,
       thermalState: 'normal'
@@ -105,6 +107,14 @@ export class PerformanceManager {
       case 'low': return 200;
       case 'medium': return 300;
       case 'high': return 350;
+    }
+  }
+
+  private getMaxFoodItems(tier: 'low' | 'medium' | 'high'): number {
+    switch (tier) {
+      case 'low': return 150;
+      case 'medium': return 200;
+      case 'high': return 250;
     }
   }
 
@@ -245,6 +255,7 @@ export class PerformanceManager {
         this.devicePerformance.canvasScale = 0.5;
         this.devicePerformance.enableShadows = false;
         this.devicePerformance.maxDeadPoints = Math.min(50, this.devicePerformance.maxDeadPoints);
+        this.devicePerformance.maxFoodItems = Math.min(100, this.devicePerformance.maxFoodItems);
         break;
     }
   }
