@@ -18,6 +18,7 @@ export class GameEngine {
   private lastCleanupTime: number = 0;
   private readonly CLEANUP_INTERVAL = 5000; // Clean up every 5 seconds
   private zoom: number = MAP_ZOOM_LEVEL;
+  private isTabVisible: boolean = true;
   
   // Dynamic frame rate limiting based on device performance
   private frameStartTime: number = 0;
@@ -31,6 +32,7 @@ export class GameEngine {
     this.ctx = canvas.getContext('2d')!;
     this.setupCanvas();
     this.initializeGame();
+    this.setupVisibilityHandler();
   }
 
   private setupCanvas(): void {
@@ -163,6 +165,25 @@ export class GameEngine {
     }
   }
 
+  private setupVisibilityHandler(): void {
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+  }
+
+  private handleVisibilityChange = (): void => {
+    if (document.hidden) {
+      // Page is hidden - only stop rendering to save resources
+      this.isTabVisible = false;
+      console.log('[GAME ENGINE] Tab hidden - continuing game logic but skipping rendering');
+    } else {
+      // Page is visible - resume rendering
+      this.isTabVisible = true;
+      // Reset timing variables to prevent time jumps
+      this.lastFrameTime = 0;
+      this.frameStartTime = 0;
+      console.log('[GAME ENGINE] Tab visible - resuming rendering');
+    }
+  };
+
   start(): void {
     if (!this.animationId) {
       this.gameLoop();
@@ -180,9 +201,11 @@ export class GameEngine {
     const now = performance.now();
     this.frameStartTime = now;
     
-    // Use performance manager to determine if we should skip this frame
-    if (!performanceManager.shouldSkipFrame(now)) {
-      this.update();
+    // Always update game logic to maintain multiplayer sync
+    this.update();
+    
+    // Only render if tab is visible and performance allows
+    if (this.isTabVisible && !performanceManager.shouldSkipFrame(now)) {
       this.render();
       
       // Track frame time for adaptive performance
