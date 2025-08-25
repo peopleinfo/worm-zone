@@ -100,7 +100,7 @@ export const TopPlayersModal: React.FC = () => {
                             src={player.avatarUrl}
                             alt={player.name}
                           />
-                          {player.name} {isCurrentUser && `(${t("common.you"), 'You'})`}
+                          {player.name}
                         </div>
                         <div className="player-score">
                           {player.score.toLocaleString()}
