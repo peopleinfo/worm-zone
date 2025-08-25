@@ -74,7 +74,10 @@ export const Leaderboard: React.FC = React.memo(() => {
                   isCurrentPlayer ? "current-player-name" : ""
                 }`}
               >
-                {player.name} {isCurrentPlayer && `(${(t("common.you"), "You")})`}
+                {player.name}{" "}
+                <span style={{ marginLeft: 10 }}>
+                  {isCurrentPlayer && `(${(t("common.you"), "You")})`}
+                </span>
               </span>
               <div className="player-score">
                 {/* <span className="score-icon">👤</span> */}
