@@ -2001,7 +2001,7 @@ io.on("connection", (socket) => {
       points: [],
       angle: safeAngle,
       radius: playerRadius,
-      speed: 0.7,
+      speed: 0.8,
       color: getRandomColor(),
       score: 0,
       alive: true,
