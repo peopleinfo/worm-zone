@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useGameStore } from "../../stores/gameStore";
 import type { LeaderboardPlayer } from "../../stores/gameStore";
 import { authService } from "../../services/authService";
+import { t } from "i18next";
 
 export const Leaderboard: React.FC = React.memo(() => {
   const leaderboard = useGameStore((state) => state.leaderboard);
@@ -44,7 +45,10 @@ export const Leaderboard: React.FC = React.memo(() => {
   }
 
   return (
-    <div className="leaderboard" style={{ left: marginTop?.statusBarHeight + 6 }}>
+    <div
+      className="leaderboard"
+      style={{ left: marginTop?.statusBarHeight + 6 }}
+    >
       <div className="playing-leaderboard-header">
         {/* <span className="playing-leaderboard-icon"></span> */}
         <span className="playing-leaderboard-title">
@@ -70,7 +74,10 @@ export const Leaderboard: React.FC = React.memo(() => {
                   isCurrentPlayer ? "current-player-name" : ""
                 }`}
               >
-                {player.name}
+                {player.name}{" "}
+                <span style={{ marginLeft: 10 }}>
+                  {isCurrentPlayer && `(${(t("common.you"), "You")})`}
+                </span>
               </span>
               <div className="player-score">
                 {/* <span className="score-icon">👤</span> */}
