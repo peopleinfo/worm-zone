@@ -7,7 +7,7 @@ export class Point {
   color: string;
   private static pool: Point[] = [];
   private static poolSize = 0;
-  private static readonly MAX_POOL_SIZE = 500;
+  private static readonly MAX_POOL_SIZE = 800;
 
   constructor(x: number = 0, y: number = 0, radius: number = 0, color: string = '') {
     this.x = x;

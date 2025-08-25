@@ -145,6 +145,17 @@ const performanceMetrics = {
   cpuUsage: 0,
   stateTransitions: 0,
   lastMetricsLog: Date.now(),
+  
+  // Enhanced pause/resume metrics
+  serverPauses: 0,
+  serverResumes: 0,
+  totalPausedTime: 0,
+  lastPauseStart: null,
+  resourcesSavedDuringPause: {
+    botUpdatesSkipped: 0,
+    intervalsCleared: 0,
+    memoryFreed: 0
+  },
 
   // Enhanced performance tracking
   botUpdates: 0,
@@ -175,6 +186,13 @@ let lastMemoryCleanup = Date.now();
 
 // Performance metrics interval
 let performanceMetricsInterval = null;
+
+// Cleanup interval
+let cleanupInterval = null;
+
+// Game stats and leaderboard intervals
+let gameStatsInterval = null;
+let leaderboardUpdateInterval = null;
 
 // ===== MEMORY MONITORING SYSTEM =====
 
@@ -373,6 +391,17 @@ function logPerformanceMetrics() {
         : 0
     }`
   );
+  
+  // Enhanced pause/resume metrics
+  console.log(`\n⏸️  PAUSE/RESUME OPTIMIZATION:`);
+  console.log(`  Server Pauses: ${performanceMetrics.serverPauses}`);
+  console.log(`  Server Resumes: ${performanceMetrics.serverResumes}`);
+  console.log(`  Total Paused Time: ${Math.round(performanceMetrics.totalPausedTime / 1000)}s`);
+  console.log(`  Pause Efficiency: ${uptimeMinutes > 0 ? Math.round((performanceMetrics.totalPausedTime / (uptime)) * 100) : 0}%`);
+  console.log(`  Current State: ${serverState}`);
+  if (performanceMetrics.lastPauseStart) {
+    console.log(`  Current Pause Duration: ${Math.round((Date.now() - performanceMetrics.lastPauseStart) / 1000)}s`);
+  }
 
   // Memory and cleanup metrics
   console.log(`\n🧹 CLEANUP & MEMORY:`);
@@ -1180,6 +1209,24 @@ function handleBotDeath(bot) {
 
 // ===== SERVER STATE MANAGEMENT FUNCTIONS =====
 
+// Global interval references for complete pause functionality
+// (Variables already declared above: gameStatsInterval, leaderboardUpdateInterval, performanceMetricsInterval, cleanupInterval)
+
+// Start the main active game loop
+function startActiveGameLoop() {
+  // The main game loop is handled by bot intervals and event-driven updates
+  // This function ensures all core game systems are active
+  console.log('🎮 GAME LOOP: Main game loop activated');
+  
+  // Game loop is primarily event-driven through:
+  // - Socket events (playerMoved, foodEaten, etc.)
+  // - Bot update intervals
+  // - Cleanup intervals
+  // - Performance monitoring intervals
+  
+  // No additional setInterval needed as the game is event-driven
+}
+
 // Check if server should be paused (no human players)
 function shouldPauseServer() {
   const humanPlayers = Array.from(gameState.players.values()).filter(
@@ -1192,50 +1239,103 @@ function shouldPauseServer() {
 function pauseServer() {
   if (serverState === SERVER_STATES.PAUSED) return;
 
-  console.log("🔄 SERVER: Pausing server operations (no active players)");
+  console.log("⏸️  SERVER: Pausing server operations (no human players)");
   serverState = SERVER_STATES.PAUSED;
   performanceMetrics.stateTransitions++;
   performanceMetrics.serverPauses++;
+  performanceMetrics.lastPauseStart = Date.now();
+  
+  // Track memory before pause for comparison
+  const memoryBeforePause = process.memoryUsage().heapUsed;
 
-  // Clear all game loop intervals
-  gameLoopIntervals.forEach((interval) => clearInterval(interval));
-  gameLoopIntervals = [];
+  // Clear ALL game intervals for complete pause
+  let intervalsCleared = 0;
+  if (typeof gameLoopIntervals !== 'undefined') {
+    gameLoopIntervals.forEach((interval) => clearInterval(interval));
+    intervalsCleared += gameLoopIntervals.length;
+    gameLoopIntervals = [];
+  }
+  if (botUpdateInterval) {
+    clearInterval(botUpdateInterval);
+    botUpdateInterval = null;
+    intervalsCleared++;
+  }
+  if (botMaintenanceInterval) {
+    clearInterval(botMaintenanceInterval);
+    botMaintenanceInterval = null;
+    intervalsCleared++;
+  }
+  if (gameStatsInterval) {
+    clearInterval(gameStatsInterval);
+    gameStatsInterval = null;
+    intervalsCleared++;
+  }
+  if (leaderboardUpdateInterval) {
+    clearInterval(leaderboardUpdateInterval);
+    leaderboardUpdateInterval = null;
+    intervalsCleared++;
+  }
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+    intervalsCleared++;
+  }
+  if (memoryMonitorInterval) {
+    clearInterval(memoryMonitorInterval);
+    memoryMonitorInterval = null;
+    intervalsCleared++;
+  }
+  if (performanceMetricsInterval) {
+    clearInterval(performanceMetricsInterval);
+    performanceMetricsInterval = null;
+    intervalsCleared++;
+  }
+  
+  performanceMetrics.resourcesSavedDuringPause.intervalsCleared += intervalsCleared;
+  console.log(`🔧 OPTIMIZATION: Cleared ${intervalsCleared} intervals to save resources`);
 
-  // Keep minimal bot count during pause
-  const currentBots = Array.from(gameState.players.values()).filter(
-    (p) => p.isBot
-  );
-  const botsToRemove = currentBots.length - PERFORMANCE_CONFIG.MIN_BOTS_IDLE;
-
-  if (botsToRemove > 0) {
-    // Remove excess bots (keep lowest scoring ones)
-    const sortedBots = currentBots.sort((a, b) => a.score - b.score);
-    for (let i = 0; i < botsToRemove; i++) {
-      const bot = sortedBots[i];
-      gameState.players.delete(bot.id);
-      io.emit("playerDisconnected", bot.id);
-    }
-    console.log(
-      `🤖 SERVER: Removed ${botsToRemove} bots during pause (keeping ${PERFORMANCE_CONFIG.MIN_BOTS_IDLE})`
-    );
+  // Remove ALL bots to completely pause bot activity
+  const allBots = Array.from(gameState.players.values()).filter((p) => p.isBot);
+  if (allBots.length > 0) {
+    console.log(`🤖 PAUSE: Removing all ${allBots.length} bots`);
+    allBots.forEach((bot) => {
+      if (bot.alive) {
+        handleBotDeath(bot);
+      } else {
+        gameState.players.delete(bot.id);
+        io.emit("playerDisconnected", bot.id);
+      }
+    });
+    
+    // Update leaderboard after removing all bots
+    const leaderboard = generateLeaderboard();
+    const fullLeaderboard = generateFullLeaderboard();
+    io.emit("leaderboardUpdate", {
+      leaderboard: leaderboard,
+      fullLeaderboard: fullLeaderboard,
+    });
   }
 
-  // Start idle game loop with reduced frequency
-  startIdleGameLoop();
-
-  // Restart intervals with idle configuration
-  startBotIntervals();
-  startCleanupInterval();
+  console.log("⏸️  SERVER: Complete pause activated - all game loops stopped");
+  console.log("💤 SERVER: Waiting for human players to reconnect...");
 }
 
 // Resume server operations
 function resumeServer() {
   if (serverState === SERVER_STATES.ACTIVE) return;
 
-  console.log("🔄 SERVER: Resuming server operations");
+  console.log("🔄 SERVER: Resuming server operations (players detected)");
   serverState = SERVER_STATES.RESUMING;
   performanceMetrics.stateTransitions++;
   performanceMetrics.serverResumes++;
+  
+  // Calculate pause duration and update metrics
+  if (performanceMetrics.lastPauseStart) {
+    const pauseDuration = Date.now() - performanceMetrics.lastPauseStart;
+    performanceMetrics.totalPausedTime += pauseDuration;
+    console.log(`📊 METRICS: Server was paused for ${Math.round(pauseDuration / 1000)}s (Total paused: ${Math.round(performanceMetrics.totalPausedTime / 1000)}s)`);
+    performanceMetrics.lastPauseStart = null;
+  }
 
   // Clear pause timeout if exists
   if (pauseTimeout) {
@@ -1243,29 +1343,69 @@ function resumeServer() {
     pauseTimeout = null;
   }
 
-  // Ensure minimum active bots
+  // Start active game loop immediately
+  startActiveGameLoop();
+
+  // Restart ALL intervals with active configuration
+  startBotIntervals();
+  startCleanupInterval();
+  startMemoryMonitoring();
+  startPerformanceMetricsLogging();
+  
+  // Restart game stats and leaderboard intervals
+  if (!gameStatsInterval) {
+    gameStatsInterval = setInterval(() => {
+      const stats = {
+        totalPlayers: gameState.players.size,
+        humanPlayers: Array.from(gameState.players.values()).filter(p => !p.isBot).length,
+        botPlayers: Array.from(gameState.players.values()).filter(p => p.isBot).length,
+        alivePlayers: Array.from(gameState.players.values()).filter(p => p.alive).length,
+        deadPoints: gameState.deadPoints.length,
+        foods: gameState.foods.length,
+        serverState: serverState
+      };
+      io.emit('gameStats', stats);
+    }, 5000);
+  }
+  
+  if (!leaderboardUpdateInterval) {
+    leaderboardUpdateInterval = setInterval(() => {
+      const leaderboard = generateLeaderboard();
+      const fullLeaderboard = generateFullLeaderboard();
+      io.emit("leaderboardUpdate", {
+        leaderboard: leaderboard,
+        fullLeaderboard: fullLeaderboard,
+      });
+    }, 2000);
+  }
+
+  // Spawn bots to reach optimal count
   const currentBots = Array.from(gameState.players.values()).filter(
     (p) => p.isBot
   );
-  const botsNeeded = PERFORMANCE_CONFIG.MIN_BOTS_ACTIVE - currentBots.length;
+  const humanPlayers = Array.from(gameState.players.values()).filter(
+    (p) => !p.isBot
+  );
+  const targetBots = Math.min(
+    PERFORMANCE_CONFIG.MAX_BOTS_ACTIVE,
+    Math.max(0, 3 - humanPlayers.length)
+  );
+  const botsToSpawn = Math.max(0, targetBots - currentBots.length);
 
-  if (botsNeeded > 0) {
-    spawnBots(botsNeeded);
+  if (botsToSpawn > 0) {
+    for (let i = 0; i < botsToSpawn; i++) {
+      spawnBots(1);
+    }
     console.log(
-      `🤖 SERVER: Spawned ${botsNeeded} additional bots for active state`
+      `🤖 RESUME: Spawned ${botsToSpawn} bots on resume (total: ${targetBots})`
     );
   }
 
-  // Start active game loop
+  // Set server to active after brief delay
   setTimeout(() => {
     serverState = SERVER_STATES.ACTIVE;
-    startActiveGameLoop();
-
-    // Restart intervals with active configuration
-    startBotIntervals();
-    startCleanupInterval();
-
-    console.log("✅ SERVER: Server fully resumed and active");
+    console.log("▶️  SERVER: Complete resume activated - all game loops restarted");
+    console.log(`🎮 SERVER: Active with ${humanPlayers.length} humans, ${currentBots.length + botsToSpawn} bots`);
   }, PERFORMANCE_CONFIG.RESUME_TIMEOUT);
 }
 
@@ -2423,8 +2563,6 @@ io.on("connection", (socket) => {
 });
 
 // Smart dead point cleanup with performance optimization
-let cleanupInterval;
-
 function startCleanupInterval() {
   if (cleanupInterval) clearInterval(cleanupInterval);
 
@@ -2681,6 +2819,16 @@ startMemoryMonitoring();
 // Start performance metrics logging
 startPerformanceMetricsLogging();
 
+// Check if server should pause immediately after startup
+setTimeout(() => {
+  if (shouldPauseServer()) {
+    pauseServer();
+  } else {
+    // Start intervals only if there are human players
+    resumeServer();
+  }
+}, 1000); // Small delay to allow initial connections
+
 // Generate leaderboard data
 function generateLeaderboard() {
   // Get all alive players sorted by score
@@ -2729,27 +2877,9 @@ function generateFullLeaderboard() {
 
 // Score persistence removed from server - now handled client-side with Zustand
 
-// Send periodic game state updates
-setInterval(() => {
-  const playerCount = gameState.players.size;
-  const leaderboard = generateLeaderboard();
-
-  io.emit("gameStats", {
-    playerCount: playerCount,
-    foodCount: gameState.foods.length,
-    leaderboard: leaderboard,
-  });
-}, 5000);
-
-// Send leaderboard updates more frequently
-setInterval(() => {
-  const leaderboard = generateLeaderboard();
-  const fullLeaderboard = generateFullLeaderboard();
-  io.emit("leaderboardUpdate", {
-    leaderboard: leaderboard,
-    fullLeaderboard: fullLeaderboard,
-  });
-}, 1000);
+// Note: gameStatsInterval and leaderboardUpdateInterval are now managed by the
+// pauseServer/resumeServer system to prevent bot scoring during idle periods.
+// These intervals are started in resumeServer() and cleared in pauseServer().
 
 const PORT = process.env.PORT || 9000;
 server.listen(PORT, () => {

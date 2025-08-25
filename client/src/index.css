@@ -70,11 +70,10 @@ body {
   left: 0;
   overflow: hidden;
   background: var(--color-dark);
-  background-image: url("/bg.png");
+  background-image: url("/bg.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  animation: backgroundFloat 30s ease-in-out infinite;
 }
 @keyframes backgroundFloat {
   0%,
@@ -317,17 +316,21 @@ canvas {
   z-index: 1;
   margin: 0;
   padding: 0;
-  /* Optimize canvas for mobile performance and quality */
-  image-rendering: auto;
-  image-rendering: smooth;
+  /* Optimize canvas for high quality rendering */
+  image-rendering: high-quality;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
   transform: translateZ(0);
   backface-visibility: hidden;
-  /* Reduce GPU overhead while maintaining quality */
+  /* Enable smooth scaling and transitions */
+  transform-style: preserve-3d;
+  will-change: transform;
+  /* Maintain performance optimizations */
   contain: layout style paint;
-  /* Optimize for mobile touch interactions */
+  /* Touch interaction handling */
   touch-action: none;
   user-select: none;
-  -webkit-user-select: none;
+  -webkit-user-select: none; 
   -webkit-touch-callout: none;
 }
 
@@ -867,8 +870,8 @@ canvas:not(#gameCanvas) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
-  padding: 20px;
+  gap: 10px;
+  padding: 10px;
 }
 
 .mute-toggle-button:hover {
