@@ -498,7 +498,6 @@ function getRandomColor() {
     "white",
     "yellow",
     "orange",
-    "purple",
     "lightgreen",
     "grey",
   ];
