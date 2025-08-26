@@ -239,7 +239,7 @@ export class Snake implements SnakeInterface {
 
     // Draw body segments with overlap to create continuous appearance
     // Use smaller increment to ensure segments overlap and connect seamlessly
-    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.8)); 
+    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.7)); 
 
     for (let i = 0; i < this.points.length; i += segmentSpacing) {
       this.points[i].draw(ctx, enableShadows, SHADOW_COLOR, SHADOW_BLUR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y);

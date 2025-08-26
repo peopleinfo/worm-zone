@@ -32,9 +32,9 @@ export class Food extends Point {
     Food.i %= 17;
   }
 
-  draw(ctx: CanvasRenderingContext2D, color?: string): void {
+  draw(ctx: CanvasRenderingContext2D): void {
     // Optimized rendering for mobile performance - no shadows or gradients
-    const drawColor = color || this.color;
+    const drawColor = this.color;
     
     // Simple solid circle for better performance
     ctx.fillStyle = drawColor;
@@ -47,6 +47,4 @@ export class Food extends Point {
     ctx.lineWidth = 1;
     ctx.stroke();
   }
-  
-  // Removed unused color manipulation methods for performance
 }

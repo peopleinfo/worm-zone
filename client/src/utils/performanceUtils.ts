@@ -72,7 +72,7 @@ export class PerformanceManager {
       isMobile,
       targetFPS: this.getTargetFPS(tier, isMobile),
       canvasScale: this.getCanvasScale(tier),
-      enableShadows: ENABLE_SHADOWS && (tier === 'medium' || tier === 'high') && !isMobile,
+      enableShadows: ENABLE_SHADOWS,
       maxDeadPoints: this.getMaxDeadPoints(tier),
       batteryLevel: undefined,
       isCharging: undefined,
@@ -142,7 +142,7 @@ export class PerformanceManager {
         console.log('🔥 Thermal throttling detected, reducing performance');
         this.thermalThrottleDetected = true;
         this.devicePerformance.targetFPS = Math.max(10, this.devicePerformance.targetFPS - 2);
-        this.devicePerformance.enableShadows = false;
+        this.devicePerformance.enableShadows = ENABLE_SHADOWS;
         this.devicePerformance.canvasScale = Math.max(0.5, this.devicePerformance.canvasScale - 0.1);
       }
     }
@@ -252,7 +252,7 @@ export class PerformanceManager {
           this.devicePerformance.targetFPS = Math.max(10, this.devicePerformance.targetFPS - 2);
         }
         this.devicePerformance.canvasScale = Math.max(0.6, this.devicePerformance.canvasScale - 0.1);
-        this.devicePerformance.enableShadows = false;
+        this.devicePerformance.enableShadows = ENABLE_SHADOWS;
         break;
       case 'critical':
         console.log('🚨 Critical thermal state, applying aggressive throttling');
@@ -260,7 +260,7 @@ export class PerformanceManager {
           this.devicePerformance.targetFPS = 8;
         }
         this.devicePerformance.canvasScale = 0.5;
-        this.devicePerformance.enableShadows = false;
+        this.devicePerformance.enableShadows = ENABLE_SHADOWS;
         this.devicePerformance.maxDeadPoints = Math.min(50, this.devicePerformance.maxDeadPoints);
         break;
     }
