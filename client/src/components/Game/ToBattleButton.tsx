@@ -4,10 +4,9 @@ import { socketClient } from "../../services/socketClient";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { audioService } from "../../services/audioService";
 import { useTranslation } from "react-i18next";
+import { MIN_PLAYERS_FOR_BATTLE } from "../../config/gameConfig";
 
 
-// Configuration constants
-const MIN_PLAYERS_FOR_BATTLE = 5;
 
 export const ToBattleButton = () => {
   const { t } = useTranslation('game');

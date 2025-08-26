@@ -82,8 +82,11 @@ io.use((socket, next) => {
   next(); // Always allow connection, but track auth status
 });
 
+// Check with client config too avoid not sync
+
 // Bot configuration
-const MAX_BOTS = 5;
+const MAX_BOTS = 4;
+const POINT = 1; // Points awarded for eating food or dead points
 
 // Bot management throttling
 let lastBotSpawnAttempt = 0;
@@ -101,7 +104,6 @@ const SERVER_STATES = {
 };
 
 let serverState = SERVER_STATES.ACTIVE;
-let lastPlayerActivity = Date.now();
 let pauseTimeout = null;
 let gameLoopIntervals = [];
 
@@ -1033,7 +1035,7 @@ function createBot(id) {
     radius: botRadius,
     speed: 1.1,
     color: getRandomColor(),
-    score: 1.0,
+    score: POINT,
     alive: true,
     isBot: true,
     spawnProtection: true,
@@ -1077,7 +1079,7 @@ function createBot(id) {
   return bot;
 }
 
-function spawnBots(count = 5) {
+function spawnBots(count = MAX_BOTS) {
   const currentTime = Date.now();
 
   // Throttle spawn attempts to prevent spam
@@ -1836,7 +1838,7 @@ function updateBots() {
       const food = gameState.foods[i];
       if (isCollided(botHead, food)) {
         // Bot eats food - same logic as human players
-        player.score++;
+        player.score += POINT;
 
         // Add new point to bot's body using bot's main color
         if (player.points.length > 0) {
@@ -1882,8 +1884,8 @@ function updateBots() {
     for (let i = gameState.deadPoints.length - 1; i >= 0; i--) {
       const deadPoint = gameState.deadPoints[i];
       if (isCollided(botHead, deadPoint)) {
-        // Bot eats dead point - award 1 point per dead snake
-        player.score += 1;
+        // Bot eats dead point - award POINT per dead snake
+        player.score += POINT;
 
         // Add new point to bot's body using bot's main color
         if (player.points.length > 0) {
@@ -2138,7 +2140,7 @@ io.on("connection", (socket) => {
       food.y = Math.random() * gameState.worldHeight;
       food.color = getRandomColor();
 
-      player.score++;
+      player.score += POINT;
       performanceMetrics.foodEaten++;
 
       console.log(
@@ -2193,8 +2195,8 @@ io.on("connection", (socket) => {
         }
       });
 
-      // Update player score - award 1 point per dead snake consumed
-      player.score += 1;
+      // Update player score - award POINT per dead snake consumed
+      player.score += POINT;
       performanceMetrics.deadPointsEaten += deadPoints.length;
 
       // Broadcast dead point removal to all clients
@@ -2440,62 +2442,6 @@ function startCleanupInterval() {
 // Start initial cleanup interval
 startCleanupInterval();
 
-// Automatic bot respawning function
-function maintainMinimumBots() {
-  const humanPlayers = Array.from(gameState.players.values()).filter(
-    (p) => !p.isBot && p.alive
-  ).length;
-  const aliveBots = Array.from(gameState.players.values()).filter(
-    (p) => p.isBot && p.alive
-  );
-  const allBots = Array.from(gameState.players.values()).filter((p) => p.isBot);
-
-  // Maintain 3-5 bots minimum, adjusting based on human player count
-  const minBots = Math.max(3, Math.min(5, 5 - humanPlayers));
-  const maxBots = 5;
-
-  // If we have too many bots, remove lowest-scoring ones (high rank priority)
-  if (allBots.length > maxBots) {
-    // Sort bots by score (descending) to keep highest-scoring ones
-    const sortedBots = allBots.sort((a, b) => b.score - a.score);
-    const botsToRemove = sortedBots.slice(maxBots); // Remove excess bots (lowest scores)
-
-    botsToRemove.forEach((bot) => {
-      console.log(
-        `Removing low-rank bot ${bot.id} (score: ${bot.score.toFixed(
-          1
-        )}) to maintain max ${maxBots} bots`
-      );
-      if (bot.alive) {
-        handleBotDeath(bot);
-      } else {
-        // Remove dead bot from game state
-        gameState.players.delete(bot.id);
-        io.emit("playerDisconnected", bot.id);
-      }
-    });
-
-    // Update leaderboard after bot removal
-    const leaderboard = generateLeaderboard();
-    const fullLeaderboard = generateFullLeaderboard();
-    io.emit("leaderboardUpdate", {
-      leaderboard: leaderboard,
-      fullLeaderboard: fullLeaderboard,
-    });
-  }
-
-  // Only attempt to spawn bots if we actually need them and haven't tried recently
-  const currentAliveBots = aliveBots.length;
-  if (currentAliveBots < minBots && allBots.length < maxBots) {
-    const botsNeeded = Math.min(
-      minBots - currentAliveBots,
-      maxBots - allBots.length
-    );
-    if (botsNeeded > 0) {
-      spawnBots(botsNeeded);
-    }
-  }
-}
 
 // ===== OPTIMIZED BOT MANAGEMENT SYSTEM =====
 
