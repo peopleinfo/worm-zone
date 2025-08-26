@@ -55,8 +55,8 @@ export class Snake implements SnakeInterface {
     }
   }
 
-  eat(color: string = 'red'): void {
-    const newPoint = new Point(INFINITY, INFINITY, this.radius, color);
+  eat(color: string = 'red', foodType?: string): void {
+    const newPoint = new Point(INFINITY, INFINITY, this.radius, color, foodType);
     this.points.push(newPoint);
     this.radius = Math.min(10, Math.max(4, this.points.length * this.fatScaler));
   }
@@ -120,7 +120,9 @@ export class Snake implements SnakeInterface {
     const headX = this.getHead().x + effectiveSpeed * this.velocity.x;
     const headY = this.getHead().y + effectiveSpeed * this.velocity.y;
 
-    const head = new Point(headX, headY, this.getHead().radius, this.getHead().color);
+    // Preserve foodType from current head when creating new head
+    const currentHead = this.getHead();
+    const head = new Point(headX, headY, currentHead.radius, currentHead.color, currentHead.foodType);
 
     this.points.unshift(head);
     this.points.pop();
@@ -153,7 +155,7 @@ export class Snake implements SnakeInterface {
     if (this.angle < 0) this.angle += 360;
   }
 
-  checkCollisionsWithFood(target: Point | { x: number; y: number; radius: number; color: string }): Point | { x: number; y: number; radius: number; color: string } | undefined {
+  checkCollisionsWithFood(target: Point | { x: number; y: number; radius: number; color: string; type?: string }): Point | { x: number; y: number; radius: number; color: string; type?: string } | undefined {
     const head = this.getHead();
     // Create a temporary Point object for collision detection if target is not a Point
     const targetPoint = target instanceof Point ? target : new Point(target.x, target.y, target.radius, target.color);
@@ -175,7 +177,9 @@ export class Snake implements SnakeInterface {
 
     if (collisionDetected) {
       // console.log(`[FOOD EATEN] Snake ${this.id.substring(0,6)} ate food at (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}) - Distance: ${distance.toFixed(2)}`);
-      this.eat(target.color);
+      // Pass the food type if available (for Food objects) or default to 'pizza_01'
+      const foodType = 'type' in target ? target.type : 'pizza_01';
+      this.eat(target.color, foodType);
       return target;
     }
     return undefined;
@@ -223,9 +227,11 @@ export class Snake implements SnakeInterface {
       import('../stores/gameStore').then(({ useGameStore }) => {
         const store = useGameStore.getState();
         
-        // Convert snake segments to pizza_01 food items
+        // Convert snake segments to food items preserving their original types
         const newFoodItems = this.points.map((p, index) => {
-          const food = new Food(`${this.id}_segment_${index}_${Date.now()}`, p.x, p.y, p.radius, p.color, 'pizza_01');
+          // Use the stored food type from the segment, or default to 'pizza_01' if not available
+          const foodType = p.foodType || 'pizza_01';
+          const food = new Food(`${this.id}_segment_${index}_${Date.now()}`, p.x, p.y, p.radius, p.color, foodType);
           return food;
         });
         
@@ -233,7 +239,15 @@ export class Snake implements SnakeInterface {
         const currentFoods = store.foods;
         store.updateFoods([...currentFoods, ...newFoodItems]);
         
-        console.log(`🍕 Snake death: Created ${newFoodItems.length} pizza_01 food items`);
+        // Debug logging to show actual food types being created
+        const foodTypeCounts = newFoodItems.reduce((acc, food) => {
+          acc[food.type] = (acc[food.type] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        const foodTypesSummary = Object.entries(foodTypeCounts)
+          .map(([type, count]) => `${count}x ${type}`)
+          .join(', ');
+        console.log(`🍕 Snake death: Created ${newFoodItems.length} food items: ${foodTypesSummary}`);
       }).catch(error => {
         console.error('Failed to import gameStore:', error);
         // Fallback to original dead points behavior
@@ -265,7 +279,7 @@ export class Snake implements SnakeInterface {
 
     // Draw body segments with overlap to create continuous appearance
     // Use smaller increment to ensure segments overlap and connect seamlessly
-    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.9)); 
+    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.4)); 
 
     for (let i = 0; i < this.points.length; i += segmentSpacing) {
       this.points[i].draw(ctx, enableShadows, SHADOW_COLOR, SHADOW_BLUR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y);

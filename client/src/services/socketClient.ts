@@ -215,10 +215,29 @@ class SocketClient {
           f.x = food.x;
           f.y = food.y;
           f.color = food.color;
+          f.type = food.type; // Update food type as well
         }
         return f;
       });
       store.updateFoods(updatedFoods);
+    });
+
+    // Food type eaten (server notification for snake segment storage)
+    this.socket.on('foodTypeEaten', (data: { playerId: string; foodId: string; eatenFoodType: string }) => {
+      const store = useGameStore.getState();
+      
+      // Don't process if the game is over
+      if (store.isGameOver) {
+        console.log('🚫 Ignoring foodTypeEaten - game is over');
+        return;
+      }
+      
+      // Only process if it's the current player
+      if (data.playerId === this.playerId && store.mySnake) {
+        console.log(`🍎 Food type eaten: ${data.eatenFoodType} (foodId: ${data.foodId})`);
+        // The snake's eat method should already be called from collision detection
+        // This event is mainly for logging and potential future features
+      }
     });
 
     // Score update
