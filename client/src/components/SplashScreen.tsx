@@ -19,12 +19,12 @@ const SplashScreen: React.FC = () => {
           {/* Logo with glow effect */}
           <div className="splash-logo-container">
             {/* Glow effect */}
-            <div className="splash-glow-effect" />
+            {/* <div className="splash-glow-effect" /> */}
             
             {/* Logo image */}
             <div className="splash-logo-image-container">
               <img
-                src="/snake-splash.jpeg"
+                src="/logo-snake.png"
                 alt="Snake Zone Logo"
                 className="splash-logo-image"
               />
