@@ -493,7 +493,6 @@ function getRandomColor() {
   const colors = [
     "red",
     "green",
-    "blue",
     "white",
     "yellow",
     "orange",

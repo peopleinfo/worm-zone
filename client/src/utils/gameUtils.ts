@@ -6,7 +6,7 @@ export const isCollided = (circle1: Point, circle2: Point): boolean => {
 };
 
 export const getRandomColor = (): string => {
-  const colors = ['red', 'green', 'blue', 'white', 'yellow', 'orange', 'purple', 'lightgreen', 'grey'];
+  const colors = ['red', 'green', 'white', 'yellow', 'orange', 'purple', 'lightgreen', 'grey'];
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
