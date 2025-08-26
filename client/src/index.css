@@ -107,7 +107,7 @@ body {
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  background-image: url("/splash-screen.jpg") !important;
+  background-image: url("/bg-black.jpg") !important;
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
