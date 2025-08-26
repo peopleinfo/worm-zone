@@ -228,10 +228,20 @@ export class Snake implements SnakeInterface {
         const store = useGameStore.getState();
         
         // Convert snake segments to food items preserving their original types
+        // Add wider spacing by applying random offsets to positions
         const newFoodItems = this.points.map((p, index) => {
           // Use the stored food type from the segment, or default to 'pizza_01' if not available
           const foodType = p.foodType || 'pizza_01';
-          const food = new Food(`${this.id}_segment_${index}_${Date.now()}`, p.x, p.y, p.radius, p.color, foodType);
+          
+          // Add random offset for wider spacing (within reasonable bounds)
+          const offsetRange = this.radius * 2; // Spacing range based on snake radius
+          const offsetX = (Math.random() - 0.5) * offsetRange;
+          const offsetY = (Math.random() - 0.5) * offsetRange;
+          
+          const newX = p.x + offsetX;
+          const newY = p.y + offsetY;
+          
+          const food = new Food(`${this.id}_segment_${index}_${Date.now()}`, newX, newY, p.radius, p.color, foodType);
           return food;
         });
         
@@ -281,19 +291,42 @@ export class Snake implements SnakeInterface {
     // Use smaller increment to ensure segments overlap and connect seamlessly
     const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.4)); 
 
-    for (let i = 0; i < this.points.length; i += segmentSpacing) {
+    // Draw body segments (excluding head - index 0) from tail to head
+    // This ensures newer segments appear on top when snake overlaps itself
+    for (let i = this.points.length - 1; i >= 1; i -= segmentSpacing) {
       this.points[i].draw(ctx, enableShadows, SHADOW_COLOR, SHADOW_BLUR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y);
     }
 
-    // Always draw the last segment to ensure tail is visible
+    // Draw tail with enhanced appearance
     if (this.points.length > 1) {
       const lastIndex = this.points.length - 1;
-      if (lastIndex % segmentSpacing !== 0) {
-        this.points[lastIndex].draw(ctx, enableShadows, SHADOW_COLOR, SHADOW_BLUR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y);
+      if (lastIndex % segmentSpacing !== 0 && lastIndex > 0) {
+        // Draw tail with slightly smaller radius for tapered effect
+        const tailPoint = this.points[lastIndex];
+        const tailRadius = tailPoint.radius * 0.8; // Make tail slightly smaller
+        
+        ctx.save();
+        if (enableShadows) {
+          ctx.shadowColor = SHADOW_COLOR;
+          ctx.shadowBlur = SHADOW_BLUR;
+          ctx.shadowOffsetX = SHADOW_OFFSET_X;
+          ctx.shadowOffsetY = SHADOW_OFFSET_Y;
+        }
+        
+        ctx.fillStyle = tailPoint.color;
+        ctx.beginPath();
+        ctx.arc(tailPoint.x, tailPoint.y, tailRadius, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore();
       }
     }
 
-    // Draw facial features without shadows to maintain clean appearance
+    // Draw head on top of all body segments
+    if (this.points.length > 0) {
+      this.points[0].draw(ctx, enableShadows, SHADOW_COLOR, SHADOW_BLUR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y);
+    }
+
+    // Draw facial features on top of head
     this.drawEye(ctx);
     this.drawEar(ctx);
     this.drawMouth(ctx);
