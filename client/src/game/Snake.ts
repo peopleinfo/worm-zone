@@ -1,6 +1,8 @@
 import { Point } from './Point';
 import type { Snake as SnakeInterface, Controls } from '../types/game';
 import { getRandomColor, isCollided, coeffD2R, INFINITY, defRad } from '../utils/gameUtils';
+import { performanceManager } from '../utils/performanceUtils';
+import { SHADOW_COLOR, SHADOW_BLUR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y } from '../config/gameConfig';
 
 export class Snake implements SnakeInterface {
   static deadPoints: Point[] = [];
@@ -38,12 +40,12 @@ export class Snake implements SnakeInterface {
     this.radius = 4;
     this.speed = 0.6;
     this.turningSpeed = 6;
-    this.baseSpeed = 0.4; // Base speed for platform consistency
+    this.baseSpeed = 0.5; // Base speed for platform consistency
     this.points = [new Point(x, y, this.radius, color)];
     this.velocity = { x: 1, y: 0 };
     this.overPos = { x: 0, y: 0 };
     this.color = color;
-    this.fatScaler = 0.001;
+    this.fatScaler = 0.002;
     this.angle = 0;
     this.ai = true;
     this.isAlive = true;
@@ -231,23 +233,27 @@ export class Snake implements SnakeInterface {
   draw(ctx: CanvasRenderingContext2D): void {
     if (!this.isAlive || this.points.length === 0) return;
 
+    // Check if shadows should be enabled based on device performance
+    const devicePerf = performanceManager.getDevicePerformance();
+    const enableShadows = devicePerf.enableShadows;
+
     // Draw body segments with overlap to create continuous appearance
     // Use smaller increment to ensure segments overlap and connect seamlessly
-    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.7)); // 70% of radius for tighter, more compact segments
+    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.8)); 
 
     for (let i = 0; i < this.points.length; i += segmentSpacing) {
-      this.points[i].draw(ctx);
+      this.points[i].draw(ctx, enableShadows, SHADOW_COLOR, SHADOW_BLUR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y);
     }
 
     // Always draw the last segment to ensure tail is visible
     if (this.points.length > 1) {
       const lastIndex = this.points.length - 1;
       if (lastIndex % segmentSpacing !== 0) {
-        // this.points[lastIndex].draw(ctx, '', this.radius);
-        this.points[lastIndex].draw(ctx);
+        this.points[lastIndex].draw(ctx, enableShadows, SHADOW_COLOR, SHADOW_BLUR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y);
       }
     }
 
+    // Draw facial features without shadows to maintain clean appearance
     this.drawEye(ctx);
     this.drawEar(ctx);
     this.drawMouth(ctx);

@@ -39,13 +39,28 @@ export class Point {
     }
   }
 
-  // Optimized draw method without shadows for better mobile performance
-  draw(ctx: CanvasRenderingContext2D): void {
-    // Simplified rendering - no shadows to prevent device overheating
+  // Optimized draw method with optional shadow support
+  draw(ctx: CanvasRenderingContext2D, enableShadow: boolean = false, shadowColor: string = 'rgba(0, 0, 0, 0.3)', shadowBlur: number = 3, shadowOffsetX: number = 1, shadowOffsetY: number = 1): void {
+    // Apply shadow if enabled and supported
+    if (enableShadow) {
+      ctx.shadowColor = shadowColor;
+      ctx.shadowBlur = shadowBlur;
+      ctx.shadowOffsetX = shadowOffsetX;
+      ctx.shadowOffsetY = shadowOffsetY;
+    }
+
     ctx.fillStyle = this.color;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
+
+    // Reset shadow settings to prevent affecting other drawings
+    if (enableShadow) {
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
   }
 
   // Check if point is within viewport (for culling)

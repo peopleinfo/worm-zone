@@ -3,7 +3,7 @@ import { Food } from './Food';
 import { Point } from './Point';
 import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
-import { CLEANUP_INTERVAL, MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH } from '../config/gameConfig';
+import { CLEANUP_INTERVAL, MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH, TARGET_FPS, FORCE_FPS_LIMIT } from '../config/gameConfig';
 import { performanceManager } from '../utils/performanceUtils';
 
 export class GameEngine {
@@ -13,6 +13,7 @@ export class GameEngine {
   private mySnake: Snake | null = null;
   private lastSocketUpdate: number = 0;
   private lastFrameTime: number = 0;
+  private lastRenderTime: number = 0;
   private aiSnakes: Snake[] = [];
   private foods: Food[] = [];
   private lastCleanupTime: number = 0;
@@ -179,6 +180,7 @@ export class GameEngine {
       this.isTabVisible = true;
       // Reset timing variables to prevent time jumps
       this.lastFrameTime = 0;
+      this.lastRenderTime = 0;
       this.frameStartTime = 0;
       console.log('[GAME ENGINE] Tab visible - resuming rendering');
     }
@@ -201,11 +203,26 @@ export class GameEngine {
     const now = performance.now();
     this.frameStartTime = now;
     
+    // Calculate target frame interval based on config
+    const targetFrameInterval = 1000 / TARGET_FPS;
+    const timeSinceLastRender = now - this.lastRenderTime;
+    
+    // Apply FPS limiting if enabled
+    if (FORCE_FPS_LIMIT && timeSinceLastRender < targetFrameInterval) {
+      // Skip this frame to maintain target FPS
+      this.animationId = requestAnimationFrame(this.gameLoop);
+      return;
+    }
+    
+    // Update last render time when we actually render
+    this.lastRenderTime = now;
+    
     // Always update game logic to maintain multiplayer sync
     this.update();
     
     // Only render if tab is visible and performance allows
-    if (this.isTabVisible && !performanceManager.shouldSkipFrame(now)) {
+    const shouldSkipFrame = FORCE_FPS_LIMIT ? false : performanceManager.shouldSkipFrame(now);
+    if (this.isTabVisible && !shouldSkipFrame) {
       this.render();
       
       // Track frame time for adaptive performance

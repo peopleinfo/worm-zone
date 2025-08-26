@@ -1,4 +1,5 @@
 // Performance utilities for mobile optimization
+import { TARGET_FPS, FORCE_FPS_LIMIT, ENABLE_SHADOWS } from '../config/gameConfig';
 
 export interface DevicePerformance {
   tier: 'low' | 'medium' | 'high';
@@ -71,7 +72,7 @@ export class PerformanceManager {
       isMobile,
       targetFPS: this.getTargetFPS(tier, isMobile),
       canvasScale: this.getCanvasScale(tier),
-      enableShadows: tier === 'high' && !isMobile,
+      enableShadows: ENABLE_SHADOWS && (tier === 'medium' || tier === 'high') && !isMobile,
       maxDeadPoints: this.getMaxDeadPoints(tier),
       batteryLevel: undefined,
       isCharging: undefined,
@@ -80,6 +81,11 @@ export class PerformanceManager {
   }
 
   private getTargetFPS(tier: 'low' | 'medium' | 'high', isMobile: boolean): number {
+    // Use forced FPS if enabled in config
+    if (FORCE_FPS_LIMIT) {
+      return TARGET_FPS;
+    }
+    
     if (isMobile) {
       switch (tier) {
         case 'low': return 25;
@@ -131,7 +137,8 @@ export class PerformanceManager {
       const targetFrameTime = this.getFrameInterval();
 
       // If average frame time is significantly higher than target, reduce FPS
-      if (avgFrameTime > targetFrameTime * 1.5 && !this.thermalThrottleDetected) {
+      // Only apply thermal throttling if FPS is not forced
+      if (avgFrameTime > targetFrameTime * 1.5 && !this.thermalThrottleDetected && !FORCE_FPS_LIMIT) {
         console.log('🔥 Thermal throttling detected, reducing performance');
         this.thermalThrottleDetected = true;
         this.devicePerformance.targetFPS = Math.max(10, this.devicePerformance.targetFPS - 2);
@@ -184,9 +191,12 @@ export class PerformanceManager {
     this.devicePerformance.isCharging = battery.charging;
 
     // Reduce performance when battery is low and not charging
+    // Only reduce FPS if it's not forced
     if (this.devicePerformance.batteryLevel! < 20 && !this.devicePerformance.isCharging) {
       console.log('🔋 Low battery detected, reducing performance');
-      this.devicePerformance.targetFPS = Math.max(10, this.devicePerformance.targetFPS - 2);
+      if (!FORCE_FPS_LIMIT) {
+        this.devicePerformance.targetFPS = Math.max(10, this.devicePerformance.targetFPS - 2);
+      }
       this.devicePerformance.canvasScale = Math.max(0.6, this.devicePerformance.canvasScale - 0.1);
     }
   }
@@ -225,23 +235,30 @@ export class PerformanceManager {
 
   // Apply thermal throttling based on thermal state
   private applyThermalThrottling(state: 'warm' | 'hot' | 'critical'): void {
+    // Don't modify FPS if it's forced, but still apply other optimizations
     switch (state) {
       case 'warm':
         if (!this.thermalThrottleDetected) {
           console.log('🌡️ Device warming up, applying light throttling');
-          this.devicePerformance.targetFPS = Math.max(12, this.devicePerformance.targetFPS - 1);
+          if (!FORCE_FPS_LIMIT) {
+            this.devicePerformance.targetFPS = Math.max(12, this.devicePerformance.targetFPS - 1);
+          }
           this.thermalThrottleDetected = true;
         }
         break;
       case 'hot':
         console.log('🔥 Device getting hot, applying moderate throttling');
-        this.devicePerformance.targetFPS = Math.max(10, this.devicePerformance.targetFPS - 2);
+        if (!FORCE_FPS_LIMIT) {
+          this.devicePerformance.targetFPS = Math.max(10, this.devicePerformance.targetFPS - 2);
+        }
         this.devicePerformance.canvasScale = Math.max(0.6, this.devicePerformance.canvasScale - 0.1);
         this.devicePerformance.enableShadows = false;
         break;
       case 'critical':
         console.log('🚨 Critical thermal state, applying aggressive throttling');
-        this.devicePerformance.targetFPS = 8;
+        if (!FORCE_FPS_LIMIT) {
+          this.devicePerformance.targetFPS = 8;
+        }
         this.devicePerformance.canvasScale = 0.5;
         this.devicePerformance.enableShadows = false;
         this.devicePerformance.maxDeadPoints = Math.min(50, this.devicePerformance.maxDeadPoints);
