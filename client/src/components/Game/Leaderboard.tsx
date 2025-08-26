@@ -76,7 +76,7 @@ export const Leaderboard: React.FC = React.memo(() => {
               >
                 {player.name}{" "}
                 <span style={{ marginLeft: 10 }}>
-                  {isCurrentPlayer && `(${(t("common.you"), "You")})`}
+                  {isCurrentPlayer && `(${t("common.you")})`}
                 </span>
               </span>
               <div className="player-score">
