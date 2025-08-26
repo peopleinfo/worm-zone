@@ -7,3 +7,4 @@ export const WORLD_HEIGHT = 800;
 export const MAP_ZOOM_LEVEL = 3.5;
 export const POINT = 1; // Points awarded for eating food
 export const MIN_PLAYERS_FOR_BATTLE = 4;
+export const CLEANUP_INTERVAL = 30000; // 30 seconds

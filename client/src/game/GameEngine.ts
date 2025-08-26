@@ -3,7 +3,7 @@ import { Food } from './Food';
 import { Point } from './Point';
 import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
-import { MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH } from '../config/gameConfig';
+import { CLEANUP_INTERVAL, MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH } from '../config/gameConfig';
 import { performanceManager } from '../utils/performanceUtils';
 
 export class GameEngine {
@@ -16,7 +16,7 @@ export class GameEngine {
   private aiSnakes: Snake[] = [];
   private foods: Food[] = [];
   private lastCleanupTime: number = 0;
-  private readonly CLEANUP_INTERVAL = 5000; // Clean up every 5 seconds
+  private readonly CLEANUP_INTERVAL = CLEANUP_INTERVAL; // Clean up every 
   private zoom: number = MAP_ZOOM_LEVEL;
   private isTabVisible: boolean = true;
   

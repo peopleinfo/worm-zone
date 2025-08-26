@@ -117,7 +117,7 @@ const PERFORMANCE_CONFIG = {
   MAX_DEAD_POINTS: 2000,
   CLEANUP_THRESHOLD: 1500,
   CLEANUP_BATCH_SIZE: 500,
-  CLEANUP_INTERVAL: 15000, // 15 seconds
+  CLEANUP_INTERVAL: 30000, // 30 seconds
 
   // Bot management optimization
   IDLE_BOT_UPDATE_INTERVAL: 1000, // 1 second when no players
@@ -2432,7 +2432,7 @@ function startCleanupInterval() {
   const interval =
     serverState === SERVER_STATES.ACTIVE
       ? PERFORMANCE_CONFIG.CLEANUP_INTERVAL
-      : PERFORMANCE_CONFIG.CLEANUP_INTERVAL * 2; // Less frequent when paused
+      : PERFORMANCE_CONFIG.CLEANUP_INTERVAL * 0.5; // Less frequent when paused
 
   cleanupInterval = setInterval(() => {
     performSmartDeadPointCleanup();
@@ -2671,8 +2671,6 @@ function generateFullLeaderboard() {
     realUserId: player.realUserId || null,
   }));
 }
-
-// Score persistence removed from server - now handled client-side with Zustand
 
 // Send periodic game state updates
 setInterval(() => {
