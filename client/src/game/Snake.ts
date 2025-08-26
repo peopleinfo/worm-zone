@@ -251,7 +251,7 @@ export class Snake implements SnakeInterface {
         
         // Debug logging to show actual food types being created
         const foodTypeCounts = newFoodItems.reduce((acc, food) => {
-          acc[food.type] = (acc[food.type] || 0) + 1;
+          acc[food.foodType] = (acc[food.foodType] || 0) + 1;
           return acc;
         }, {} as Record<string, number>);
         const foodTypesSummary = Object.entries(foodTypeCounts)

@@ -215,7 +215,7 @@ class SocketClient {
           f.x = food.x;
           f.y = food.y;
           f.color = food.color;
-          f.type = food.type; // Update food type as well
+          f.foodType = food.foodType; // Update food type as well
         }
         return f;
       });

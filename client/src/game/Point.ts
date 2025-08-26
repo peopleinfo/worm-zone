@@ -5,12 +5,12 @@ export class Point {
   y: number;
   radius: number;
   color: string;
-  foodType?: string; // Optional food type for snake segments
+  foodType?: any; // Optional food type for snake segments
   private static pool: Point[] = [];
   private static poolSize = 0;
   private static readonly MAX_POOL_SIZE = 500;
 
-  constructor(x: number = 0, y: number = 0, radius: number = 0, color: string = '', foodType?: string) {
+  constructor(x: number = 0, y: number = 0, radius: number = 0, color: string = '', foodType?: any) {
     this.x = x;
     this.y = y;
     this.radius = radius;
