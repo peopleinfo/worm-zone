@@ -201,11 +201,15 @@ export class GameEngine {
     const now = performance.now();
     this.frameStartTime = now;
     
-    // Always update game logic to maintain multiplayer sync
-    this.update();
+    const store = useGameStore.getState();
     
-    // Only render if tab is visible and performance allows
-    if (this.isTabVisible && !performanceManager.shouldSkipFrame(now)) {
+    // Only update game logic if not paused
+    if (!store.isPaused) {
+      this.update();
+    }
+    
+    // Only render if tab is visible, performance allows, and not paused
+    if (this.isTabVisible && !performanceManager.shouldSkipFrame(now) && !store.isPaused) {
       this.render();
       
       // Track frame time for adaptive performance
@@ -311,7 +315,7 @@ export class GameEngine {
       }
 
       // Send player movement to server (throttled with error handling)
-      if (shouldSendUpdate) {
+      if (shouldSendUpdate && !store.isPaused) {
         try {
           socketClient.sendPlayerMove(this.mySnake);
           this.lastSocketUpdate = now;

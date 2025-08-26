@@ -73,7 +73,8 @@
     "bestScore": "Best Score:",
     "ranking": "Ranking:",
     "newRecord": "New Record! +{{points}} points!",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "playAgain": "Play Again"
   },
   "howToPlay": {
     "title": "How to Play",
@@ -94,5 +95,21 @@
       "viewScore": "View your score and highest score in the game over modal",
       "scoreResets": "Your score resets to zero on restart"
     }
+  },
+  "connection": {
+    "title": "Connection Status",
+    "connected": "Connected to server",
+    "disconnected": "Disconnected from server",
+    "connecting": "Connecting to server...",
+    "error": "Connection error",
+    "unknown": "Unknown connection status",
+    "reconnectAttempts": "Reconnect attempts: {{attempts}}/{{max}}",
+    "reason": "Reason",
+    "attemptingReconnect": "Attempting to reconnect...",
+    "reconnectFailed": "Reconnection failed",
+    "reconnectNow": "Reconnect Now",
+    "tryAgain": "Try Again",
+    "returnToMenu": "Return to Menu",
+    "checkingConnection": "Checking connection..."
   }
 }

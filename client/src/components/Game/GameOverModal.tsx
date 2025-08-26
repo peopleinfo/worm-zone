@@ -11,7 +11,7 @@ export const GameOverModal = React.memo(() => {
   const isGameOver = useGameStore((state) => state.isGameOver);
   const score = useGameStore((state) => state.finalScore);
   const rank = useGameStore((state) => state.rank);
-  const setGameOver = useGameStore((state) => state.setGameState);
+  const handleModalClose = useGameStore((state) => state.handleModalClose);
 
   // Auth store for scores and score update data
   const scores = useAuthStore((state) => state.scores);
@@ -36,8 +36,39 @@ export const GameOverModal = React.memo(() => {
   const isNewRecord = scoreUpdateData ? scoreUpdateData.scoreChange > 0 : false;
 
   const handleClose = () => {
-    setGameOver({ isGameOver: false });
+    handleModalClose('close');
   };
+
+  const handleRestart = () => {
+    handleModalClose('restart');
+  };
+
+  // Handle ESC key and click outside
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      } else if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        handleRestart();
+      }
+    };
+    
+    const handleClickOutside = (e: MouseEvent) => {
+      const modal = document.querySelector('.settings-modal');
+      if (modal && !modal.contains(e.target as Node)) {
+        handleClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [handleClose, handleRestart]);
 
   if (!isGameOver) return null;
 
@@ -111,6 +142,32 @@ export const GameOverModal = React.memo(() => {
               🎉 {t('game:gameOver.newRecord', { points: scoreUpdateData?.scoreChange })} 🎉
             </div>
           )}
+        </div>
+        
+        {/* Action Buttons */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '12px', 
+          marginTop: '24px',
+          justifyContent: 'center'
+        }}>
+          <button
+            onClick={handleRestart}
+            style={{
+              backgroundColor: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              flex: 1,
+              maxWidth: '200px'
+            }}
+          >
+            {t('game:gameOver.playAgain')}
+          </button>
         </div>
       </div>
     </div>

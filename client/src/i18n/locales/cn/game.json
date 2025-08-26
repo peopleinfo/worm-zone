@@ -73,7 +73,8 @@
     "bestScore": "最佳得分：",
     "ranking": "排名：",
     "newRecord": "新纪录！+{{points}} 分！",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "playAgain": "再玩一次"
   },
   "howToPlay": {
     "title": "游戏说明",
@@ -94,5 +95,21 @@
       "viewScore": "在游戏结束模态框中查看你的得分和最高分",
       "scoreResets": "重新开始时你的得分重置为零"
     }
+  },
+  "connection": {
+    "title": "连接状态",
+    "connected": "已连接到服务器",
+    "disconnected": "与服务器断开连接",
+    "connecting": "正在连接到服务器...",
+    "error": "连接错误",
+    "unknown": "未知连接状态",
+    "reconnectAttempts": "重连尝试：{{attempts}}/{{max}}",
+    "reason": "原因",
+    "attemptingReconnect": "正在尝试重新连接...",
+    "reconnectFailed": "重新连接失败",
+    "reconnectNow": "立即重连",
+    "tryAgain": "重试",
+    "returnToMenu": "返回菜单",
+    "checkingConnection": "检查连接中..."
   }
 }

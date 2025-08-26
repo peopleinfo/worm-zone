@@ -73,7 +73,19 @@ class SocketClient {
           console.log('✅ Connected to server with socket ID:', this.socket?.id);
           this.isConnected = true;
           this.setupEventListeners();
-          this.initializeGame();
+          
+          // Check if this is a reconnection and handle accordingly
+          const store = useGameStore.getState();
+          if (store.currentPlayerId && (store.isPlaying || store.isGameOver)) {
+            console.log('🔄 Reconnection detected, attempting to rejoin game...');
+            this.socket?.emit('rejoinGame', {
+              playerId: store.currentPlayerId,
+              preserveState: true
+            });
+          } else {
+            this.initializeGame();
+          }
+          
           resolve();
         });
 
@@ -85,6 +97,28 @@ class SocketClient {
 
         this.socket.on('disconnect', (reason) => {
           console.log('🔌 Disconnected from server:', reason);
+          this.isConnected = false;
+          
+          // If it's a server disconnect (not client-initiated), try to reconnect
+          if (reason === 'io server disconnect' || reason === 'transport close') {
+            console.log('🔄 Attempting to reconnect after server disconnect...');
+            setTimeout(() => {
+              this.connect().catch(error => {
+                console.error('❌ Reconnection failed:', error);
+              });
+            }, 1000);
+          }
+        });
+
+        // Handle WebSocket errors
+        this.socket.on('error', (error) => {
+          console.error('🔌 WebSocket error:', error);
+          this.isConnected = false;
+        });
+
+        // Handle transport errors
+        this.socket.on('transport_error', (error) => {
+          console.error('🔌 Transport error:', error);
           this.isConnected = false;
         });
 
@@ -168,6 +202,53 @@ class SocketClient {
         mode: 'multiplayer',
         playerCount: data.gameState.players.length 
       });
+    });
+
+    // Rejoin game after reconnection
+    this.socket.on('rejoinGame', (data: GameInitData) => {
+      console.log('🔄 Rejoined game after reconnection:', data);
+      this.playerId = data.playerId;
+      
+      const store = useGameStore.getState();
+      
+      // Preserve current game state but update with server data
+      const currentPlayerData = data.gameState.players.find(p => p.id === this.playerId);
+      if (currentPlayerData) {
+        console.log('🐍 Restoring current player snake after reconnection:', currentPlayerData);
+        const currentPlayerSnake = this.convertServerPlayerToSnake(currentPlayerData);
+        currentPlayerSnake.ai = false; // Mark as human player
+        store.updateMySnake(currentPlayerSnake);
+        
+        // Preserve score and game state if player is still alive
+        if (currentPlayerData.alive && store.isPlaying) {
+          console.log('✅ Successfully rejoined active game, preserving score:', store.score);
+        } else {
+          console.log('⚠️ Player is not alive or game is over, score may be reset');
+        }
+      }
+      
+      // Update other players and game objects
+      const otherSnakes = data.gameState.players
+        .filter(p => p.id !== this.playerId)
+        .map(p => this.convertServerPlayerToSnake(p));
+      
+      const foods = data.gameState.foods.map(f => {
+        const food = new Food(f.id, f.x, f.y, f.radius, f.color);
+        return food;
+      });
+      
+      store.updateOtherSnakes(otherSnakes);
+      store.updateFoods(foods);
+      
+      const deadPoints = data.gameState.deadPoints.map((p: any) => Point.create(p.x, p.y, p.radius, p.color));
+      store.addDeadPoints(deadPoints);
+      
+      store.setGameState({ 
+        mode: 'multiplayer',
+        playerCount: data.gameState.players.length 
+      });
+      
+      console.log('✅ Game state restored after reconnection');
     });
 
     // Player joined
@@ -513,6 +594,25 @@ class SocketClient {
     return this.isConnected;
   }
 
+  // Get detailed connection status
+  getConnectionStatus(): {
+    isConnected: boolean;
+    socketId: string | null;
+    playerId: string | null;
+    lastDisconnectReason?: string;
+  } {
+    return {
+      isConnected: this.isConnected,
+      socketId: this.socket?.id || null,
+      playerId: this.playerId,
+    };
+  }
+
+  // Get socket instance for event listening
+  getSocket(): Socket | null {
+    return this.socket;
+  }
+
   // Request minimum players (server should add bots if needed)
   requestMinimumPlayers(minPlayers: number): void {
     if (!this.socket || !this.isConnected) return;
@@ -520,6 +620,24 @@ class SocketClient {
     this.socket.emit('requestMinimumPlayers', {
       minPlayers: minPlayers
     });
+  }
+
+  // Request game restart (keep same room, reset score)
+  requestRestart(): void {
+    if (!this.socket || !this.isConnected || !this.playerId) {
+      console.warn('Cannot request restart: socket not connected or no player ID');
+      return;
+    }
+    
+    try {
+      console.log('🔄 Requesting game restart for player:', this.playerId);
+      this.socket.emit('restartGame', {
+        playerId: this.playerId,
+        resetScore: true
+      });
+    } catch (error) {
+      console.error('❌ Error requesting restart:', error);
+    }
   }
 }
 

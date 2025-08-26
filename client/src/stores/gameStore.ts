@@ -56,6 +56,13 @@ interface GameStore extends GameState {
   isHowToPlayOpen: boolean;
   setIsHowToPlayOpen: (isOpen: boolean) => void;
   toggleHowToPlay: () => void;
+  setPaused: (paused: boolean) => void;
+  pauseGame: () => void;
+  resumeGame: () => void;
+  resetCompleteState: () => void;
+  restartGame: () => void;
+  cleanupGameSession: () => void;
+  handleModalClose: (action: 'close' | 'restart') => void;
 }
 
 const initialState = {
@@ -93,7 +100,7 @@ const initialState = {
 
 export const useGameStore = create<GameStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...initialState,
 
       setGameState: (state) =>
@@ -264,6 +271,94 @@ export const useGameStore = create<GameStore>()(
           countdownValue: null,
           status: "Ready",
         }),
+
+      setPaused: (paused) =>
+        set({
+          isPaused: paused,
+          status: paused ? "Paused" : "Playing",
+        }),
+
+      pauseGame: () =>
+        set({
+          isPaused: true,
+          status: "Paused",
+        }),
+
+      resumeGame: () =>
+        set({
+          isPaused: false,
+          status: "Playing",
+        }),
+
+      // Complete state reset for modal close
+      resetCompleteState: () => set(() => {
+        // Import socketClient dynamically to avoid circular dependency
+        import("../services/socketClient")
+          .then(({ socketClient }) => {
+            socketClient.leaveRoom();
+            socketClient.disconnect();
+          })
+          .catch((error) => {
+            console.error("❌ Failed to cleanup socket:", error);
+          });
+
+        // Stop background music
+        import("../services/audioService").then(({ audioService }) => {
+          audioService.stopBackgroundMusic();
+        }).catch((error) => {
+          console.error('Failed to stop background music on reset:', error);
+        });
+
+        return {
+          ...initialState,
+          // Preserve only persistent data
+          currentPlayerId: null,
+        };
+      }),
+
+      // Restart game without complete reset
+      restartGame: () => set((state) => ({
+        ...state,
+        // Reset game-specific state only
+        isPlaying: false,
+        isGameOver: false,
+        isPaused: false,
+        score: 0,
+        rank: 0,
+        mySnake: null,
+        otherSnakes: [],
+        foods: [],
+        deadPoints: [],
+        status: 'Ready',
+        isCountingDown: false,
+        countdownValue: null,
+      })),
+
+      // Cleanup game session
+      cleanupGameSession: () => {
+        // Clear any running timers or intervals
+        // Reset canvas context if needed
+        // Cleanup socket listeners
+        console.log('🧹 Cleaning up game session');
+      },
+
+      // Handle modal close with different actions
+      handleModalClose: (action: 'close' | 'restart') => {
+        if (action === 'close') {
+          get().resetCompleteState();
+          get().cleanupGameSession();
+        } else if (action === 'restart') {
+          get().restartGame();
+          // Emit socket event to restart in same room
+          import("../services/socketClient")
+            .then(({ socketClient }) => {
+              socketClient.requestRestart();
+            })
+            .catch((error) => {
+              console.error("❌ Failed to request restart:", error);
+            });
+        }
+      },
     }),
     {
       name: "snake-zone-game-store",

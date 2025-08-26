@@ -15,6 +15,7 @@ import { useAuthStore } from "../../stores/authStore";
 import { HowToPlayModal } from "./HowToPlayModal";
 import socketClient from "../../services/socketClient";
 import { QuitModal } from "../QuitModal";
+import { ConnectionIndicator } from "./ConnectionIndicator";
 
 export const GameUI: React.FC = React.memo(() => {
   const isPlaying = useGameStore((state) => state.isPlaying);
@@ -63,6 +64,7 @@ export const GameUI: React.FC = React.memo(() => {
 
   return (
     <>
+      {isPlaying && <ConnectionIndicator />}
       <HowToPlayModal isOpen={isHowToPlayOpen} onClose={toggleHowToPlay} />
       <GameOverModal />
       <TopPlayersModal />
