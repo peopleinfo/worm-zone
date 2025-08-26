@@ -155,7 +155,7 @@ class SocketClient {
       
       // Convert server foods to client foods
       const foods = data.gameState.foods.map(f => {
-        const food = new Food(f.id, f.x, f.y, f.radius, f.color);
+        const food = new Food(f.id, f.x, f.y, f.radius, f.color, f.type);
         return food;
       });
       
@@ -240,7 +240,7 @@ class SocketClient {
     });
 
     // Player died
-    this.socket.on('playerDied', (data: { playerId: string; deadPoints: Point[] }) => {
+    this.socket.on('playerDied', (data: { playerId: string; deadPoints: Point[]; newFoods?: any[] }) => {
       const store = useGameStore.getState();
       
       if (data.playerId === this.playerId) {
@@ -261,9 +261,23 @@ class SocketClient {
         store.updateOtherSnakes(updatedSnakes);
       }
       
-      // Convert server deadPoints to client Point instances
-      const deadPoints = data.deadPoints.map((p: any) => new Point(p.x, p.y, p.radius, p.color));
-      store.addDeadPoints(deadPoints);
+      // Handle new food items from snake death (pizza_01 type)
+      if (data.newFoods && data.newFoods.length > 0) {
+        console.log(`🍕 Received ${data.newFoods.length} new pizza_01 food items from player death`);
+        // Convert server food objects to proper Food instances
+        const newFoodInstances = data.newFoods.map((f: any) => new Food(f.id, f.x, f.y, f.radius, f.color, f.type));
+        // Add new food items to the game state
+        const currentFoods = store.foods;
+        const updatedFoods = [...currentFoods, ...newFoodInstances];
+        store.updateFoods(updatedFoods);
+      }
+      
+      // Convert server deadPoints to client Point instances (fallback for compatibility)
+      if (data.deadPoints && data.deadPoints.length > 0) {
+        const deadPoints = data.deadPoints.map((p: any) => new Point(p.x, p.y, p.radius, p.color));
+        store.addDeadPoints(deadPoints);
+      }
+      
       store.setGameState({ playerCount: store.playerCount - 1 });
     });
 
@@ -375,6 +389,25 @@ class SocketClient {
       
       // Remove dead points from local state to maintain synchronization
       store.removeDeadPoints(data.deadPoints);
+    });
+
+    // Foods updated (server broadcast)
+    this.socket.on('foodsUpdated', (newFoods: any[]) => {
+      const store = useGameStore.getState();
+      
+      // Don't process food updates if the game is over
+      if (store.isGameOver) {
+        console.log('🚫 Ignoring foodsUpdated - game is over');
+        return;
+      }
+      
+      console.log(`🍕 Received ${newFoods.length} new food items via foodsUpdated`);
+      // Convert server food objects to proper Food instances
+      const newFoodInstances = newFoods.map((f: any) => new Food(f.id, f.x, f.y, f.radius, f.color, f.type));
+      // Add new food items to the existing foods
+      const currentFoods = store.foods;
+      const updatedFoods = [...currentFoods, ...newFoodInstances];
+      store.updateFoods(updatedFoods);
     });
   }
 

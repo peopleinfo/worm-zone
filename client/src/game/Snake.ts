@@ -218,8 +218,34 @@ export class Snake implements SnakeInterface {
     this.isAlive = false;
     const finalScore = this.points.length;
 
-    const latestDeadPoints = this.points.map(p => new Point(p.x, p.y, defRad, getRandomColor()));
-    Snake.deadPoints.push(...latestDeadPoints);
+    // Import Food class and game store dynamically to avoid circular dependencies
+    import('../game/Food').then(({ Food }) => {
+      import('../stores/gameStore').then(({ useGameStore }) => {
+        const store = useGameStore.getState();
+        
+        // Convert snake segments to pizza_01 food items
+        const newFoodItems = this.points.map((p, index) => {
+          const food = new Food(`${this.id}_segment_${index}_${Date.now()}`, p.x, p.y, p.radius, p.color, 'pizza_01');
+          return food;
+        });
+        
+        // Add new food items to the game store
+        const currentFoods = store.foods;
+        store.updateFoods([...currentFoods, ...newFoodItems]);
+        
+        console.log(`🍕 Snake death: Created ${newFoodItems.length} pizza_01 food items`);
+      }).catch(error => {
+        console.error('Failed to import gameStore:', error);
+        // Fallback to original dead points behavior
+        const latestDeadPoints = this.points.map(p => new Point(p.x, p.y, defRad, getRandomColor()));
+        Snake.deadPoints.push(...latestDeadPoints);
+      });
+    }).catch(error => {
+      console.error('Failed to import Food class:', error);
+      // Fallback to original dead points behavior
+      const latestDeadPoints = this.points.map(p => new Point(p.x, p.y, defRad, getRandomColor()));
+      Snake.deadPoints.push(...latestDeadPoints);
+    });
 
     const head = this.getHead();
     this.overPos.x = head.x;
@@ -239,7 +265,7 @@ export class Snake implements SnakeInterface {
 
     // Draw body segments with overlap to create continuous appearance
     // Use smaller increment to ensure segments overlap and connect seamlessly
-    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.7)); 
+    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.9)); 
 
     for (let i = 0; i < this.points.length; i += segmentSpacing) {
       this.points[i].draw(ctx, enableShadows, SHADOW_COLOR, SHADOW_BLUR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y);
