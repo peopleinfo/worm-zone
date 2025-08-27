@@ -268,7 +268,28 @@ export class GameEngine {
     // Update player snake
     if (this.mySnake.isAlive) {
       this.mySnake.move(store.controls, deltaTime);
-      this.mySnake.checkCollisionsWithBoundary(this.WORLD_WIDTH, this.WORLD_HEIGHT);
+      
+      // Check boundary collisions and notify server if collision occurs
+      // Capture points BEFORE collision check since over() method clears them
+      const currentPoints = this.mySnake.points.map(p => ({
+        x: p.x,
+        y: p.y,
+        radius: p.radius,
+        color: p.color,
+        type: p.type
+      }));
+      
+      const boundaryCollision = this.mySnake.checkCollisionsWithBoundary(this.WORLD_WIDTH, this.WORLD_HEIGHT);
+      if (boundaryCollision) {
+        // Immediately notify server of player death from boundary collision
+        try {
+          const pointInstances = currentPoints.map(p => Point.create(p.x, p.y, p.radius, p.color, p.type));
+          socketClient.sendPlayerDied(pointInstances);
+          console.log(`🏁 Player boundary collision detected - notified server of death with ${currentPoints.length} points`);
+        } catch (error) {
+          console.warn('Failed to send boundary collision death event:', error);
+        }
+      }
 
       // Food collisions - multiplayer only
       const foodsToCheck = store.foods;
@@ -306,7 +327,7 @@ export class GameEngine {
       for (let i = 0; i < store.deadPoints.length; i++) {
         const point = store.deadPoints[i];
         const collision = this.mySnake.checkCollisionsWithFood(point);
-        if (collision) {
+        if (collision && point.isOldEnoughToConsume()) {
           consumedPoints.push(point);
         }
       }
@@ -323,7 +344,9 @@ export class GameEngine {
           }
         });
         
-        store.removeDeadPoints(consumedPoints);
+        // Removed immediate local removal - let server handle dead point removal authority
+        // Dead points will be removed when server confirms via 'deadPointsRemoved' event
+        
         // Notify server about consumed dead points
         try {
           socketClient.sendDeadPointEaten(consumedPoints);
@@ -339,11 +362,29 @@ export class GameEngine {
         for (let i = 0; i < otherSnakes.length; i++) {
           const snake = otherSnakes[i];
           if (snake.isAlive) {
+            // Capture points BEFORE collision check since over() method clears them
+            const snakePoints = this.mySnake.points.map(p => ({
+              x: p.x,
+              y: p.y,
+              radius: p.radius,
+              color: p.color,
+              type: p.type
+            }));
+            
             const collision = this.mySnake.checkCollisionsWithOtherSnakes(snake);
             if (collision.collided) {
-              // Award points to the snake that caused the collision
+              // Immediately notify server of player death
+              try {
+                const pointInstances = snakePoints.map(p => Point.create(p.x, p.y, p.radius, p.color, p.type));
+                socketClient.sendPlayerDied(pointInstances);
+                console.log(`🐍 Player collision detected - notified server of death with ${snakePoints.length} points`);
+              } catch (error) {
+                console.warn('Failed to send immediate player death event:', error);
+              }
+              
+              // Award points to the snake that caused the collision (client-side visual feedback only)
               if (collision.collidedWith && collision.points) {
-                collision.collidedWith.eatSnake(collision.points, this.mySnake);
+                collision.collidedWith.eatSnake(collision.points);
               }
               break; // Stop checking once collision detected
             }
@@ -364,12 +405,7 @@ export class GameEngine {
       // Update store with current snake state
       store.updateMySnake(this.mySnake);
     } else {
-      // Snake is dead - send death event to server
-      try {
-        socketClient.sendPlayerDied(Snake.deadPoints);
-      } catch (error) {
-        console.warn('Failed to send player death event:', error);
-      }
+      // Snake is dead - end game (death event already sent during collision)
       store.endGame(this.mySnake.finalScore || 0, this.mySnake.finalRank || 1);
     }
 

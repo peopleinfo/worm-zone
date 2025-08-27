@@ -175,9 +175,9 @@ class SocketClient {
 
       store.updateOtherSnakes(otherSnakes);
       store.updateFoods(foods);
-      // Convert server deadPoints to client Point instances
+      // Convert server deadPoints to client Point instances with timestamps
       const deadPoints = data.gameState.deadPoints.map((p: any) =>
-        Point.create(p.x, p.y, p.radius, p.color)
+        Point.create(p.x, p.y, p.radius, p.color, undefined, p.createdAt || Date.now())
       );
       store.addDeadPoints(deadPoints);
       store.setGameState({
@@ -355,10 +355,10 @@ class SocketClient {
           store.updateFoods(updatedFoods);
         }
 
-        // Convert server deadPoints to client Point instances (fallback for compatibility)
+        // Convert server deadPoints to client Point instances with timestamps (fallback for compatibility)
         if (data.deadPoints && data.deadPoints.length > 0) {
           const deadPoints = data.deadPoints.map(
-            (p: any) => new Point(p.x, p.y, p.radius, p.color)
+            (p: any) => Point.create(p.x, p.y, p.radius, p.color, undefined, p.createdAt || Date.now())
           );
           store.addDeadPoints(deadPoints);
         }
@@ -546,6 +546,7 @@ class SocketClient {
           y: p.y,
           radius: p.radius,
           color: p.color,
+          type: p.type,
         })),
       });
     } catch (error) {
@@ -586,6 +587,7 @@ class SocketClient {
           y: p.y,
           radius: p.radius,
           color: p.color,
+          type: p.type,
         })),
       });
     } catch (error) {
@@ -608,6 +610,7 @@ class SocketClient {
           y: p.y,
           radius: p.radius,
           color: p.color,
+          type: p.type,
         })),
       });
     } catch (error) {

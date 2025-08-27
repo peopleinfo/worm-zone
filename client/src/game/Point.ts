@@ -1,25 +1,30 @@
 // Removed unused import
 
+import { CLEANUP_INTERVAL } from "../config/gameConfig";
+
 export class Point {
   x: number;
   y: number;
   radius: number;
   color: string;
   type?: any; // Optional food type for snake segments
+  createdAt?: number; // Timestamp for age tracking (dead points only)
   private static pool: Point[] = [];
   private static poolSize = 0;
   private static readonly MAX_POOL_SIZE = 300;
+  private static readonly CLEANUP_PROTECTION_TIME = CLEANUP_INTERVAL; // 30 seconds to match server
 
-  constructor(x: number = 0, y: number = 0, radius: number = 0, color: string = '', type?: any) {
+  constructor(x: number = 0, y: number = 0, radius: number = 0, color: string = '', type?: any, createdAt?: number) {
     this.x = x;
     this.y = y;
     this.radius = radius;
     this.color = color;
     this.type = type;
+    this.createdAt = createdAt;
   }
 
   // Object pooling for better memory management
-  static create(x: number, y: number, radius: number, color: string, type?: string): Point {
+  static create(x: number, y: number, radius: number, color: string, type?: string, createdAt?: number): Point {
     let point: Point;
     
     if (Point.poolSize > 0) {
@@ -29,8 +34,9 @@ export class Point {
       point.radius = radius;
       point.color = color;
       point.type = type;
+      point.createdAt = createdAt;
     } else {
-      point = new Point(x, y, radius, color, type);
+      point = new Point(x, y, radius, color, type, createdAt);
     }
     
     return point;
@@ -64,6 +70,13 @@ export class Point {
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
     }
+  }
+
+  // Check if dead point is old enough to be consumed (matches server's 30-second protection)
+  isOldEnoughToConsume(): boolean {
+    if (!this.createdAt) return true; // If no timestamp, allow consumption (regular food)
+    const age = Date.now() - this.createdAt;
+    return age >= Point.CLEANUP_PROTECTION_TIME;
   }
 
   // Check if point is within viewport (for culling)

@@ -1,11 +1,9 @@
 import { Point } from "./Point";
 import type { Snake as SnakeInterface, Controls } from "../types/game";
 import {
-  getRandomColor,
   isCollided,
   coeffD2R,
   INFINITY,
-  defRad,
 } from "../utils/gameUtils";
 import { performanceManager } from "../utils/performanceUtils";
 import {
@@ -53,7 +51,14 @@ export class Snake implements SnakeInterface {
     this.speed = 0.6;
     this.turningSpeed = 6;
     this.baseSpeed = 0.5; // Base speed for platform consistency
-    this.points = [new Point(x, y, this.radius, color)];
+    
+    // Get random food type for initial segments
+    const getRandomFoodType = (): string => {
+      const types = ['pizza', 'cherry', 'donut', 'burger'];
+      return types[Math.floor(Math.random() * types.length)];
+    };
+    
+    this.points = [new Point(x, y, this.radius, color, getRandomFoodType())];
     this.velocity = { x: 1, y: 0 };
     this.overPos = { x: 0, y: 0 };
     this.color = color;
@@ -63,7 +68,7 @@ export class Snake implements SnakeInterface {
     this.isAlive = true;
 
     for (let i = 1; i < length; i++) {
-      this.points.push(new Point(INFINITY, INFINITY, this.radius, color));
+      this.points.push(new Point(INFINITY, INFINITY, this.radius, color, getRandomFoodType()));
     }
   }
 
@@ -76,14 +81,18 @@ export class Snake implements SnakeInterface {
     );
   }
 
-  eatSnake(points: number, eatenSnake?: Snake): void {
-    // Award points equal to the length of the eaten snake
-    for (let i = 0; i < points; i++) {
-      const tail = this.points[this.points.length - 1];
-      // Preserve food type from eaten snake if available, otherwise use default
-      const type = eatenSnake && eatenSnake.points[i] ? eatenSnake.points[i].type : undefined;
-      const newPoint = new Point(tail.x, tail.y, tail.radius, this.color, type);
-      this.points.push(newPoint);
+  eatSnake(points: number): void {
+    // Server will handle score updates and broadcast to all clients
+    // Client only provides visual/audio feedback
+    console.log(`🐍 Snake ${this.id.substring(0,6)} ate snake with ${points} points - server will handle score update`);
+    
+    // Play eat sound effect for player snake only
+    if (!this.ai) {
+      import("../services/audioService").then(({ audioService }) => {
+        audioService.playEatSound();
+      }).catch((error) => {
+        console.warn('Failed to play eat sound:', error);
+      });
     }
   }
 
@@ -279,79 +288,16 @@ export class Snake implements SnakeInterface {
     this.isAlive = false;
     const finalScore = this.points.length;
 
-    // Import Food class and game store dynamically to avoid circular dependencies
-    import("../game/Food")
-      .then(({ Food }) => {
-        import("../stores/gameStore")
-          .then(({ useGameStore }) => {
-            const store = useGameStore.getState();
-
-            // Convert snake segments to food items preserving their original types
-            // Add wider spacing by applying random offsets to positions
-            const newFoodItems = this.points.map((p, index) => {
-              // Use the stored food type from the segment, or default to 'pizza' if not available
-              const type = p.type || "pizza";
-
-              // Add random offset for wider spacing (within reasonable bounds)
-              const offsetRange = this.radius * 2; // Spacing range based on snake radius
-              const offsetX = (Math.random() - 0.5) * offsetRange;
-              const offsetY = (Math.random() - 0.5) * offsetRange;
-
-              const newX = p.x + offsetX;
-              const newY = p.y + offsetY;
-
-              const food = new Food(
-                `${this.id}_segment_${index}_${Date.now()}`,
-                newX,
-                newY,
-                p.radius,
-                p.color,
-                type
-              );
-              return food;
-            });
-
-            // Add new food items to the game store
-            const currentFoods = store.foods;
-            store.updateFoods([...currentFoods, ...newFoodItems]);
-
-            // Debug logging to show actual food types being created
-            const typeCounts = newFoodItems.reduce((acc, food) => {
-              acc[food.type] = (acc[food.type] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>);
-            const typesSummary = Object.entries(typeCounts)
-              .map(([type, count]) => `${count}x ${type}`)
-              .join(", ");
-            console.log(
-              `🍕 Snake death: Created ${newFoodItems.length} food items: ${typesSummary}`
-            );
-          })
-          .catch((error) => {
-            console.error("Failed to import gameStore:", error);
-            // Fallback to original dead points behavior
-            const latestDeadPoints = this.points.map(
-              (p) => new Point(p.x, p.y, defRad, getRandomColor())
-            );
-            Snake.deadPoints.push(...latestDeadPoints);
-          });
-      })
-      .catch((error) => {
-        console.error("Failed to import Food class:", error);
-        // Fallback to original dead points behavior
-        const latestDeadPoints = this.points.map(
-          (p) => new Point(p.x, p.y, defRad, getRandomColor())
-        );
-        Snake.deadPoints.push(...latestDeadPoints);
-      });
-
+    // Store snake death data for server to handle food creation
     const head = this.getHead();
     this.overPos.x = head.x;
     this.overPos.y = head.y;
+    this.finalScore = finalScore;
 
+    // Clear snake points - server will handle food creation and broadcast to all clients
     this.points.length = 0;
 
-    this.finalScore = finalScore;
+    console.log(`🐍 Snake ${this.id.substring(0,6)} died with score ${finalScore} - server will handle food creation`);
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
