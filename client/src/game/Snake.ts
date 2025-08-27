@@ -1,8 +1,20 @@
-import { Point } from './Point';
-import type { Snake as SnakeInterface, Controls } from '../types/game';
-import { getRandomColor, isCollided, coeffD2R, INFINITY, defRad } from '../utils/gameUtils';
-import { performanceManager } from '../utils/performanceUtils';
-import { SHADOW_COLOR, SHADOW_BLUR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y } from '../config/gameConfig';
+import { Point } from "./Point";
+import type { Snake as SnakeInterface, Controls } from "../types/game";
+import {
+  getRandomColor,
+  isCollided,
+  coeffD2R,
+  INFINITY,
+  defRad,
+} from "../utils/gameUtils";
+import { performanceManager } from "../utils/performanceUtils";
+import {
+  SHADOW_COLOR,
+  SHADOW_BLUR,
+  SHADOW_OFFSET_X,
+  SHADOW_OFFSET_Y,
+  BODY_SEGMENT_SPACING,
+} from "../config/gameConfig";
 
 export class Snake implements SnakeInterface {
   static deadPoints: Point[] = [];
@@ -33,7 +45,7 @@ export class Snake implements SnakeInterface {
     x: number = 0,
     y: number = 0,
     length: number = 25,
-    color: string = 'red',
+    color: string = "red",
     id: string = Math.random().toString(36).substr(2, 9)
   ) {
     this.id = id;
@@ -55,10 +67,13 @@ export class Snake implements SnakeInterface {
     }
   }
 
-  eat(color: string = 'red', foodType?: string): void {
-    const newPoint = new Point(INFINITY, INFINITY, this.radius, color, foodType);
+  eat(color: string = "red", type?: string): void {
+    const newPoint = new Point(INFINITY, INFINITY, this.radius, color, type);
     this.points.push(newPoint);
-    this.radius = Math.min(10, Math.max(4, this.points.length * this.fatScaler));
+    this.radius = Math.min(
+      10,
+      Math.max(4, this.points.length * this.fatScaler)
+    );
   }
 
   eatSnake(points: number): void {
@@ -90,7 +105,9 @@ export class Snake implements SnakeInterface {
   }
 
   calculateTargetAngleRandomly(): number {
-    return [0, 45, 90, 135, 180, 225, 270, 315, 360][Math.floor(Math.random() * 8)];
+    return [0, 45, 90, 135, 180, 225, 270, 315, 360][
+      Math.floor(Math.random() * 8)
+    ];
   }
 
   move(controls?: Controls, deltaTime: number = 16.67): void {
@@ -101,7 +118,10 @@ export class Snake implements SnakeInterface {
     if (this.ai) {
       const targetAngle = this.calculateTargetAngleRandomly();
       this.updateAngle(targetAngle);
-    } else if (controls && (controls.up || controls.down || controls.left || controls.right)) {
+    } else if (
+      controls &&
+      (controls.up || controls.down || controls.left || controls.right)
+    ) {
       const targetAngle = this.calculateTargetAngleWithControls(controls);
       this.updateAngle(targetAngle);
     }
@@ -109,20 +129,27 @@ export class Snake implements SnakeInterface {
 
     this.velocity = {
       x: Math.cos(this.angle * coeffD2R),
-      y: Math.sin(this.angle * -coeffD2R)
+      y: Math.sin(this.angle * -coeffD2R),
     };
 
     // Platform-consistent movement with frame rate normalization
     const normalizedDeltaTime = deltaTime / 16.67; // Normalize to 60 FPS baseline
     const platformMultiplier = this.getPlatformSpeedMultiplier();
-    const effectiveSpeed = this.baseSpeed * normalizedDeltaTime * platformMultiplier;
+    const effectiveSpeed =
+      this.baseSpeed * normalizedDeltaTime * platformMultiplier;
 
     const headX = this.getHead().x + effectiveSpeed * this.velocity.x;
     const headY = this.getHead().y + effectiveSpeed * this.velocity.y;
 
-    // Preserve foodType from current head when creating new head
+    // Preserve type from current head when creating new head
     const currentHead = this.getHead();
-    const head = new Point(headX, headY, currentHead.radius, currentHead.color, currentHead.foodType);
+    const head = new Point(
+      headX,
+      headY,
+      currentHead.radius,
+      currentHead.color,
+      currentHead.type
+    );
 
     this.points.unshift(head);
     this.points.pop();
@@ -149,16 +176,27 @@ export class Snake implements SnakeInterface {
     if (deltaAngle > 0) {
       this.angle = (this.angle + Math.min(this.turningSpeed, deltaAngle)) % 360;
     } else if (deltaAngle < 0) {
-      this.angle = (this.angle - Math.min(this.turningSpeed, -deltaAngle)) % 360;
+      this.angle =
+        (this.angle - Math.min(this.turningSpeed, -deltaAngle)) % 360;
     }
 
     if (this.angle < 0) this.angle += 360;
   }
 
-  checkCollisionsWithFood(target: Point | { x: number; y: number; radius: number; color: string; type?: string }): Point | { x: number; y: number; radius: number; color: string; type?: string } | undefined {
+  checkCollisionsWithFood(
+    target:
+      | Point
+      | { x: number; y: number; radius: number; color: string; type?: string }
+  ):
+    | Point
+    | { x: number; y: number; radius: number; color: string; type?: string }
+    | undefined {
     const head = this.getHead();
     // Create a temporary Point object for collision detection if target is not a Point
-    const targetPoint = target instanceof Point ? target : new Point(target.x, target.y, target.radius, target.color);
+    const targetPoint =
+      target instanceof Point
+        ? target
+        : new Point(target.x, target.y, target.radius, target.color);
 
     // Calculate distance for debugging
     const distance = Math.hypot(head.x - targetPoint.x, head.y - targetPoint.y);
@@ -177,19 +215,23 @@ export class Snake implements SnakeInterface {
 
     if (collisionDetected) {
       // console.log(`[FOOD EATEN] Snake ${this.id.substring(0,6)} ate food at (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}) - Distance: ${distance.toFixed(2)}`);
-      // Pass the food type if available (for Food objects) or default to 'pizza_01'
-      const foodType = 'type' in target ? target.type : 'pizza_01';
-      this.eat(target.color, foodType);
+      // Pass the food type if available (for Food objects) or default to 'pizza'
+      const type = "type" in target ? target.type : "pizza_01";
+      this.eat(target.color, type);
       return target;
     }
     return undefined;
   }
 
-  checkCollisionsWithOtherSnakes(snake: Snake): { collided: boolean; collidedWith?: Snake; points?: number } {
+  checkCollisionsWithOtherSnakes(snake: Snake): {
+    collided: boolean;
+    collidedWith?: Snake;
+    points?: number;
+  } {
     if (snake === this || !this.isAlive) return { collided: false };
 
     const head = this.getHead();
-    const collided = snake.points.find(p => isCollided(head, p));
+    const collided = snake.points.find((p) => isCollided(head, p));
 
     if (collided) {
       const points = this.points.length; // Points to award to the other snake
@@ -199,7 +241,10 @@ export class Snake implements SnakeInterface {
     return { collided: false };
   }
 
-  checkCollisionsWithBoundary(worldWidth: number, worldHeight: number): boolean {
+  checkCollisionsWithBoundary(
+    worldWidth: number,
+    worldHeight: number
+  ): boolean {
     if (!this.isAlive) return false;
 
     const head = this.getHead();
@@ -223,53 +268,70 @@ export class Snake implements SnakeInterface {
     const finalScore = this.points.length;
 
     // Import Food class and game store dynamically to avoid circular dependencies
-    import('../game/Food').then(({ Food }) => {
-      import('../stores/gameStore').then(({ useGameStore }) => {
-        const store = useGameStore.getState();
-        
-        // Convert snake segments to food items preserving their original types
-        // Add wider spacing by applying random offsets to positions
-        const newFoodItems = this.points.map((p, index) => {
-          // Use the stored food type from the segment, or default to 'pizza_01' if not available
-          const foodType = p.foodType || 'pizza_01';
-          
-          // Add random offset for wider spacing (within reasonable bounds)
-          const offsetRange = this.radius * 2; // Spacing range based on snake radius
-          const offsetX = (Math.random() - 0.5) * offsetRange;
-          const offsetY = (Math.random() - 0.5) * offsetRange;
-          
-          const newX = p.x + offsetX;
-          const newY = p.y + offsetY;
-          
-          const food = new Food(`${this.id}_segment_${index}_${Date.now()}`, newX, newY, p.radius, p.color, foodType);
-          return food;
-        });
-        
-        // Add new food items to the game store
-        const currentFoods = store.foods;
-        store.updateFoods([...currentFoods, ...newFoodItems]);
-        
-        // Debug logging to show actual food types being created
-        const foodTypeCounts = newFoodItems.reduce((acc, food) => {
-          acc[food.foodType] = (acc[food.foodType] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-        const foodTypesSummary = Object.entries(foodTypeCounts)
-          .map(([type, count]) => `${count}x ${type}`)
-          .join(', ');
-        console.log(`🍕 Snake death: Created ${newFoodItems.length} food items: ${foodTypesSummary}`);
-      }).catch(error => {
-        console.error('Failed to import gameStore:', error);
+    import("../game/Food")
+      .then(({ Food }) => {
+        import("../stores/gameStore")
+          .then(({ useGameStore }) => {
+            const store = useGameStore.getState();
+
+            // Convert snake segments to food items preserving their original types
+            // Add wider spacing by applying random offsets to positions
+            const newFoodItems = this.points.map((p, index) => {
+              // Use the stored food type from the segment, or default to 'pizza' if not available
+              const type = p.type || "pizza_01";
+
+              // Add random offset for wider spacing (within reasonable bounds)
+              const offsetRange = this.radius * 2; // Spacing range based on snake radius
+              const offsetX = (Math.random() - 0.5) * offsetRange;
+              const offsetY = (Math.random() - 0.5) * offsetRange;
+
+              const newX = p.x + offsetX;
+              const newY = p.y + offsetY;
+
+              const food = new Food(
+                `${this.id}_segment_${index}_${Date.now()}`,
+                newX,
+                newY,
+                p.radius,
+                p.color,
+                type
+              );
+              return food;
+            });
+
+            // Add new food items to the game store
+            const currentFoods = store.foods;
+            store.updateFoods([...currentFoods, ...newFoodItems]);
+
+            // Debug logging to show actual food types being created
+            const typeCounts = newFoodItems.reduce((acc, food) => {
+              acc[food.type] = (acc[food.type] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+            const typesSummary = Object.entries(typeCounts)
+              .map(([type, count]) => `${count}x ${type}`)
+              .join(", ");
+            console.log(
+              `🍕 Snake death: Created ${newFoodItems.length} food items: ${typesSummary}`
+            );
+          })
+          .catch((error) => {
+            console.error("Failed to import gameStore:", error);
+            // Fallback to original dead points behavior
+            const latestDeadPoints = this.points.map(
+              (p) => new Point(p.x, p.y, defRad, getRandomColor())
+            );
+            Snake.deadPoints.push(...latestDeadPoints);
+          });
+      })
+      .catch((error) => {
+        console.error("Failed to import Food class:", error);
         // Fallback to original dead points behavior
-        const latestDeadPoints = this.points.map(p => new Point(p.x, p.y, defRad, getRandomColor()));
+        const latestDeadPoints = this.points.map(
+          (p) => new Point(p.x, p.y, defRad, getRandomColor())
+        );
         Snake.deadPoints.push(...latestDeadPoints);
       });
-    }).catch(error => {
-      console.error('Failed to import Food class:', error);
-      // Fallback to original dead points behavior
-      const latestDeadPoints = this.points.map(p => new Point(p.x, p.y, defRad, getRandomColor()));
-      Snake.deadPoints.push(...latestDeadPoints);
-    });
 
     const head = this.getHead();
     this.overPos.x = head.x;
@@ -289,12 +351,22 @@ export class Snake implements SnakeInterface {
 
     // Draw body segments with overlap to create continuous appearance
     // Use smaller increment to ensure segments overlap and connect seamlessly
-    const segmentSpacing = Math.max(1, Math.floor(this.radius * 0.4)); 
+    const segmentSpacing = Math.max(
+      1,
+      Math.floor(this.radius * BODY_SEGMENT_SPACING)
+    );
 
     // Draw body segments (excluding head - index 0) from tail to head
     // This ensures newer segments appear on top when snake overlaps itself
     for (let i = this.points.length - 1; i >= 1; i -= segmentSpacing) {
-      this.points[i].draw(ctx, enableShadows, SHADOW_COLOR, SHADOW_BLUR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y);
+      this.points[i].draw(
+        ctx,
+        enableShadows,
+        SHADOW_COLOR,
+        SHADOW_BLUR,
+        SHADOW_OFFSET_X,
+        SHADOW_OFFSET_Y
+      );
     }
 
     // Draw tail with enhanced appearance
@@ -304,7 +376,7 @@ export class Snake implements SnakeInterface {
         // Draw tail with slightly smaller radius for tapered effect
         const tailPoint = this.points[lastIndex];
         const tailRadius = tailPoint.radius * 0.8; // Make tail slightly smaller
-        
+
         ctx.save();
         if (enableShadows) {
           ctx.shadowColor = SHADOW_COLOR;
@@ -312,7 +384,7 @@ export class Snake implements SnakeInterface {
           ctx.shadowOffsetX = SHADOW_OFFSET_X;
           ctx.shadowOffsetY = SHADOW_OFFSET_Y;
         }
-        
+
         ctx.fillStyle = tailPoint.color;
         ctx.beginPath();
         ctx.arc(tailPoint.x, tailPoint.y, tailRadius, 0, 2 * Math.PI);
@@ -323,7 +395,14 @@ export class Snake implements SnakeInterface {
 
     // Draw head on top of all body segments
     if (this.points.length > 0) {
-      this.points[0].draw(ctx, enableShadows, SHADOW_COLOR, SHADOW_BLUR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y);
+      this.points[0].draw(
+        ctx,
+        enableShadows,
+        SHADOW_COLOR,
+        SHADOW_BLUR,
+        SHADOW_OFFSET_X,
+        SHADOW_OFFSET_Y
+      );
     }
 
     // Draw facial features on top of head
@@ -337,24 +416,24 @@ export class Snake implements SnakeInterface {
     const eyeGapCoeff = 2;
 
     const eyeRight = new Point(
-      head.x - this.radius / eyeGapCoeff * this.velocity.y,
-      head.y + this.radius / eyeGapCoeff * this.velocity.x,
+      head.x - (this.radius / eyeGapCoeff) * this.velocity.y,
+      head.y + (this.radius / eyeGapCoeff) * this.velocity.x,
       this.radius / 4
     );
 
     const eyeLeft = new Point(
-      head.x + this.radius / eyeGapCoeff * this.velocity.y,
-      head.y - this.radius / eyeGapCoeff * this.velocity.x,
+      head.x + (this.radius / eyeGapCoeff) * this.velocity.y,
+      head.y - (this.radius / eyeGapCoeff) * this.velocity.x,
       this.radius / 4
     );
 
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = "white";
     ctx.beginPath();
     ctx.arc(eyeRight.x, eyeRight.y, eyeRight.radius, 0, 2 * Math.PI);
     ctx.arc(eyeLeft.x, eyeLeft.y, eyeLeft.radius, 0, 2 * Math.PI);
     ctx.fill();
 
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = "black";
     ctx.beginPath();
     ctx.arc(eyeRight.x, eyeRight.y, eyeRight.radius / 2, 0, 2 * Math.PI);
     ctx.arc(eyeLeft.x, eyeLeft.y, eyeLeft.radius / 2, 0, 2 * Math.PI);
@@ -387,16 +466,24 @@ export class Snake implements SnakeInterface {
     const head = this.getHead();
 
     const mouth = new Point(
-      head.x + this.radius / 2 * this.velocity.x,
-      head.y + this.radius / 2 * this.velocity.y,
+      head.x + (this.radius / 2) * this.velocity.x,
+      head.y + (this.radius / 2) * this.velocity.y,
       this.radius / 8
     );
 
-    ctx.fillStyle = 'red';
+    ctx.fillStyle = "red";
     ctx.beginPath();
     const max = this.radius / 2;
     const min = this.radius / 8;
-    ctx.ellipse(mouth.x, mouth.y, min, max, -this.angle * Math.PI / 180, 0, Math.PI * 2);
+    ctx.ellipse(
+      mouth.x,
+      mouth.y,
+      min,
+      max,
+      (-this.angle * Math.PI) / 180,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 }

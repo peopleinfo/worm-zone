@@ -467,14 +467,14 @@ function initializeFoods() {
   );
 
   for (let i = 0; i < gameState.maxFoods; i++) {
-    const foodType = getRandomFoodType();
+    const type = getRandomFood();
     const food = {
       id: i,
       x: Math.random() * gameState.worldWidth,
       y: Math.random() * gameState.worldHeight,
       radius: 5,
-      color: getFoodColorByType(foodType),
-      type: foodType,
+      color: getFoodColorByType(type),
+      type: type,
     };
     gameState.foods.push(food);
 
@@ -507,18 +507,18 @@ function getRandomColor() {
 }
 
 // Get random food type matching client-side Food.ts types
-function getRandomFoodType() {
-  const foodTypes = ['pizza', 'apple', 'cherry', 'donut', 'burger', 'pizza_01'];
-  return foodTypes[Math.floor(Math.random() * foodTypes.length)];
+function getRandomFood() {
+  const types = ['pizza', 'apple', 'cherry', 'donut', 'burger', 'pizza'];
+  return types[Math.floor(Math.random() * types.length)];
 }
 
 // Get color based on food type
-function getFoodColorByType(foodType) {
-  switch (foodType) {
+function getFoodColorByType(type) {
+  switch (type) {
     case 'apple': return 'red';
     case 'cherry': return 'darkred';
     case 'pizza': return 'orange';
-    case 'pizza_01': return 'orange';
+    case 'pizza': return 'orange';
     case 'donut': return 'yellow';
     case 'burger': return 'brown';
     default: return 'orange';
@@ -1179,18 +1179,18 @@ function handleBotDeath(bot) {
   const newFoodItems = [];
   bot.points.forEach((point) => {
     // Use food type from point if available, otherwise default to pizza_01
-    const foodType = point.foodType || "pizza_01";
-    const foodId = `${foodType}_bot_${Date.now()}_${Math.random()
+    const type = point.type || "pizza_01";
+    const foodId = `${type}_bot_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 9)}`;
     
     // Determine color based on food type
     let foodColor = "orange"; // Default pizza color
-    if (foodType === "apple_01") foodColor = "red";
-    else if (foodType === "banana_01") foodColor = "yellow";
-    else if (foodType === "grape_01") foodColor = "purple";
-    else if (foodType === "cherry_01") foodColor = "darkred";
-    else if (foodType === "orange_01") foodColor = "orange";
+    if (type === "apple_01") foodColor = "red";
+    else if (type === "banana_01") foodColor = "yellow";
+    else if (type === "grape_01") foodColor = "purple";
+    else if (type === "cherry_01") foodColor = "darkred";
+    else if (type === "orange_01") foodColor = "orange";
     
     const foodItem = {
       id: foodId,
@@ -1198,7 +1198,7 @@ function handleBotDeath(bot) {
       y: point.y,
       radius: point.radius * 1.1,
       color: foodColor,
-      type: foodType,
+      type: type,
       createdAt: Date.now(),
     };
 
@@ -1921,7 +1921,7 @@ function updateBots() {
         player.score += POINT;
         
         // Extract the food type that was eaten (for potential future bot food type tracking)
-        const eatenFoodType = food.type || 'pizza_01';
+        const eatentype = food.type || 'pizza';
 
         // Add new point to bot's body using bot's main color
         if (player.points.length > 0) {
@@ -1931,17 +1931,17 @@ function updateBots() {
             y: tail.y,
             radius: player.radius,
             color: player.color, // Use bot's main color instead of food color
-            foodType: eatenFoodType, // Store food type for when bot dies
+            type: eatentype, // Store food type for when bot dies
           });
         }
 
         // Regenerate food with logging
         const oldPos = { x: food.x, y: food.y };
-        const newFoodType = getRandomFoodType();
+        const newtype = getRandomFood();
         food.x = Math.random() * gameState.worldWidth;
         food.y = Math.random() * gameState.worldHeight;
-        food.color = getFoodColorByType(newFoodType);
-        food.type = newFoodType;
+        food.color = getFoodColorByType(newtype);
+        food.type = newtype;
 
         // console.log(`🍎 Bot ${player.id} ate food ${food.id}: regenerated from (${oldPos.x.toFixed(2)}, ${oldPos.y.toFixed(2)}) to (${food.x.toFixed(2)}, ${food.y.toFixed(2)})`);
 
@@ -2221,15 +2221,15 @@ io.on("connection", (socket) => {
         updatePlayerActivity();
       }
       // Extract the food type that was eaten
-      const eatenFoodType = food.type || 'pizza_01';
+      const eatentype = food.type || 'pizza';
       
       // Regenerate food with logging
       const oldPos = { x: food.x, y: food.y };
-      const newFoodType = getRandomFoodType();
+      const newtype = getRandomFood();
       food.x = Math.random() * gameState.worldWidth;
       food.y = Math.random() * gameState.worldHeight;
-      food.color = getFoodColorByType(newFoodType);
-      food.type = newFoodType;
+      food.color = getFoodColorByType(newtype);
+      food.type = newtype;
 
       player.score += POINT;
       performanceMetrics.foodEaten++;
@@ -2248,10 +2248,10 @@ io.on("connection", (socket) => {
       io.emit("foodRegenerated", food);
       
       // Broadcast the eaten food type to the client for snake segment storage
-      io.emit("foodTypeEaten", { 
+      io.emit("typeEaten", { 
         playerId, 
         foodId, 
-        eatenFoodType 
+        eatentype 
       });
 
       // Broadcast score update
@@ -2332,18 +2332,18 @@ io.on("connection", (socket) => {
 
       deadPoints.forEach((dp) => {
         // Use the food type from the dead point, default to pizza_01 if not specified
-        const foodType = dp.foodType || "pizza_01";
-        const foodId = `${foodType}_${Date.now()}_${Math.random()
+        const type = dp.type || "pizza_01";
+        const foodId = `${type}_${Date.now()}_${Math.random()
           .toString(36)
           .substr(2, 9)}`;
         
         // Determine color based on food type
         let foodColor = "orange"; // Default pizza color
-        if (foodType === "apple_01") foodColor = "red";
-        else if (foodType === "banana_01") foodColor = "yellow";
-        else if (foodType === "grape_01") foodColor = "purple";
-        else if (foodType === "cherry_01") foodColor = "darkred";
-        else if (foodType === "orange_01") foodColor = "orange";
+        if (type === "apple_01") foodColor = "red";
+        else if (type === "banana_01") foodColor = "yellow";
+        else if (type === "grape_01") foodColor = "purple";
+        else if (type === "cherry_01") foodColor = "darkred";
+        else if (type === "orange_01") foodColor = "orange";
         
         const foodItem = {
           id: foodId,
@@ -2351,7 +2351,7 @@ io.on("connection", (socket) => {
           y: dp.y,
           radius: 8, // Slightly larger than regular food
           color: foodColor,
-          type: foodType,
+          type: type,
           createdAt: Date.now(),
         };
 

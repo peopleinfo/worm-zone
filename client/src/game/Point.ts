@@ -5,21 +5,21 @@ export class Point {
   y: number;
   radius: number;
   color: string;
-  foodType?: any; // Optional food type for snake segments
+  type?: any; // Optional food type for snake segments
   private static pool: Point[] = [];
   private static poolSize = 0;
-  private static readonly MAX_POOL_SIZE = 500;
+  private static readonly MAX_POOL_SIZE = 300;
 
-  constructor(x: number = 0, y: number = 0, radius: number = 0, color: string = '', foodType?: any) {
+  constructor(x: number = 0, y: number = 0, radius: number = 0, color: string = '', type?: any) {
     this.x = x;
     this.y = y;
     this.radius = radius;
     this.color = color;
-    this.foodType = foodType;
+    this.type = type;
   }
 
   // Object pooling for better memory management
-  static create(x: number, y: number, radius: number, color: string, foodType?: string): Point {
+  static create(x: number, y: number, radius: number, color: string, type?: string): Point {
     let point: Point;
     
     if (Point.poolSize > 0) {
@@ -28,9 +28,9 @@ export class Point {
       point.y = y;
       point.radius = radius;
       point.color = color;
-      point.foodType = foodType;
+      point.type = type;
     } else {
-      point = new Point(x, y, radius, color, foodType);
+      point = new Point(x, y, radius, color, type);
     }
     
     return point;

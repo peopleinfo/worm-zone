@@ -1,29 +1,29 @@
 import { getRandomColor, getRandX, getRandY, lerp } from '../utils/gameUtils';
 import { Point } from './Point';
 
-type FoodType = 'pizza' | 'apple' | 'cherry' | 'donut' | 'burger' | 'pizza_01';
+type Type = 'pizza' | 'apple' | 'cherry' | 'donut' | 'burger';
   
 export class Food extends Point {
   static i: number = 0;
   static imageCache: Map<string, HTMLCanvasElement> = new Map();
   id: string;
-  foodType: FoodType;
+  type: Type;
   private imageReady: boolean = false;
 
-  constructor(id: string, x: number, y: number, radius: number, color: string, type?: FoodType) {
+  constructor(id: string, x: number, y: number, radius: number, color: string, type?: Type) {
     super(x, y, radius, color);
     this.id = id;
-    this.foodType = type || this.getRandomFoodType();
+    this.type = type || this.getRandomFood();
     this.createFoodImage();
   }
 
-  private getRandomFoodType(): FoodType {
-    const types: FoodType[] = ['pizza', 'cherry', 'donut', 'burger', 'pizza_01'];
+  private getRandomFood(): Type {
+    const types: Type[] = ['pizza', 'cherry', 'donut', 'burger'];   
     return types[Math.floor(Math.random() * types.length)];
   }
 
   private createFoodImage(): void {
-    const cacheKey = `${this.foodType}_${this.radius}`;
+    const cacheKey = `${this.type}_${this.radius}`;
     
     if (Food.imageCache.has(cacheKey)) {
       this.imageReady = true;
@@ -61,10 +61,7 @@ export class Food extends Point {
     const drawRadius = this.radius;
 
     // Draw different food types
-    switch (this.foodType) {
-      case 'pizza':
-        this.drawPizza(ctx, centerX, centerY, drawRadius);
-        break;
+    switch (this.type) {
       case 'apple':
         this.drawApple(ctx, centerX, centerY, drawRadius);
         break;
@@ -74,78 +71,13 @@ export class Food extends Point {
       case 'burger':
         this.drawBurger(ctx, centerX, centerY, drawRadius);
         break;
-      case 'pizza_01':
-        this.drawPizza01(ctx, centerX, centerY, drawRadius, size);
+      case 'pizza':
+        this.drawPizza(ctx, centerX, centerY, drawRadius, size);
         break;
     }
 
     Food.imageCache.set(cacheKey, canvas);
     this.imageReady = true;
-  }
-
-  private drawPizza(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number): void {
-    // Add shadow for depth
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
-    
-    // Pizza base with gradient
-    const baseGradient = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, 0, x, y, radius);
-    baseGradient.addColorStop(0, '#FFED4E');
-    baseGradient.addColorStop(0.7, '#FFD700');
-    baseGradient.addColorStop(1, '#FFA500');
-    
-    ctx.fillStyle = baseGradient;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Reset shadow for crust
-    ctx.shadowColor = 'transparent';
-    
-    // Pizza crust with gradient
-    const crustGradient = ctx.createLinearGradient(x - radius, y - radius, x + radius, y + radius);
-    crustGradient.addColorStop(0, '#D2691E');
-    crustGradient.addColorStop(1, '#8B4513');
-    
-    ctx.strokeStyle = crustGradient;
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-    
-    // Pepperoni with gradients and shadows
-    const pepperoniPositions = [
-      { x: x - radius * 0.3, y: y - radius * 0.2 },
-      { x: x + radius * 0.2, y: y - radius * 0.3 },
-      { x: x - radius * 0.1, y: y + radius * 0.3 },
-      { x: x + radius * 0.3, y: y + radius * 0.1 }
-    ];
-    
-    pepperoniPositions.forEach(pos => {
-      // Pepperoni shadow
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-      ctx.shadowBlur = 2;
-      ctx.shadowOffsetX = 1;
-      ctx.shadowOffsetY = 1;
-      
-      // Pepperoni gradient
-      const pepperoniGradient = ctx.createRadialGradient(
-        pos.x - radius * 0.05, pos.y - radius * 0.05, 0,
-        pos.x, pos.y, radius * 0.15
-      );
-      pepperoniGradient.addColorStop(0, '#FF6B6B');
-      pepperoniGradient.addColorStop(0.6, '#DC143C');
-      pepperoniGradient.addColorStop(1, '#8B0000');
-      
-      ctx.fillStyle = pepperoniGradient;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, radius * 0.15, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Reset shadow
-      ctx.shadowColor = 'transparent';
-    });
   }
 
   private drawApple(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number): void {
@@ -180,7 +112,7 @@ export class Food extends Point {
     );
     highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
     highlightGradient.addColorStop(0.5, 'rgba(255, 136, 136, 0.6)');
-    highlightGradient.addColorStop(1, 'rgba(255, 68, 68, 0.2)');
+    highlightGradient.addColorStop(1, 'rgba(255, 68, 68, 0.2)');  
     
     ctx.fillStyle = highlightGradient;
     ctx.beginPath();
@@ -397,7 +329,7 @@ export class Food extends Point {
     });
   }
 
-  private drawPizza01(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, size: number): void {
+  private drawPizza(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, size: number): void {
     // Load and draw the PNG image from icons folder
     const img = new Image();
     img.onload = () => {
@@ -416,7 +348,7 @@ export class Food extends Point {
       ctx.drawImage(img, imageX, imageY, imageSize, imageSize);
       
       // Update the cache with the new image
-      const cacheKey = `${this.foodType}_${this.radius}`;
+      const cacheKey = `${this.type}_${this.radius}`;
       const canvas = ctx.canvas;
       Food.imageCache.set(cacheKey, canvas);
     };
@@ -449,7 +381,7 @@ export class Food extends Point {
     this.y = getRandY(canvasHeight);
     this.color = getRandomColor();
     // Generate new food type for variety
-    this.foodType = this.getRandomFoodType();
+    this.type = this.getRandomFood();
     this.createFoodImage();
   }
 
@@ -468,7 +400,7 @@ export class Food extends Point {
     
     // Use cached food image if available, otherwise fallback to circle
     if (this.imageReady) {
-      const cacheKey = `${this.foodType}_${this.radius}`;
+      const cacheKey = `${this.type}_${this.radius}`;
       const foodImage = Food.imageCache.get(cacheKey);
       
       if (foodImage) {

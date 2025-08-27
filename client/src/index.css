@@ -1043,7 +1043,7 @@ canvas:not(#gameCanvas) {
   border: 2px solid var(--color-primary);
   border-radius: 40px;
   box-shadow: 0px 3px 0px #512d15, inset 2px 4px 4px rgba(255, 255, 255, 0.67);
-  padding: 20px;
+  padding: 16;
   pointer-events: auto;
 }
 
