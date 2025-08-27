@@ -599,6 +599,7 @@ interface Food {
   y: number;
   radius: number;
   color: string;
+  type: 'apple' | 'cherry' | 'donut' | 'burger' | 'pizza';
 }
 
 interface DeadPoint {
@@ -606,6 +607,8 @@ interface DeadPoint {
   y: number;
   radius: number;
   color: string;
+  type?: 'apple' | 'cherry' | 'donut' | 'burger' | 'pizza';
+  createdAt: number;
 }
 ```
 
@@ -632,6 +635,37 @@ interface DeadPoint {
 * Human players respawn after 3 seconds, bots are permanently removed
 
 * Score system: 1 point per food, 1 point per dead point consumed
+
+#### Food Type Preservation System
+
+**Enhanced Food Lifecycle Management**: The game implements a comprehensive food type preservation system that ensures accurate display of food types throughout the entire game lifecycle - from spawned food → eaten by snake → stored in segments → released as dead food with correct type.
+
+**Food Type Categories**:
+* Apple (🍎) - Basic food type with standard nutritional value
+* Cherry (🍒) - Small, quick-consumption food items
+* Donut (🍩) - Medium-value food with distinctive appearance
+* Burger (🍔) - High-value food items for significant growth
+* Pizza (🍕) - Premium food type with maximum nutritional benefit
+
+**Type Preservation Process**:
+1. **Food Spawning**: Each food item is assigned a specific type (apple, cherry, donut, burger, pizza) with corresponding visual representation and color coding
+2. **Snake Consumption**: When a snake eats food, the food's type is preserved and stored in the snake's body segments (Point objects with type property)
+3. **Segment Storage**: Snake segments maintain the original food type throughout the snake's lifetime, creating a visual history of consumed foods
+4. **Death Conversion**: When a snake dies, each body segment is converted to dead food while preserving its original type, ensuring accurate visual representation
+5. **Dead Food Display**: Dead food items display with the correct type and color, showing apple, cherry, donut, burger, or pizza instead of defaulting to pizza
+
+**Cross-Platform Synchronization**:
+* **Client-Side Type Handling**: Snake.ts properly stores food types in Point objects and preserves them during death conversion
+* **Server-Side Type Management**: Server maintains food type consistency in bot deaths, player deaths, and dead point to food conversion
+* **Unified Type Mapping**: Consistent food type definitions and color mappings between client and server ensure synchronized visual representation
+* **Type Validation**: Both client and server validate food types with fallback to 'pizza' only when type data is genuinely unavailable
+
+**Technical Implementation**:
+* Point class supports optional 'type' property for food type storage
+* Snake.eat() method preserves food type when creating new body segments
+* Snake death handlers (both client and server) maintain type information during conversion
+* Server-side bot and player death functions properly map food types to colors
+* Dead point cleanup system preserves type information throughout the 30-second lifecycle
 
 ### 6.3 Server Configuration
 

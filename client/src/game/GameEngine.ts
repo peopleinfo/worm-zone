@@ -319,7 +319,7 @@ export class GameEngine {
             if (collision.collided) {
               // Award points to the snake that caused the collision
               if (collision.collidedWith && collision.points) {
-                collision.collidedWith.eatSnake(collision.points);
+                collision.collidedWith.eatSnake(collision.points, this.mySnake);
               }
               break; // Stop checking once collision detected
             }

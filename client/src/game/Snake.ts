@@ -76,11 +76,13 @@ export class Snake implements SnakeInterface {
     );
   }
 
-  eatSnake(points: number): void {
+  eatSnake(points: number, eatenSnake?: Snake): void {
     // Award points equal to the length of the eaten snake
     for (let i = 0; i < points; i++) {
       const tail = this.points[this.points.length - 1];
-      const newPoint = new Point(tail.x, tail.y, tail.radius, this.color);
+      // Preserve food type from eaten snake if available, otherwise use default
+      const type = eatenSnake && eatenSnake.points[i] ? eatenSnake.points[i].type : undefined;
+      const newPoint = new Point(tail.x, tail.y, tail.radius, this.color, type);
       this.points.push(newPoint);
     }
   }
@@ -216,7 +218,7 @@ export class Snake implements SnakeInterface {
     if (collisionDetected) {
       // console.log(`[FOOD EATEN] Snake ${this.id.substring(0,6)} ate food at (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}) - Distance: ${distance.toFixed(2)}`);
       // Pass the food type if available (for Food objects) or default to 'pizza'
-      const type = "type" in target ? target.type : "pizza_01";
+      const type = "type" in target ? target.type : "pizza";
       this.eat(target.color, type);
       return target;
     }
@@ -278,7 +280,7 @@ export class Snake implements SnakeInterface {
             // Add wider spacing by applying random offsets to positions
             const newFoodItems = this.points.map((p, index) => {
               // Use the stored food type from the segment, or default to 'pizza' if not available
-              const type = p.type || "pizza_01";
+              const type = p.type || "pizza";
 
               // Add random offset for wider spacing (within reasonable bounds)
               const offsetRange = this.radius * 2; // Spacing range based on snake radius

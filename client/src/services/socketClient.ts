@@ -257,8 +257,17 @@ class SocketClient {
           console.log(
             `🍎 Food type eaten: ${data.eatentype} (foodId: ${data.foodId})`
           );
-          // The snake's eat method should already be called from collision detection
-          // This event is mainly for logging and potential future features
+          
+          // The eat() method in Snake.ts adds a new segment to the END of the points array
+          // We need to update this newly created segment with the correct food type
+          // This ensures the food type is preserved when the snake dies
+          if (store.mySnake.points.length > 0) {
+            // The newly created segment is at the end of the array (last index)
+            const newSegment = store.mySnake.points[store.mySnake.points.length - 1];
+            newSegment.type = data.eatentype;
+            console.log(`🔄 Updated newly created segment type to: ${data.eatentype}`);
+            console.log(`🐍 Snake now has ${store.mySnake.points.length} segments`);
+          }
         }
       }
     );
