@@ -11,9 +11,9 @@ export interface ScoreAnimationData {
 
 export class ScoreAnimation {
   private animations: ScoreAnimationData[] = [];
-  private readonly ANIMATION_DURATION = 800; // 0.8s
+  private readonly ANIMATION_DURATION = 1200; // 1.2s - Enhanced duration per PRD
   private readonly FLOAT_DISTANCE = 18; // pixels to float up
-  private readonly FADE_START = 0.6; // Start fading at 70% of animation
+  private readonly FADE_START = 0.5; // Start fading at 50% of animation - Enhanced per PRD
 
   // Add a new score animation
   addAnimation(x: number, y: number, points: number): void {
@@ -46,14 +46,16 @@ export class ScoreAnimation {
       const elapsed = now - animation.startTime;
       const progress = Math.min(elapsed / animation.duration, 1);
       
-      // Easing function for smooth upward movement
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      animation.offsetY = -this.FLOAT_DISTANCE * easeOut;
+      // Enhanced cubic-bezier easing function (0.25, 0.46, 0.45, 0.94) per PRD
+      const t = progress;
+      const cubicBezier = 3 * (1 - t) * (1 - t) * t * 0.25 + 3 * (1 - t) * t * t * 0.46 + t * t * t * 0.94;
+      animation.offsetY = -this.FLOAT_DISTANCE * cubicBezier;
       
-      // Fade out in the last 30% of the animation
+      // Enhanced smoother opacity transition starting at 50% per PRD
       if (progress >= this.FADE_START) {
         const fadeProgress = (progress - this.FADE_START) / (1 - this.FADE_START);
-        animation.opacity = 1 - fadeProgress;
+        // Smoother fade-out with cubic easing
+        animation.opacity = 1 - (fadeProgress * fadeProgress * (3 - 2 * fadeProgress));
       }
       
       // Remove completed animations
@@ -70,24 +72,25 @@ export class ScoreAnimation {
     for (const animation of this.animations) {
       ctx.globalAlpha = animation.opacity;
       
-      // Set text properties
+      // Enhanced text properties with better visibility
       ctx.font = 'bold 4px Baloo-Regular';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       
-      // Draw text shadow for better visibility
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-      ctx.fillText(
+      // Enhanced text shadow with increased width for better visibility per PRD
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.lineWidth = 1.5; // Increased stroke width
+      ctx.strokeText(
         `+${animation.points}`,
-        animation.x + 1.3,
-        animation.y + animation.offsetY + 1.3
+        animation.x,
+        animation.y + animation.offsetY
       );
       
-      // Draw main text with color based on points
+      // Enhanced colors per PRD: bright yellow for +1, gold for +2
       if (animation.points === 1) {
-        ctx.fillStyle = '#ffffff'; // white for 1 point
+        ctx.fillStyle = '#FFD60A'; // Bright yellow for 1 point per PRD
       } else {
-        ctx.fillStyle = '#FF9800'; // Orange for 2 points
+        ctx.fillStyle = '#FF9F0A'; // Gold for 2+ points per PRD
       }
       
       ctx.fillText(
