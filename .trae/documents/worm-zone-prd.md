@@ -19,7 +19,7 @@ The game targets mobile users seeking quick, competitive multiplayer experiences
 
 Our Snake Zone game consists of the following main pages:
 
-1. **Game Arena**: main game canvas, real-time multiplayer gameplay with bots, score display, joypad controls
+1. **Game Arena**: main game canvas, real-time multiplayer gameplay with bots, enhanced point system with different food values, floating score animations, directional snake head indicators, score display, joypad controls
 2. **Room Lobby**: auto room joining, countdown display (3,2,1), player list with bot indicators
 3. **Game Over Modal**: score summary with multiplayer rankings, highest score display, global leaderboard, restart functionality
 4. **Landing Home**: main entry point with settings icon, language selection, game start
@@ -80,16 +80,31 @@ Our Snake Zone game consists of the following main pages:
 - Smooth animations when leaderboard updates with new records
 - Real-time player activity tracking and analytics collection
 
-### 2.6 Page Details
+### 2.6 Enhanced Point System & Visual Features
+
+**Point System Enhancement:**
+- **Pizza & Apple**: 1 point each (standard food items)
+- **Cherry, Donut & Burger**: 2 points each (premium food items)
+- **Visual Feedback**: Floating score animations (+1 or +2) appear when eating food
+- **Performance Optimized**: Animations are lightweight and don't affect gameplay performance
+
+**Snake Visual Enhancements:**
+- **Direction Indicators**: Snake heads display directional arrows showing movement direction
+- **Score Animations**: Floating text shows point values when food is consumed
+- **Synchronized Rendering**: All visual enhancements work seamlessly in multiplayer mode
+
+### 2.7 Page Details
 
 | Page Name       | Module Name      | Feature Description                                                        |
 | --------------- | ---------------- | -------------------------------------------------------------------------- |
 | Landing Home    | Settings Icon    | Right-side settings gear icon that opens settings modal                    |
 | Landing Home    | Game Start       | Main entry point with play button and game branding                        |
 | Landing Home    | Language Display | Current language flag indicator in top area                                |
-| Game Arena      | Game Canvas      | Render worm movement, food collection, collision detection, real-time sync |
+| Game Arena      | Game Canvas      | Render worm movement with directional indicators, enhanced food collection with different point values, collision detection, real-time sync |
+| Game Arena      | Point System     | Different food types award different points: Pizza/Apple (1pt), Cherry/Donut/Burger (2pts) |
+| Game Arena      | Visual Effects   | Floating score animations (+1/+2), directional snake head indicators, performance-optimized rendering |
 | Game Arena      | Joypad Controls  | Touch-based directional controls optimized for rotated landscape interface |
-| Game Arena      | Score Display    | Real-time score updates, leaderboard during gameplay                       |
+| Game Arena      | Score Display    | Real-time score updates with enhanced visual feedback, leaderboard during gameplay |
 | Room Lobby      | Auto Matchmaking | Connect players to available rooms, automatically spawn bots to maintain 3-player gameplay |
 | Room Lobby      | Countdown Timer  | Display 3-2-1 countdown before game starts                                 |
 | Room Lobby      | Player Status    | Show connected players, intelligent bot indicators, connection status      |
@@ -119,10 +134,19 @@ Our Snake Zone game consists of the following main pages:
 7. Game engine adapts performance settings based on device tier and thermal state
 8. Display lobby with player count (human + bot indicators) and 3-2-1 countdown
 9. Game starts with synchronized multiplayer gameplay (human players + AI bots)
-10. On death → Show game over modal with scores, rankings, and global leaderboard
-11. System updates backend with new score and analytics data
-12. Modal Close → Complete state reset (equivalent to app restart)
-13. Restart → New game with zero score, rejoin multiplayer room with fresh bot spawning
+10. User collects food to grow their snake and increase score:
+    - **Pizza & Apple**: Award 1 point with +1 floating animation
+    - **Cherry, Donut & Burger**: Award 2 points with +2 floating animation
+    - **Visual Feedback**: Snake head shows directional indicator for movement
+11. On death → Show game over modal with scores, rankings, and global leaderboard
+12. System updates backend with new score and analytics data
+13. Modal Close → Complete state reset (equivalent to app restart)
+14. Restart → New game with zero score, rejoin multiplayer room with fresh bot spawning
+
+**Enhanced Gameplay Features:**
+- **Point System**: Different food types provide varying point values for strategic gameplay
+- **Visual Feedback**: Floating score animations and directional indicators enhance user experience
+- **Performance Optimized**: All visual enhancements maintain optimal fps gameplay
 
 **Performance Optimization Flow:**
 
@@ -202,13 +226,19 @@ graph TD
 
 * **Performance Colors**: Blue (#2196F3) for optimal, Orange (#FF9800) for warning, Red (#F44336) for critical states
 
+* **Score Animation Colors**: Bright yellow (#FFD60A) for +1 points, gold (#FF9F0A) for +2 points
+
 * **Button Style**: Rounded corners with 8px radius, gradient backgrounds
 
-* **Font**: Roboto Bold for scores, Roboto Regular for UI text (16px-24px), Roboto Mono for performance metrics (14px)
+* **Font**: Roboto Bold for scores, Roboto Regular for UI text (16px-24px), Roboto Mono for performance metrics (14px), Bold sans-serif for floating score animations (18px)
 
 * **Layout Style**: Full-screen landscape with floating UI elements, adaptive canvas scaling
 
 * **Icons**: Minimalist line icons, gaming-themed emojis (🐍, 🎮, 🏆), performance indicators (🔥, ⚡, 🔋)
+
+* **Direction Indicators**: Triangular arrows with 3px stroke, semi-transparent overlay
+
+* **Visual Effects**: Performance-optimized canvas animations with alpha blending, floating scores with 1.5s fade-out
 
 * **Performance Indicators**: Color-coded badges for device tier, thermal state icons, battery optimization visual feedback
 
@@ -217,9 +247,11 @@ graph TD
 | Page Name       | Module Name      | UI Elements                                                                |
 |-----------------|------------------|----------------------------------------------------------------------------|
 | Landing Home    | Main Interface   | Game title, start button, settings icon, language indicator, performance badge |
-| Game Arena      | Game Canvas      | Snake sprites, food items, score display, touch control overlay, adaptive scaling |
-| Game Arena      | UI Overlay       | Current score, pause button, mini-map, FPS indicator, thermal status      |
+| Game Arena      | Game Canvas      | Snake sprites with directional indicators, enhanced food items with different point values, floating score animations, touch control overlay, adaptive scaling |
+| Game Arena      | UI Overlay       | Current score with visual feedback, pause button, mini-map, FPS indicator, thermal status |
 | Game Arena      | Performance HUD  | Device tier badge, battery status, frame rate display, thermal warning    |
+| Game Arena      | Visual Effects   | **Floating +1/+2 score animations (yellow/gold), directional snake head arrows (semi-transparent triangles), performance-optimized canvas rendering** |
+| Game Arena      | Point System UI  | **Visual differentiation for food types: Pizza/Apple (standard glow), Cherry/Donut/Burger (premium glow effect)** |
 | Game Over Modal | Score Display    | Current score, best score, ranking position, restart button, score comparison |
 | Game Over Modal | Leaderboard      | Top 10 global scores, player highlighting, crown icons for top 3, real-time updates |
 | Game Over Modal | Analytics        | Session statistics, performance metrics, backend sync status              |
@@ -244,11 +276,11 @@ graph TD
 
 * **Frontend**: React 18 + TypeScript + Vite
 
-* **State Management**: Zustand for multiplayer game state and UI state
+* **State Management**: Zustand for multiplayer game state and enhanced scoring system
 
 * **Internationalization**: react-i18next for multi-language support
 
-* **Real-time Communication**: Socket.io client for multiplayer and bot communication
+* **Real-time Communication**: Socket.io client for multiplayer and bot communication with synchronized point updates
 
 * **Mobile Integration**: MOS SDK for mini-program features
 
@@ -258,11 +290,13 @@ graph TD
 
 * **Backend Integration**: AuthService for user profile and score synchronization
 
-* **Backend**: Node.js + Express + Socket.io server with intelligent bot management
+* **Backend**: Node.js + Express + Socket.io server with intelligent bot management and enhanced point system validation
 
 * **Analytics**: Real-time game statistics broadcasting and player activity tracking
 
 * **User Management**: Backend user profile storage and global leaderboard system
+
+* **Visual Effects Engine**: Performance-optimized animations for score feedback and directional indicators
 
 ### 5.2 Development Flow
 
@@ -329,11 +363,13 @@ npx kill-port 3000 5000
 #### 5.2.3 Development Guidelines
 
 1. **Orientation Enforcement**: Implement CSS and JavaScript locks for landscape mode
-2. **Socket Synchronization**: Use Zustand middleware for socket state sync
-3. **Game State Management**: Centralized game state with predictable updates
+2. **Socket Synchronization**: Use Zustand middleware for socket state sync with enhanced scoring system
+3. **Game State Management**: Centralized game state with predictable updates and point value validation
 4. **Internationalization**: react-i18next setup with JSON translation files
 5. **Error Handling**: Graceful degradation for connection issues
-6. **Performance**: 60fps gameplay with optimized rendering
+6. **Performance**: 60fps gameplay with optimized rendering and lightweight visual effects
+7. **Visual Effects**: Performance-optimized animations that don't impact game logic or network sync
+8. **Point System**: Server-side validation with client-side visual feedback for different food values
 
 #### 5.2.4 Testing Strategy
 

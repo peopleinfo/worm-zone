@@ -1,6 +1,7 @@
 import { Snake } from './Snake';
 import { Food } from './Food';
 import { Point } from './Point';
+import { ScoreAnimation } from './ScoreAnimation';
 import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
 import { CLEANUP_INTERVAL, MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH, TARGET_FPS, FORCE_FPS_LIMIT } from '../config/gameConfig';
@@ -20,6 +21,7 @@ export class GameEngine {
   private readonly CLEANUP_INTERVAL = CLEANUP_INTERVAL; // Clean up every 
   private zoom: number = MAP_ZOOM_LEVEL;
   private isTabVisible: boolean = true;
+  private scoreAnimation: ScoreAnimation = new ScoreAnimation();
   
   // Dynamic frame rate limiting based on device performance
   private frameStartTime: number = 0;
@@ -220,6 +222,9 @@ export class GameEngine {
     // Always update game logic to maintain multiplayer sync
     this.update();
     
+    // Update score animations
+    this.scoreAnimation.update();
+    
     // Only render if tab is visible and performance allows
     const shouldSkipFrame = FORCE_FPS_LIMIT ? false : performanceManager.shouldSkipFrame(now);
     if (this.isTabVisible && !shouldSkipFrame) {
@@ -274,6 +279,14 @@ export class GameEngine {
           // The checkCollisionsWithFood method already calls eat() internally with the food's color
           console.log(`[GAME ENGINE] Snake ate food at (${food.x.toFixed(1)}, ${food.y.toFixed(1)})`);
           
+          // Get point value for this food type and trigger score animation near snake head
+          const pointValue = food.getPointValue();
+          const head = this.mySnake.getHead();
+          // Position animation closer to snake head with small offset
+          const animX = head.x + (this.mySnake.radius * 0.5) * this.mySnake.velocity.x;
+          const animY = head.y + (this.mySnake.radius * 0.5) * this.mySnake.velocity.y;
+          this.scoreAnimation.addAnimation(animX, animY, pointValue);
+          
           // Remove the food from local store immediately
           store.removeFood(food.id);
           
@@ -299,6 +312,17 @@ export class GameEngine {
       }
       
       if (consumedPoints.length > 0) {
+        // Add score animations for consumed dead points
+        consumedPoints.forEach(() => {
+          // Dead points are worth 1 point each - position animation near snake head
+          const head = this.mySnake?.getHead();
+          if (head && this.mySnake?.radius && this.mySnake?.velocity) {
+            const animX = head.x + (this.mySnake.radius * 0.5) * this.mySnake.velocity.x;
+            const animY = head.y + (this.mySnake.radius * 0.5) * this.mySnake.velocity.y;
+            this.scoreAnimation.addAnimation(animX, animY, 1);
+          }
+        });
+        
         store.removeDeadPoints(consumedPoints);
         // Notify server about consumed dead points
         try {
@@ -425,6 +449,9 @@ export class GameEngine {
       }
     }
 
+    // Render score animations (after all game objects but before restoring context)
+    this.scoreAnimation.render(this.ctx);
+
     this.ctx.restore();
   }
 
@@ -445,6 +472,9 @@ export class GameEngine {
     // Reset timing
     this.lastSocketUpdate = 0;
     this.lastFrameTime = 0;
+    
+    // Clear score animations
+    this.scoreAnimation.clear();
     
     // Reinitialize game
     this.initializeGame();
@@ -479,6 +509,9 @@ export class GameEngine {
     
     // Clear game objects
     this.mySnake = null;
+    
+    // Clear score animations
+    this.scoreAnimation.clear();
     
     // Reset timing variables
     this.lastSocketUpdate = 0;

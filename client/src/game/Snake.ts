@@ -421,6 +421,11 @@ export class Snake implements SnakeInterface {
     this.drawEye(ctx);
     this.drawEar(ctx);
     this.drawMouth(ctx);
+    
+    // Draw direction indicator for player snakes (non-AI)
+    if (!this.ai) {
+      this.drawDirectionIndicator(ctx);
+    }
   }
 
   private drawEye(ctx: CanvasRenderingContext2D): void {
@@ -497,5 +502,53 @@ export class Snake implements SnakeInterface {
       Math.PI * 2
     );
     ctx.fill();
+  }
+
+  private drawDirectionIndicator(ctx: CanvasRenderingContext2D): void {
+    const head = this.getHead();
+    const indicatorDistance = this.radius * 2.5; // Increased distance from head center
+    const arrowSize = this.radius * 0.6; // Size of the arrow
+    
+    // Calculate arrow tip position based on movement direction
+    const tipX = head.x + indicatorDistance * this.velocity.x;
+    const tipY = head.y + indicatorDistance * this.velocity.y;
+    
+    // Calculate arrow base points (perpendicular to movement direction)
+    const perpX = -this.velocity.y; // Perpendicular vector
+    const perpY = this.velocity.x;
+    
+    const baseDistance = arrowSize * 0.4;
+    const backDistance = arrowSize * 0.8;
+    
+    // Arrow points
+    const leftBaseX = tipX - backDistance * this.velocity.x + baseDistance * perpX;
+    const leftBaseY = tipY - backDistance * this.velocity.y + baseDistance * perpY;
+    
+    const rightBaseX = tipX - backDistance * this.velocity.x - baseDistance * perpX;
+    const rightBaseY = tipY - backDistance * this.velocity.y - baseDistance * perpY;
+    
+    // Draw arrow with orange fill and dark outline
+    ctx.save();
+    
+    // Fill arrow with orange color
+    ctx.fillStyle = "rgba(255, 165, 0, 0.9)"; // Orange color
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(leftBaseX, leftBaseY);
+    ctx.lineTo(rightBaseX, rightBaseY);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Outline arrow
+    ctx.strokeStyle = "rgba(255, 165, 0, 0.9)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(leftBaseX, leftBaseY);
+    ctx.lineTo(rightBaseX, rightBaseY);
+    ctx.closePath();
+    ctx.stroke();
+    
+    ctx.restore();
   }
 }

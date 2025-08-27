@@ -524,6 +524,18 @@ function getFoodColorByType(type) {
   }
 }
 
+// Get point value based on food type
+function getPointValueByType(type) {
+  switch (type) {
+    case 'pizza': return 1;
+    case 'apple': return 2;
+    case 'cherry': return 3;
+    case 'donut': return 4;
+    case 'burger': return 5;
+    default: return POINT;
+  }
+}
+
 // Generate random player ID (for Players/fallback)
 function generatePlayerId() {
   return Math.random().toString(36).substr(2, 9);
@@ -2055,11 +2067,14 @@ function updateBots() {
     for (let i = 0; i < gameState.foods.length; i++) {
       const food = gameState.foods[i];
       if (isCollided(botHead, food)) {
-        // Bot eats food - same logic as human players
-        player.score += POINT;
-        
-        // Extract the food type that was eaten (for potential future bot food type tracking)
+        // Extract the food type that was eaten
         const eatentype = food.type || 'pizza';
+        
+        // Get point value based on food type
+        const pointValue = getPointValueByType(eatentype);
+        
+        // Bot eats food - same logic as human players
+        player.score += pointValue;
 
         // Add new point to bot's body using bot's main color
         if (player.points.length > 0) {
@@ -2114,8 +2129,12 @@ function updateBots() {
         
         // Only allow consumption if dead point is older than CLEANUP_INTERVAL (30 seconds)
         if (age >= CLEANUP_INTERVAL) {
-          // Bot eats dead point - award POINT per dead snake
-          player.score += POINT;
+          // Get point value based on dead point food type
+          const deadPointType = deadPoint.type || 'pizza';
+          const pointValue = getPointValueByType(deadPointType);
+          
+          // Bot eats dead point - award points based on food type
+          player.score += pointValue;
 
           // Add new point to bot's body using bot's main color
           if (player.points.length > 0) {
@@ -2372,6 +2391,9 @@ io.on("connection", (socket) => {
       // Extract the food type that was eaten
       const eatentype = food.type || 'pizza';
       
+      // Get point value based on food type
+      const pointValue = getPointValueByType(eatentype);
+      
       // Regenerate food with logging
       const oldPos = { x: food.x, y: food.y };
       const newtype = getRandomFood();
@@ -2380,7 +2402,7 @@ io.on("connection", (socket) => {
       food.color = getFoodColorByType(newtype);
       food.type = newtype;
 
-      player.score += POINT;
+      player.score += pointValue;
       performanceMetrics.foodEaten++;
 
       console.log(
@@ -2396,11 +2418,12 @@ io.on("connection", (socket) => {
       // Broadcast food regeneration to all players
       io.emit("foodRegenerated", food);
       
-      // Broadcast the eaten food type to the client for snake segment storage
+      // Broadcast the eaten food type and point value to the client for snake segment storage and animations
       io.emit("typeEaten", { 
         playerId, 
         foodId, 
-        eatentype 
+        eatentype,
+        pointValue 
       });
 
       // Broadcast score update
@@ -2464,9 +2487,15 @@ io.on("connection", (socket) => {
         gameState.deadPoints.splice(index, 1);
       });
 
-      // Update player score - award POINT per valid dead point consumed
+      // Update player score - award points based on dead point food types
       const consumedCount = validDeadPoints.length;
-      player.score += consumedCount * POINT;
+      let totalPoints = 0;
+      validDeadPoints.forEach(({ point }) => {
+        const deadPointType = point.type || 'pizza';
+        const pointValue = getPointValueByType(deadPointType);
+        totalPoints += pointValue;
+      });
+      player.score += totalPoints;
       performanceMetrics.deadPointsEaten += consumedCount;
 
       // Only broadcast removal if there were valid dead points consumed

@@ -1,3 +1,4 @@
+import { POINT } from '../config/gameConfig';
 import { getRandomColor, getRandX, getRandY, lerp } from '../utils/gameUtils';
 import { Point } from './Point';
 
@@ -20,6 +21,18 @@ export class Food extends Point {
   private getRandomFood(): Type {
     const types: Type[] = ['pizza', 'cherry', 'donut', 'burger'];   
     return types[Math.floor(Math.random() * types.length)];
+  }
+
+  // Get point value based on food type (sync with server-side logic)
+  getPointValue(): number {
+    switch (this.type) {
+      case 'pizza': return 1;
+      case 'apple': return 2;
+      case 'cherry': return 3;
+      case 'donut': return 4;
+      case 'burger': return 5;
+      default: return POINT; // fallback
+    }
   }
 
   private createFoodImage(): void {
