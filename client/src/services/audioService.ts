@@ -5,8 +5,10 @@ class AudioService {
   private isInitialized = false;
   private currentVolume = 0.6; // Default 60%
   private currentEffectsVolume = 0.8; // Default 80%
-  private isMuted = false;
+  private isMusicMuted = false;
+  private isEffectsMuted = false;
   private wasPlayingBeforeHidden = false; // Track if music was playing before page became hidden
+  private audioContext: AudioContext | null = null;
 
   constructor() {
     this.initializeAudio();
@@ -76,8 +78,8 @@ class AudioService {
     this.syncWithSettings();
 
     try {
-      // Only play if not muted and audio is paused
-      if (this.backgroundMusic.paused && !this.isMuted) {
+      // Only play if music is not muted and audio is paused
+      if (this.backgroundMusic.paused && !this.isMusicMuted) {
         console.log('🎵 Attempting to play background music');
         this.backgroundMusic.play().then(() => {
           // Set media session metadata when music starts playing
@@ -89,7 +91,7 @@ class AudioService {
             console.log('🎵 Autoplay blocked - waiting for user interaction');
           }
         });
-      } else if (this.isMuted) {
+      } else if (this.isMusicMuted) {
         console.log('🎵 Background music is muted - not playing');
       } else {
         console.log('🎵 Background music is already playing');
@@ -136,9 +138,9 @@ class AudioService {
     this.updateEffectsVolume();
   }
 
-  public setMuted(muted: boolean): void {
+  public setMusicMuted(muted: boolean): void {
     const wasPlaying = this.isMusicPlaying();
-    this.isMuted = muted;
+    this.isMusicMuted = muted;
     this.updateVolume();
 
     // Handle play/pause based on mute state
@@ -162,17 +164,31 @@ class AudioService {
     }
   }
 
+  public setEffectsMuted(muted: boolean): void {
+    this.isEffectsMuted = muted;
+    this.updateEffectsVolume();
+    console.log('🎵 Effects mute state updated:', muted);
+  }
+
+  public getMusicMuted(): boolean {
+    return this.isMusicMuted;
+  }
+
+  public getEffectsMuted(): boolean {
+    return this.isEffectsMuted;
+  }
+
   private updateVolume(): void {
     if (!this.backgroundMusic) return;
 
     try {
       // Apply mute state and volume
-      const effectiveVolume = this.isMuted ? 0 : this.currentVolume;
+      const effectiveVolume = this.isMusicMuted ? 0 : this.currentVolume;
       this.backgroundMusic.volume = effectiveVolume;
 
       console.log('🎵 Volume updated:', {
         volume: this.currentVolume,
-        muted: this.isMuted,
+        musicMuted: this.isMusicMuted,
         effectiveVolume
       });
     } catch (error) {
@@ -183,7 +199,7 @@ class AudioService {
   private updateEffectsVolume(): void {
     try {
       // Apply mute state and effects volume
-      const effectiveVolume = this.isMuted ? 0 : this.currentEffectsVolume;
+      const effectiveVolume = this.isEffectsMuted ? 0 : this.currentEffectsVolume;
       
       if (this.eatSound) {
         this.eatSound.volume = effectiveVolume;
@@ -194,7 +210,7 @@ class AudioService {
 
       console.log('🎵 Effects volume updated:', {
         effectsVolume: this.currentEffectsVolume,
-        muted: this.isMuted,
+        effectsMuted: this.isEffectsMuted,
         effectiveVolume
       });
     } catch (error) {
@@ -209,19 +225,27 @@ class AudioService {
         const settings = useSettingsStore.getState();
         const newVolume = settings.sound.music;
         const newEffectsVolume = settings.sound.effects;
-        const newMuted = settings.sound.muted;
+        const newMusicMuted = settings.sound.musicMuted;
+        const newEffectsMuted = settings.sound.effectsMuted;
 
         // Only update if values actually changed
-        if (this.currentVolume !== newVolume || this.currentEffectsVolume !== newEffectsVolume || this.isMuted !== newMuted) {
+        if (this.currentVolume !== newVolume || 
+            this.currentEffectsVolume !== newEffectsVolume || 
+            this.isMusicMuted !== newMusicMuted ||
+            this.isEffectsMuted !== newEffectsMuted) {
+          
           this.currentVolume = newVolume;
           this.currentEffectsVolume = newEffectsVolume;
-          this.isMuted = newMuted;
+          this.isMusicMuted = newMusicMuted;
+          this.isEffectsMuted = newEffectsMuted;
+          
           this.updateVolume();
           this.updateEffectsVolume();
-          console.log('🎵 Settings synced - Volume:', this.currentVolume, 'Effects:', this.currentEffectsVolume, 'Muted:', this.isMuted);
+          
+          console.log('🎵 Settings synced - Volume:', this.currentVolume, 'Effects:', this.currentEffectsVolume, 'Music Muted:', this.isMusicMuted, 'Effects Muted:', this.isEffectsMuted);
 
-          // If audio is playing and we just unmuted, ensure it continues
-          if (!this.isMuted && this.backgroundMusic && !this.backgroundMusic.paused) {
+          // If music is playing and we just unmuted, ensure it continues
+          if (!this.isMusicMuted && this.backgroundMusic && !this.backgroundMusic.paused) {
             this.updateVolume();
           }
         }
@@ -246,7 +270,7 @@ class AudioService {
   }
 
   public playEatSound(): void {
-    if (!this.eatSound || !this.isInitialized || this.isMuted) {
+    if (!this.eatSound || !this.isInitialized || this.isEffectsMuted) {
       return;
     }
 
@@ -262,7 +286,7 @@ class AudioService {
   }
 
   public playGameOverSound(): void {
-    if (!this.gameOverSound || !this.isInitialized || this.isMuted) {
+    if (!this.gameOverSound || !this.isInitialized || this.isEffectsMuted) {
       return;
     }
 
@@ -279,7 +303,7 @@ class AudioService {
 
   public ensureMusicIsPlaying(): void {
     // Ensure music is playing if it should be
-    if (this.backgroundMusic && this.backgroundMusic.paused && !this.isMuted) {
+    if (this.backgroundMusic && this.backgroundMusic.paused && !this.isMusicMuted) {
       console.log('🎵 Ensuring music is playing...');
       this.playBackgroundMusic();
     }
@@ -294,11 +318,14 @@ class AudioService {
     // Sync with current settings before attempting to play
     this.syncWithSettings();
 
+    // Initialize audio context for iOS compatibility
+    this.initializeAudioContext();
+
     if (this.backgroundMusic.paused) {
       console.log('🎵 User interaction - attempting to unlock audio');
 
-      // Only attempt to play if not muted
-      if (!this.isMuted) {
+      // Only attempt to play if music is not muted
+      if (!this.isMusicMuted) {
         this.backgroundMusic.play().then(() => {
           console.log('🎵 Audio unlocked and playing via user interaction!');
           this.updateVolume();
@@ -311,7 +338,7 @@ class AudioService {
           }
         });
       } else {
-        console.log('🎵 Audio is muted - not playing on user interaction');
+        console.log('🎵 Music is muted - not playing on user interaction');
         // Still attempt to unlock the audio context for future use, but keep it paused
         this.backgroundMusic.play().then(() => {
           if (this.backgroundMusic) {
@@ -322,10 +349,31 @@ class AudioService {
           console.warn('Failed to unlock audio context:', error);
         });
       }
-    } else if (!this.isMuted) {
+    } else if (!this.isMusicMuted) {
       // Audio is already playing, just ensure volume is correct
       this.updateVolume();
       console.log('🎵 Audio already playing, volume updated');
+    }
+  }
+
+  private initializeAudioContext(): void {
+    // Initialize Web Audio API context for iOS compatibility
+    if (!this.audioContext && typeof window !== 'undefined' && window.AudioContext) {
+      try {
+        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        console.log('🎵 Audio context initialized for iOS compatibility');
+      } catch (error) {
+        console.warn('Failed to initialize audio context:', error);
+      }
+    }
+
+    // Resume audio context if suspended (iOS requirement)
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      this.audioContext.resume().then(() => {
+        console.log('🎵 Audio context resumed successfully');
+      }).catch((error) => {
+        console.warn('Failed to resume audio context:', error);
+      });
     }
   }
 
@@ -341,6 +389,10 @@ class AudioService {
     if (this.gameOverSound) {
       this.gameOverSound.pause();
       this.gameOverSound = null;
+    }
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
     }
     // Clear media session metadata when destroying service
     this.clearMediaSessionMetadata();
@@ -414,10 +466,10 @@ class AudioService {
     console.log('🎵 Page visible - checking if music should resume');
 
     // Only resume if music was playing before and user hasn't muted it
-    if (this.wasPlayingBeforeHidden && !this.isMuted && this.backgroundMusic && this.backgroundMusic.paused) {
+    if (this.wasPlayingBeforeHidden && !this.isMusicMuted && this.backgroundMusic && this.backgroundMusic.paused) {
       console.log('🎵 Resuming music after page became visible');
       this.playBackgroundMusic();
-    } else if (this.isMuted) {
+    } else if (this.isMusicMuted) {
       console.log('🎵 Music remains paused - user has muted audio');
     } else if (!this.wasPlayingBeforeHidden) {
       console.log('🎵 Music remains paused - was not playing before page was hidden');
@@ -434,7 +486,7 @@ class AudioService {
 
       // Set up media session action handlers
       navigator.mediaSession.setActionHandler('play', () => {
-        if (this.backgroundMusic && this.backgroundMusic.paused && !this.isMuted) {
+        if (this.backgroundMusic && this.backgroundMusic.paused && !this.isMusicMuted) {
           this.playBackgroundMusic();
         }
       });

@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { audioService } from "../../services/audioService";
-import { MuteToggleButton } from "../Game/MuteToggleButton";
+import { MusicMuteButton } from "../Game/MusicMuteButton";
+import { EffectsMuteButton } from "../Game/EffectsMuteButton";
 import { LanguageSelector } from "./LanguageSelector";
 
 export const SettingsModal: React.FC = () => {
@@ -61,7 +62,7 @@ export const SettingsModal: React.FC = () => {
                 </div>
                 <div className="setting-item">
                   <label>{t("settings.music")}</label>
-                  <MuteToggleButton isAbsolute={false} />
+                  <MusicMuteButton isAbsolute={false} />
                   <div className="slider-container">
                     <input
                       type="range"
@@ -84,6 +85,7 @@ export const SettingsModal: React.FC = () => {
                 </div>
                 <div className="setting-item">
                   <label>{t("settings.effects")}</label>
+                  <EffectsMuteButton isAbsolute={false} />
                   <div className="slider-container">
                     <input
                       type="range"
