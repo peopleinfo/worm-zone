@@ -25,7 +25,44 @@ Our Snake Zone game consists of the following main pages:
 4. **Landing Home**: main entry point with settings icon, language selection, game start
 5. **Settings Modal**: display settings, sound controls, language selection, user profile access
 
-### 2.3 Global Leaderboard System
+### 2.3 Advanced Performance Monitoring System
+
+**Client-Side Performance Management**:
+- Device tier detection (low/medium/high) based on memory and CPU cores
+- Thermal throttling with automatic FPS reduction when device overheats
+- Battery optimization that reduces performance when battery is low and not charging
+- Adaptive frame rate scaling (8-30 FPS) based on device capabilities
+- Canvas scaling optimization (0.5x to 1.0x) for performance
+- Frame time history tracking for performance analysis
+- Thermal state monitoring (normal/warm/hot/critical) with automatic adjustments
+
+**Server-Side Performance Metrics**:
+- Real-time performance logging with 30-second interval reports
+- Memory usage monitoring with 150MB warning and 200MB critical thresholds
+- Bot performance tracking (updates per minute, maintenance cycles)
+- Player activity metrics (connections, disconnections, peak player counts)
+- Game activity analytics (food eaten, dead points created/cleaned)
+- Server state management with automatic pause/resume based on player activity
+- Comprehensive uptime and response time tracking
+
+### 2.4 User Profile & Backend Integration System
+
+**Profile Management**:
+- ProfileModal component with user avatar display and game statistics
+- MOS SDK integration for user authentication and profile data
+- Backend user profile storage and retrieval system
+- Personal best score tracking with persistent storage
+- User ranking system with real-time backend synchronization
+- Score update tracking with old/new score comparison analytics
+
+**Authentication Features**:
+- MOS SDK login integration with secure token-based authentication
+- Guest user support with auto-generated unique identifiers
+- User information retrieval and backend storage synchronization
+- Language detection from MOS SDK for automatic localization
+- Device capabilities and window information detection
+
+### 2.5 Global Leaderboard & Analytics System
 
 **Core Requirements**:
 - Track top 10 global high scores across all players (excluding bot scores)
@@ -33,6 +70,7 @@ Our Snake Zone game consists of the following main pages:
 - Display current user's position in global leaderboard if score qualifies for top 10
 - Persistent storage of global records with player identification
 - Real-time updates when new records are achieved
+- Comprehensive game statistics broadcasting and session management
 
 **Display Logic**:
 - Show global leaderboard in Game Over modal alongside personal stats
@@ -40,8 +78,9 @@ Our Snake Zone game consists of the following main pages:
 - Display rank, player name, and score for each leaderboard entry
 - Crown icons or special indicators for top 3 positions
 - Smooth animations when leaderboard updates with new records
+- Real-time player activity tracking and analytics collection
 
-### 2.4 Page Details
+### 2.6 Page Details
 
 | Page Name       | Module Name      | Feature Description                                                        |
 | --------------- | ---------------- | -------------------------------------------------------------------------- |
@@ -62,47 +101,95 @@ Our Snake Zone game consists of the following main pages:
 | Settings Modal  | Language Tab     | Flag-based language selection (EN, KH, CN) with react-i18next integration  |
 | Settings Modal  | Display Settings | Visual rotation controls, interface preferences                            |
 | Settings Modal  | Sound Controls   | Audio settings and volume controls                                         |
-| Settings Modal  | User Profile     | MOS SDK integration for user info, login status                            |
+| Settings Modal  | User Profile     | MOS SDK integration for user info, login status, ProfileModal with statistics |
 | Settings Modal  | Scrollable Content | Enable vertical scrolling for modal content in landscape mode              |
+| Profile Modal   | User Statistics  | Display user avatar, best score, global ranking, backend data synchronization |
+| Profile Modal   | Performance Stats | Real-time performance metrics, device optimization status, thermal monitoring |
 
 ## 3. Core Process
 
 **Main Game Flow:**
 
 1. User opens app → Game interface visually rotated to landscape mode (CSS transform)
-2. Landing home displays with settings icon and current language
-3. User can access settings modal for language/preferences or start game
-4. System auto-connects to multiplayer room and spawns bots to ensure 3-player gameplay
-5. Display lobby with player count (human + bot indicators) and 3-2-1 countdown
-6. Game starts with synchronized multiplayer gameplay (human players + AI bots)
-7. On death → Show game over modal with scores and rankings
-8. Modal Close → Complete state reset (equivalent to app restart)
-9. Restart → New game with zero score, rejoin multiplayer room with fresh bot spawning
+2. System initializes performance monitoring and detects device capabilities
+3. User authentication occurs automatically via MOS SDK or guest mode
+4. Landing home displays with settings icon and current language
+5. User can access settings modal for language/preferences or start game
+6. System auto-connects to multiplayer room and spawns bots to ensure 3-player gameplay
+7. Game engine adapts performance settings based on device tier and thermal state
+8. Display lobby with player count (human + bot indicators) and 3-2-1 countdown
+9. Game starts with synchronized multiplayer gameplay (human players + AI bots)
+10. On death → Show game over modal with scores, rankings, and global leaderboard
+11. System updates backend with new score and analytics data
+12. Modal Close → Complete state reset (equivalent to app restart)
+13. Restart → New game with zero score, rejoin multiplayer room with fresh bot spawning
+
+**Performance Optimization Flow:**
+
+1. System continuously monitors device performance, battery, and thermal state
+2. Frame rate automatically adjusts (8-30 FPS) based on device capabilities
+3. Canvas scaling and shadow effects optimize based on performance tier
+4. Server tracks performance metrics and adjusts bot behavior accordingly
+5. System pauses/resumes server operations based on player activity levels
+
+**User Profile & Authentication Flow:**
+
+1. System attempts MOS SDK authentication on app launch
+2. If MOS SDK unavailable, creates guest user with auto-generated ID
+3. User profile data syncs with backend including scores and statistics
+4. ProfileModal displays user avatar, best score, global ranking, and performance stats
+5. Language preference detected from MOS SDK or user selection
+6. All user data persists across sessions with backend synchronization
+
+**Settings Flow:**
+
+1. User accesses Settings modal from Game Over screen or during gameplay pause
+2. User can adjust language (English/Khmer/Chinese), sound settings, and display preferences
+3. User can view detailed profile information and performance statistics
+4. Settings are automatically saved and applied immediately with backend sync
+
+**Multiplayer & Analytics Flow:**
+
+1. System automatically matches players into rooms (up to 3 human players)
+2. If fewer than 3 human players, system adds AI bots to fill the room
+3. All players see the same game state with real-time synchronization
+4. Server broadcasts comprehensive game statistics and player activity metrics
+5. When a player dies, they can restart and rejoin while others continue playing
+6. Leaderboard updates in real-time showing all players' current scores
+7. System tracks session analytics, score comparisons, and global ranking updates
 
 ```mermaid
 graph TD
     A[App Launch] --> B[Apply CSS Landscape Rotation]
-    B --> C[Landing Home]
-    C --> D{User Action}
-    D -->|Settings Icon| E[Settings Modal]
-    D -->|Start Game| F[Auto Join Multiplayer Room]
-    E --> G{Settings Action}
-    G -->|Language Change| H[Update Language]
-    G -->|Close Settings| C
-    H --> C
-    F --> I[Spawn Bots to Fill 3-Player Slots]
-    I --> J[Lobby Screen - Show Players + Bots]
-    J --> K[Countdown 3-2-1]
-    K --> L[Multiplayer Game Arena]
-    L --> M[Real-time Gameplay with Bots]
-    M --> N{Game Over?}
-    N -->|No| M
-    N -->|Yes| O[Game Over Modal with Rankings]
-    O --> P{User Action}
-    P -->|Close Modal| Q[Complete State Reset]
-    P -->|Restart Game| R[New Game Start]
-    Q --> C
-    R --> F
+    B --> C[Performance Detection]
+    C --> D[Authentication/Guest Mode]
+    D --> E[Landing Home]
+    E --> F{User Action}
+    F -->|Settings Icon| G[Settings Modal]
+    F -->|Start Game| H[Auto Join Multiplayer Room]
+    G --> I{Settings Action}
+    I -->|Language Change| J[Update Language]
+    I -->|Profile Access| K[Profile Modal]
+    I -->|Close Settings| E
+    J --> E
+    K --> E
+    H --> L[Spawn Bots to Fill 3-Player Slots]
+    L --> M[Lobby Screen - Show Players + Bots]
+    M --> N[Countdown 3-2-1]
+    N --> O[Multiplayer Game Arena]
+    O --> P[Real-time Gameplay with Bots]
+    P --> Q{Game Over?}
+    Q -->|No| P
+    Q -->|Yes| R[Game Over Modal with Rankings]
+    R --> S{User Action}
+    S -->|Close Modal| T[Complete State Reset]
+    S -->|Restart Game| U[New Game Start]
+    S -->|View Profile| K
+    T --> E
+    U --> H
+    V[Performance Monitor] --> O
+    W[Backend Sync] --> K
+    W --> R
 ```
 
 ## 4. User Interface Design
@@ -113,31 +200,37 @@ graph TD
 
 * **Secondary Colors**: Orange (#FF6B35) for food, red (#FF0000) for danger/collision
 
+* **Performance Colors**: Blue (#2196F3) for optimal, Orange (#FF9800) for warning, Red (#F44336) for critical states
+
 * **Button Style**: Rounded corners with 8px radius, gradient backgrounds
 
-* **Font**: Roboto Bold for scores, Roboto Regular for UI text (16px-24px)
+* **Font**: Roboto Bold for scores, Roboto Regular for UI text (16px-24px), Roboto Mono for performance metrics (14px)
 
-* **Layout Style**: Full-screen landscape with floating UI elements
+* **Layout Style**: Full-screen landscape with floating UI elements, adaptive canvas scaling
 
-* **Icons**: Minimalist line icons, gaming-themed emojis (🐍, 🎮, 🏆)
+* **Icons**: Minimalist line icons, gaming-themed emojis (🐍, 🎮, 🏆), performance indicators (🔥, ⚡, 🔋)
+
+* **Performance Indicators**: Color-coded badges for device tier, thermal state icons, battery optimization visual feedback
 
 ### 4.2 Page Design Overview
 
-| Page Name       | Module Name   | UI Elements                                                                    |
-| --------------- | ------------- | ------------------------------------------------------------------------------ |
-| Landing Home    | Settings Icon | Gear icon positioned top-right, subtle glow effect, tap animation              |
-| Landing Home    | Language Flag | Current language flag icon in top area, smooth flag transitions                |
-| Landing Home    | Main Layout   | Centered game logo, play button, gradient background with game theme           |
-| Settings Modal  | Language Tab  | Three flag buttons (🇺🇸 EN, 🇰🇭 KH, 🇨🇳 CN), selected state highlighting    |
-| Settings Modal  | Modal Design  | Centered overlay with blur background, rounded corners, slide-up animation, scrollable content |
-| Settings Modal  | Controls      | Toggle switches, sliders, organized sections with clear labels                 |
-| Game Arena      | Game Canvas   | Full-screen dark background, neon-style worm trails, particle effects for food |
-| Game Arena      | Joypad        | Semi-transparent circular pad, bottom-right corner, haptic feedback            |
-| Game Arena      | Score HUD     | Top-left floating panel, real-time score updates, mini leaderboard             |
-| Room Lobby      | Player List   | Card-based layout, player avatars, bot indicators with robot icons             |
-| Room Lobby      | Countdown     | Large centered numbers with pulsing animation, countdown sound effects         |
-| Game Over Modal | Score Panel   | Centered modal with blur background, trophy icons, animated score counting, scrollable content |
-| Game Over Modal | Global Leaderboard | Top 10 list with rank numbers, player names, scores, crown icons for top 3, current user highlighting |
+| Page Name       | Module Name      | UI Elements                                                                |
+|-----------------|------------------|----------------------------------------------------------------------------|
+| Landing Home    | Main Interface   | Game title, start button, settings icon, language indicator, performance badge |
+| Game Arena      | Game Canvas      | Snake sprites, food items, score display, touch control overlay, adaptive scaling |
+| Game Arena      | UI Overlay       | Current score, pause button, mini-map, FPS indicator, thermal status      |
+| Game Arena      | Performance HUD  | Device tier badge, battery status, frame rate display, thermal warning    |
+| Game Over Modal | Score Display    | Current score, best score, ranking position, restart button, score comparison |
+| Game Over Modal | Leaderboard      | Top 10 global scores, player highlighting, crown icons for top 3, real-time updates |
+| Game Over Modal | Analytics        | Session statistics, performance metrics, backend sync status              |
+| Settings Modal  | Language Section | Language selection buttons (EN/KH/CN), current selection highlight        |
+| Settings Modal  | Sound Controls   | Volume sliders, mute toggles, sound effect previews                       |
+| Settings Modal  | User Profile     | User avatar, name, login status, MOS SDK integration indicators           |
+| Settings Modal  | Performance      | Device optimization settings, thermal monitoring toggle, FPS limit controls |
+| Profile Modal   | User Info        | Avatar display, username, authentication status, guest/MOS SDK indicator  |
+| Profile Modal   | Statistics       | Best score, global ranking, games played, session analytics               |
+| Profile Modal   | Performance      | Device tier, current FPS, thermal state, battery optimization status      |
+| Profile Modal   | Backend Sync     | Sync status indicator, last update timestamp, connection quality          |
 
 ### 4.3 Responsiveness
 
@@ -159,7 +252,17 @@ graph TD
 
 * **Mobile Integration**: MOS SDK for mini-program features
 
+* **Performance Monitoring**: Client-side PerformanceManager with device tier detection
+
+* **Authentication**: MOS SDK integration with guest user fallback
+
+* **Backend Integration**: AuthService for user profile and score synchronization
+
 * **Backend**: Node.js + Express + Socket.io server with intelligent bot management
+
+* **Analytics**: Real-time game statistics broadcasting and player activity tracking
+
+* **User Management**: Backend user profile storage and global leaderboard system
 
 ### 5.2 Development Flow
 
@@ -376,6 +479,7 @@ const LanguageSelector = () => {
 | `deadPointEaten`        | `{ playerId: string, deadPoints: Array }`                                  | Notifies server when player consumes dead points            |
 | `playerDied`            | `{ playerId: string, deadPoints: Array }`                                  | Notifies server when player dies and provides body points   |
 | `requestMinimumPlayers` | `{ minPlayers: number }`                                                   | Requests server to spawn bots to reach minimum player count |
+| `performanceMetrics`    | `{ playerId: string, fps: number, deviceTier: string, thermalState: string, batteryLevel?: number }` | Client performance data for server optimization |
 
 #### Server to Client Events
 
@@ -393,8 +497,74 @@ const LanguageSelector = () => {
 | `scoreUpdate`        | `{ playerId: string, score: number }`                                      | Broadcasts score updates                          |
 | `leaderboardUpdate`  | `{ leaderboard: Array }`                                                   | Broadcasts updated leaderboard                    |
 | `gameStats`          | `{ playerCount: number, foodCount: number, leaderboard?: Array }`          | Periodic game statistics                          |
+| `serverMetrics`      | `{ uptime: number, memoryUsage: number, playerCount: number, botPerformance: object, gameActivity: object }` | Server performance and analytics data |
 
-### 6.2 Game State Management
+### 6.2 Authentication API
+
+#### AuthService Interface
+
+```typescript
+interface AuthService {
+  // MOS SDK Authentication
+  login(): Promise<LoginResponse>
+  getUserInfo(): Promise<UserInfo | null>
+  saveUserInfo(userInfo: UserInfo): void
+  
+  // Score Management
+  getPlayerScore(): Promise<number>
+  updatePlayerScore(score: number): Promise<void>
+  
+  // Ranking System
+  getGameRank(): Promise<RankData[]>
+}
+
+interface LoginResponse {
+  success: boolean
+  token?: string
+  userInfo?: UserInfo
+}
+
+interface UserInfo {
+  id: string
+  name: string
+  avatar?: string
+  language?: string
+}
+
+interface RankData {
+  rank: number
+  score: number
+  playerName: string
+}
+```
+
+### 6.3 Performance Monitoring API
+
+#### PerformanceManager Interface
+
+```typescript
+interface PerformanceManager {
+  // Device Detection
+  getDeviceTier(): 'low' | 'medium' | 'high'
+  isMobile(): boolean
+  
+  // Performance Metrics
+  getCurrentFPS(): number
+  getCanvasScale(): number
+  shouldEnableShadows(): boolean
+  getMaxDeadPoints(): number
+  
+  // Thermal Management
+  getThermalState(): 'normal' | 'warm' | 'hot' | 'critical'
+  getBatteryInfo(): { level: number, charging: boolean }
+  
+  // Adaptive Optimization
+  updatePerformance(): void
+  adjustForThermalState(): void
+}
+```
+
+### 6.4 Game State Management
 
 #### Game State Structure
 
@@ -475,6 +645,10 @@ interface DeadPoint {
 
 * **Static Files**: Disabled (client served separately)
 
+* **Memory Management**: Automatic cleanup with 150MB warning and 200MB critical thresholds
+
+* **Performance Logging**: 30-second interval comprehensive metrics reporting
+
 #### Update Intervals
 
 * Bot movement updates: 100ms
@@ -485,6 +659,22 @@ interface DeadPoint {
 
 * Dead points cleanup: 30000ms
 
+* Performance metrics logging: 30000ms
+
+#### Advanced Performance Monitoring
+
+* **Memory Monitoring**: Real-time tracking with automatic warnings and critical alerts
+
+* **Bot Performance**: Tracking updates per minute and maintenance cycle efficiency
+
+* **Player Analytics**: Connection/disconnection tracking with peak player count monitoring
+
+* **Game Activity**: Food consumption and dead point creation/cleanup statistics
+
+* **Server State Management**: Automatic pause/resume based on player activity levels
+
+* **Thermal Optimization**: Client thermal state consideration for server-side optimizations
+
 #### Performance Optimizations
 
 * Efficient collision detection using distance calculations
@@ -494,6 +684,10 @@ interface DeadPoint {
 * Periodic cleanup of game objects
 
 * Optimized leaderboard generation with sorting and filtering
+
+* Adaptive performance adjustments based on client metrics
+
+* Analytics broadcasting for real-time game statistics
 
 ## 7. Game Over Modal State Management
 
@@ -759,7 +953,21 @@ interface SettingsStore {
 
 * [x] Zustand store architecture
 
-### Phase 2: Internationalization & Settings ✅ **COMPLETED**
+* [x] Performance monitoring foundation
+
+### Phase 2: Authentication & User Management ✅ **COMPLETED**
+
+* [x] MOS SDK integration with AuthService
+
+* [x] Guest user support and auto-generation
+
+* [x] User profile storage and retrieval
+
+* [x] Backend synchronization setup
+
+* [x] Basic performance tier detection
+
+### Phase 3: Internationalization & Settings ✅ **COMPLETED**
 
 * [x] React-i18next setup and configuration
 
@@ -769,9 +977,13 @@ interface SettingsStore {
 
 * [x] Settings modal functionality
 
+* [x] ProfileModal component implementation
+
 * [x] Audio and game settings controls
 
-### Phase 3: Game Mechanics ✅ **COMPLETED**
+* [x] Performance settings and optimization controls
+
+### Phase 4: Game Mechanics & Performance ✅ **COMPLETED**
 
 * [x] Worm movement and collision detection
 
@@ -781,7 +993,13 @@ interface SettingsStore {
 
 * [x] Game over detection
 
-### Phase 4: Multiplayer Features ✅ **COMPLETED**
+* [x] Bot AI implementation for 3-player rooms
+
+* [x] Advanced performance monitoring (thermal, battery, FPS)
+
+* [x] Adaptive performance optimization
+
+### Phase 5: Analytics & Leaderboard ✅ **COMPLETED**
 
 * [x] Room management system
 
@@ -791,7 +1009,15 @@ interface SettingsStore {
 
 * [x] Player connection handling
 
-### Phase 5: UI/UX Polish 🔄 **IN PROGRESS**
+* [x] Global leaderboard system with backend persistence
+
+* [x] Game restart and state reset functionality
+
+* [x] Comprehensive analytics and statistics tracking
+
+* [x] Server performance metrics and monitoring
+
+### Phase 6: UI/UX Polish & Advanced Features 🔄 **IN PROGRESS**
 
 * [x] Joypad controls optimization
 
@@ -803,25 +1029,51 @@ interface SettingsStore {
 
 * [x] Language switching animations
 
+* [x] Performance HUD and thermal indicators
+
+* [x] Real-time analytics dashboard
+
 * [ ] MOS SDK profile integration
+
+* [ ] Advanced performance optimizations
+
+* [ ] Final testing and bug fixes
 
 ## 10. Success Metrics
 
-**Technical Performance:**
-- Game maintains 60 FPS on target mobile devices in multiplayer environment
-- Socket.io latency <100ms for real-time multiplayer and bot synchronization
-- App startup time <3 seconds with automatic room joining
-- Memory usage <150MB during 3-player gameplay with bots
+### 10.1 Technical Performance
+- **Frame Rate**: Maintain adaptive FPS (8-30) based on device tier
+- **Load Time**: Initial app load under 3 seconds
+- **Memory Usage**: Client memory consumption under 100MB, server under 150MB warning threshold
+- **Network Latency**: Real-time updates with <100ms delay
+- **Crash Rate**: Less than 1% crash rate across all sessions
+- **Performance Optimization**: 90% of users experience optimal performance for their device tier
+- **Thermal Management**: Automatic FPS reduction prevents device overheating in 95% of cases
 
-**User Experience:**
-- Automatic room connection success rate >98%
-- Game completion rate >85% (players finish multiplayer games they start)
-- Average session duration >6 minutes with engaging bot competition
-- User retention rate >65% after first week of multiplayer experience
+### 10.2 User Experience & Authentication
+- **Language Support**: Seamless switching between EN/KH/CN
+- **Touch Responsiveness**: Immediate response to touch inputs
+- **Game Flow**: Smooth transitions between game states
+- **Settings Persistence**: User preferences saved across sessions
+- **Mobile Optimization**: Consistent experience across device orientations
+- **Authentication Success**: 95% successful MOS SDK login rate, 100% guest fallback
+- **Profile Sync**: User data synchronization within 2 seconds
+- **Backend Integration**: 99.9% uptime for user profile and score services
 
-**Multiplayer & Bot Quality:**
-- Bot auto-spawn rate 100% to maintain consistent 3-player gameplay
-- Multiplayer + bot synchronization accuracy >99.5%
-- Connection stability >97% during multiplayer sessions with intelligent bot management
-- Bot AI engagement score >4.0/5.0 (user satisfaction with bot competition quality)
+### 10.3 Multiplayer & Bot Quality
+- **Room Matching**: Automatic room joining within 2 seconds
+- **Bot Behavior**: Realistic AI movement patterns with performance-based optimization
+- **Synchronization**: All players see identical game state
+- **Reconnection**: Graceful handling of network interruptions
+- **Leaderboard Accuracy**: Real-time score updates and rankings with backend persistence
+- **Server Performance**: 30-second metric intervals with 99% accuracy
+- **Analytics Quality**: Comprehensive game statistics with real-time broadcasting
+
+### 10.4 Advanced Features Performance
+- **Performance Monitoring**: Real-time device tier detection with 95% accuracy
+- **Battery Optimization**: 20% battery life improvement on low-power devices
+- **Thermal Adaptation**: Automatic performance scaling prevents throttling in 90% of cases
+- **Analytics Accuracy**: 99% accurate game statistics and player activity tracking
+- **Backend Sync**: User profile and score synchronization with 99.5% success rate
+- **Global Leaderboard**: Real-time updates with <5 second propagation delay
 
