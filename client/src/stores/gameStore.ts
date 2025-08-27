@@ -214,11 +214,12 @@ export const useGameStore = create<GameStore>()(
             console.error("❌ Error importing socketClient:", error);
           }
 
-          // Stop background music when game ends - use dynamic import
+          // Stop background music and play game over sound - use dynamic import
           import("../services/audioService").then(({ audioService }) => {
             audioService.stopBackgroundMusic();
+            audioService.playGameOverSound();
           }).catch((error) => {
-            console.error('Failed to stop background music on end:', error);
+            console.error('Failed to handle audio on game end:', error);
           });
 
           return {
