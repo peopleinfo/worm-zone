@@ -356,20 +356,7 @@ export class Snake implements SnakeInterface {
       Math.floor(this.radius * BODY_SEGMENT_SPACING)
     );
 
-    // Draw body segments (excluding head - index 0) from tail to head
-    // This ensures newer segments appear on top when snake overlaps itself
-    for (let i = this.points.length - 1; i >= 1; i -= segmentSpacing) {
-      this.points[i].draw(
-        ctx,
-        enableShadows,
-        SHADOW_COLOR,
-        SHADOW_BLUR,
-        SHADOW_OFFSET_X,
-        SHADOW_OFFSET_Y
-      );
-    }
-
-    // Draw tail with enhanced appearance
+    // FIXED: Draw tail FIRST (at the bottom layer) with enhanced appearance
     if (this.points.length > 1) {
       const lastIndex = this.points.length - 1;
       if (lastIndex % segmentSpacing !== 0 && lastIndex > 0) {
@@ -391,6 +378,19 @@ export class Snake implements SnakeInterface {
         ctx.fill();
         ctx.restore();
       }
+    }
+
+    // Draw body segments (excluding head - index 0) from tail to head
+    // This ensures newer segments appear on top when snake overlaps itself
+    for (let i = this.points.length - 1; i >= 1; i -= segmentSpacing) {
+      this.points[i].draw(
+        ctx,
+        enableShadows,
+        SHADOW_COLOR,
+        SHADOW_BLUR,
+        SHADOW_OFFSET_X,
+        SHADOW_OFFSET_Y
+      );
     }
 
     // Draw head on top of all body segments
