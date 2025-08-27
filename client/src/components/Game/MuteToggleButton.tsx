@@ -7,14 +7,23 @@ import { useTranslation } from "react-i18next";
 export const MuteToggleButton: React.FC<{ isAbsolute?: boolean }> = React.memo(({ isAbsolute = true }) => {
   const { sound, updateSoundSettings } = useSettingsStore();
   const { t } = useTranslation();
+  
+  // Use legacy muted property for backward compatibility
   const isMuted = sound.muted;
 
   const handleToggleMute = () => {
     const newMutedState = !isMuted;
-    updateSoundSettings({ muted: newMutedState });
+    
+    // Update both music and effects mute states
+    updateSoundSettings({ 
+      muted: newMutedState,
+      musicMuted: newMutedState,
+      effectsMuted: newMutedState
+    });
 
     // Ensure audio service is synced
-    audioService.setMuted(newMutedState);
+    audioService.setMusicMuted(newMutedState);
+    audioService.setEffectsMuted(newMutedState);
 
     // If unmuting, try to play music if it's not already playing
     if (!newMutedState) {

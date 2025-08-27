@@ -78,7 +78,37 @@ function App() {
   // Sync audio service when sound settings change
   useEffect(() => {
     audioService.syncWithSettings();
-  }, [sound.music, sound.muted]);
+  }, [sound.music, sound.musicMuted, sound.effects, sound.effectsMuted, sound.muted]);
+
+  // iOS Audio Context Initialization
+  useEffect(() => {
+    const initializeIOSAudio = () => {
+      // Handle iOS audio context initialization
+      const handleUserInteraction = () => {
+        audioService.handleUserInteraction();
+        // Remove event listeners after first interaction
+        document.removeEventListener('touchstart', handleUserInteraction);
+        document.removeEventListener('click', handleUserInteraction);
+        document.removeEventListener('keydown', handleUserInteraction);
+      };
+
+      // Add event listeners for iOS audio unlock
+      document.addEventListener('touchstart', handleUserInteraction, { once: true });
+      document.addEventListener('click', handleUserInteraction, { once: true });
+      document.addEventListener('keydown', handleUserInteraction, { once: true });
+
+      // Cleanup function
+      return () => {
+        document.removeEventListener('touchstart', handleUserInteraction);
+        document.removeEventListener('click', handleUserInteraction);
+        document.removeEventListener('keydown', handleUserInteraction);
+      };
+    };
+
+    // Initialize iOS audio handling
+    const cleanup = initializeIOSAudio();
+    return cleanup;
+  }, []);
 
   if (isUserInfoDenied) {
     return <UserInfoDeniedModal onRetry={autoLogin} />;

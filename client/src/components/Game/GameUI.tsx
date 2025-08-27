@@ -122,7 +122,8 @@ export const GameUI: React.FC = React.memo(() => {
       {/* Settings button positioned independently at top-right */}
       {!isPlaying && (
         <>
-          {/* <MuteToggleButton /> */}
+          {/* <MusicMuteButton />
+          <EffectsMuteButton /> */}
           <div className="top-right-buttons">
             {isLoggedIn && (
               <button

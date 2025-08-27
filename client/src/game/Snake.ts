@@ -220,6 +220,16 @@ export class Snake implements SnakeInterface {
       // Pass the food type if available (for Food objects) or default to 'pizza'
       const type = "type" in target ? target.type : "pizza";
       this.eat(target.color, type);
+      
+      // Play eat sound effect for player snake only
+      if (!this.ai) {
+        import("../services/audioService").then(({ audioService }) => {
+          audioService.playEatSound();
+        }).catch((error) => {
+          console.warn('Failed to play eat sound:', error);
+        });
+      }
+      
       return target;
     }
     return undefined;

@@ -51,7 +51,9 @@
   },
   "audio": {
     "muteMusic": "បិទសំឡេងតន្ត្រី",
-    "unmuteMusic": "បើកសំឡេងតន្ត្រី"
+    "unmuteMusic": "បើកសំឡេងតន្ត្រី",
+    "muteEffects": "បិទអេហ្វឺកថ៍សំឡេង",
+    "unmuteEffects": "បើកអេហ្វឺកថ៍សំឡេង"
   },
   "quit": {
     "button": "ចាកចេញពីល្បែង",

@@ -6,7 +6,9 @@ export interface SoundSettings {
   master: number;
   music: number;
   effects: number;
-  muted: boolean;
+  muted: boolean; // Legacy property for backward compatibility
+  musicMuted: boolean;
+  effectsMuted: boolean;
 }
 
 export type SettingsTab = "language" | "sound";
@@ -50,7 +52,9 @@ const defaultSettings = {
     master: 0.8,
     music: 0.6,
     effects: 0.8,
-    muted: false,
+    muted: false, // Legacy property for backward compatibility
+    musicMuted: false,
+    effectsMuted: false,
   },
 };
 
@@ -98,8 +102,19 @@ export const useSettingsStore = create<SettingsState>()(
             if (settings.music !== undefined) {
               audioService.setVolume(settings.music);
             }
+            if (settings.effects !== undefined) {
+              audioService.setEffectsVolume(settings.effects);
+            }
+            if (settings.musicMuted !== undefined) {
+              audioService.setMusicMuted(settings.musicMuted);
+            }
+            if (settings.effectsMuted !== undefined) {
+              audioService.setEffectsMuted(settings.effectsMuted);
+            }
+            // Legacy support for backward compatibility
             if (settings.muted !== undefined) {
-              audioService.setMuted(settings.muted);
+              audioService.setMusicMuted(settings.muted);
+              audioService.setEffectsMuted(settings.muted);
             }
           }).catch((error) => {
             console.error('Failed to sync with audio service:', error);

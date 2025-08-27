@@ -51,7 +51,9 @@
   },
   "audio": {
     "muteMusic": "Mute music",
-    "unmuteMusic": "Unmute music"
+    "unmuteMusic": "Unmute music",
+    "muteEffects": "Mute sound effects",
+    "unmuteEffects": "Unmute sound effects"
   },
   "quit": {
     "button": "Quit Game",

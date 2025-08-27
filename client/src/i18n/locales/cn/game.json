@@ -51,7 +51,9 @@
   },
   "audio": {
     "muteMusic": "静音音乐",
-    "unmuteMusic": "取消静音音乐"
+    "unmuteMusic": "取消静音音乐",
+    "muteEffects": "静音音效",
+    "unmuteEffects": "取消静音音效"
   },
   "quit": {
     "button": "退出游戏",
