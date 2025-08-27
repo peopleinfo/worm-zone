@@ -82,6 +82,28 @@ export const SettingsModal: React.FC = () => {
                     </span>
                   </div>
                 </div>
+                <div className="setting-item">
+                  <label>{t("settings.effects")}</label>
+                  <div className="slider-container">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={sound.effects}
+                      onChange={(e) => {
+                        handleSettingsButtonClick();
+                        updateSoundSettings({
+                          effects: parseFloat(e.target.value),
+                        });
+                      }}
+                      className="volume-slider"
+                    />
+                    <span className="slider-value">
+                      {Math.round(sound.effects * 100)}%
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

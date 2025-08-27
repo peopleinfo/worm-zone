@@ -1,7 +1,10 @@
 class AudioService {
   private backgroundMusic: HTMLAudioElement | null = null;
+  private eatSound: HTMLAudioElement | null = null;
+  private gameOverSound: HTMLAudioElement | null = null;
   private isInitialized = false;
   private currentVolume = 0.6; // Default 60%
+  private currentEffectsVolume = 0.8; // Default 80%
   private isMuted = false;
   private wasPlayingBeforeHidden = false; // Track if music was playing before page became hidden
 
@@ -19,32 +22,50 @@ class AudioService {
       this.backgroundMusic.preload = 'auto';
       this.backgroundMusic.volume = this.currentVolume;
 
+      // Create audio elements for sound effects
+      this.eatSound = new Audio('/eat.mp3');
+      this.eatSound.preload = 'auto';
+      this.eatSound.volume = this.currentEffectsVolume;
+
+      this.gameOverSound = new Audio('/game-over.mp3');
+      this.gameOverSound.preload = 'auto';
+      this.gameOverSound.volume = this.currentEffectsVolume;
+
       // Add error handling for audio loading
-      this.backgroundMusic.addEventListener('error', (e) => {
-        console.error('🎵 Audio loading error:', e);
-        console.error('🎵 Audio error details:', this.backgroundMusic?.error);
-      });
-
-      this.backgroundMusic.addEventListener('canplaythrough', () => {
-        console.log('🎵 Audio loaded successfully');
-      });
-
-      this.backgroundMusic.addEventListener('play', () => {
-        console.log('🎵 Audio started playing');
-      });
-
-      this.backgroundMusic.addEventListener('pause', () => {
-        console.log('🎵 Audio paused');
-      });
+      this.setupAudioErrorHandling(this.backgroundMusic, 'Background Music');
+      this.setupAudioErrorHandling(this.eatSound, 'Eat Sound');
+      this.setupAudioErrorHandling(this.gameOverSound, 'Game Over Sound');
 
       this.updateVolume();
       this.isInitialized = true;
 
-      console.log('🎵 Audio service initialized with volume:', this.currentVolume);
+      console.log('🎵 Audio service initialized with volume:', this.currentVolume, 'effects:', this.currentEffectsVolume);
     } catch (error) {
       console.error('Failed to initialize audio service:', error);
     }
   }
+
+  private setupAudioErrorHandling(audio: HTMLAudioElement | null, name: string): void {
+    if (!audio) return;
+
+    audio.addEventListener('error', (e) => {
+      console.error(`🎵 ${name} loading error:`, e);
+      console.error(`🎵 ${name} error details:`, audio.error);
+    });
+
+    audio.addEventListener('canplaythrough', () => {
+      console.log(`🎵 ${name} loaded successfully`);
+    });
+
+    audio.addEventListener('play', () => {
+      console.log(`🎵 ${name} started playing`);
+    });
+
+    audio.addEventListener('pause', () => {
+      console.log(`🎵 ${name} paused`);
+    });
+  }
+
   public playBackgroundMusic(): void {
     if (!this.backgroundMusic || !this.isInitialized) {
       console.warn('Audio service not initialized');
@@ -110,6 +131,11 @@ class AudioService {
     this.updateVolume();
   }
 
+  public setEffectsVolume(volume: number): void {
+    this.currentEffectsVolume = Math.max(0, Math.min(1, volume));
+    this.updateEffectsVolume();
+  }
+
   public setMuted(muted: boolean): void {
     const wasPlaying = this.isMusicPlaying();
     this.isMuted = muted;
@@ -154,20 +180,45 @@ class AudioService {
     }
   }
 
+  private updateEffectsVolume(): void {
+    try {
+      // Apply mute state and effects volume
+      const effectiveVolume = this.isMuted ? 0 : this.currentEffectsVolume;
+      
+      if (this.eatSound) {
+        this.eatSound.volume = effectiveVolume;
+      }
+      if (this.gameOverSound) {
+        this.gameOverSound.volume = effectiveVolume;
+      }
+
+      console.log('🎵 Effects volume updated:', {
+        effectsVolume: this.currentEffectsVolume,
+        muted: this.isMuted,
+        effectiveVolume
+      });
+    } catch (error) {
+      console.error('Error updating effects volume:', error);
+    }
+  }
+
   public syncWithSettings(): void {
     try {
       // Dynamically import the settings store to avoid circular dependency
       import('../stores/settingsStore').then(({ useSettingsStore }) => {
         const settings = useSettingsStore.getState();
         const newVolume = settings.sound.music;
+        const newEffectsVolume = settings.sound.effects;
         const newMuted = settings.sound.muted;
 
         // Only update if values actually changed
-        if (this.currentVolume !== newVolume || this.isMuted !== newMuted) {
+        if (this.currentVolume !== newVolume || this.currentEffectsVolume !== newEffectsVolume || this.isMuted !== newMuted) {
           this.currentVolume = newVolume;
+          this.currentEffectsVolume = newEffectsVolume;
           this.isMuted = newMuted;
           this.updateVolume();
-          console.log('🎵 Settings synced - Volume:', this.currentVolume, 'Muted:', this.isMuted);
+          this.updateEffectsVolume();
+          console.log('🎵 Settings synced - Volume:', this.currentVolume, 'Effects:', this.currentEffectsVolume, 'Muted:', this.isMuted);
 
           // If audio is playing and we just unmuted, ensure it continues
           if (!this.isMuted && this.backgroundMusic && !this.backgroundMusic.paused) {
@@ -186,8 +237,44 @@ class AudioService {
     return this.currentVolume;
   }
 
+  public getCurrentEffectsVolume(): number {
+    return this.currentEffectsVolume;
+  }
+
   public isMusicPlaying(): boolean {
     return this.backgroundMusic ? !this.backgroundMusic.paused : false;
+  }
+
+  public playEatSound(): void {
+    if (!this.eatSound || !this.isInitialized || this.isMuted) {
+      return;
+    }
+
+    try {
+      // Reset to beginning and play
+      this.eatSound.currentTime = 0;
+      this.eatSound.play().catch((error) => {
+        console.warn('Failed to play eat sound:', error);
+      });
+    } catch (error) {
+      console.error('Error playing eat sound:', error);
+    }
+  }
+
+  public playGameOverSound(): void {
+    if (!this.gameOverSound || !this.isInitialized || this.isMuted) {
+      return;
+    }
+
+    try {
+      // Reset to beginning and play
+      this.gameOverSound.currentTime = 0;
+      this.gameOverSound.play().catch((error) => {
+        console.warn('Failed to play game over sound:', error);
+      });
+    } catch (error) {
+      console.error('Error playing game over sound:', error);
+    }
   }
 
   public ensureMusicIsPlaying(): void {
@@ -246,6 +333,14 @@ class AudioService {
     if (this.backgroundMusic) {
       this.stopBackgroundMusic();
       this.backgroundMusic = null;
+    }
+    if (this.eatSound) {
+      this.eatSound.pause();
+      this.eatSound = null;
+    }
+    if (this.gameOverSound) {
+      this.gameOverSound.pause();
+      this.gameOverSound = null;
     }
     // Clear media session metadata when destroying service
     this.clearMediaSessionMetadata();

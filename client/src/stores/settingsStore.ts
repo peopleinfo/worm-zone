@@ -98,6 +98,9 @@ export const useSettingsStore = create<SettingsState>()(
             if (settings.music !== undefined) {
               audioService.setVolume(settings.music);
             }
+            if (settings.effects !== undefined) {
+              audioService.setEffectsVolume(settings.effects);
+            }
             if (settings.muted !== undefined) {
               audioService.setMuted(settings.muted);
             }
