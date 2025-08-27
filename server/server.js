@@ -467,12 +467,14 @@ function initializeFoods() {
   );
 
   for (let i = 0; i < gameState.maxFoods; i++) {
+    const type = getRandomFood();
     const food = {
       id: i,
       x: Math.random() * gameState.worldWidth,
       y: Math.random() * gameState.worldHeight,
       radius: 5,
-      color: getRandomColor(),
+      color: getFoodColorByType(type),
+      type: type,
     };
     gameState.foods.push(food);
 
@@ -498,11 +500,29 @@ function getRandomColor() {
     "white",
     "yellow",
     "orange",
-    "purple",
     "lightgreen",
     "grey",
   ];
   return colors[Math.floor(Math.random() * colors.length)];
+}
+
+// Get random food type matching client-side Food.ts types
+function getRandomFood() {
+  const types = ['pizza', 'apple', 'cherry', 'donut', 'burger', 'pizza'];
+  return types[Math.floor(Math.random() * types.length)];
+}
+
+// Get color based on food type
+function getFoodColorByType(type) {
+  switch (type) {
+    case 'apple': return 'red';
+    case 'cherry': return 'darkred';
+    case 'pizza': return 'orange';
+    case 'pizza': return 'orange';
+    case 'donut': return 'yellow';
+    case 'burger': return 'brown';
+    default: return 'orange';
+  }
 }
 
 // Generate random player ID (for guests/fallback)
@@ -669,15 +689,19 @@ function isPositionSafe(x, y, radius, minDistance = 200) {
   }
 
   // Additional safety check: ensure spawn direction is clear
-  const testAngles = [0, Math.PI/2, Math.PI, 3*Math.PI/2];
+  const testAngles = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
   let clearDirections = 0;
   for (const angle of testAngles) {
     const testDistance = 100;
     const testX = x + Math.cos(angle) * testDistance;
     const testY = y + Math.sin(angle) * testDistance;
-    
-    if (testX >= boundaryBuffer && testX <= gameState.worldWidth - boundaryBuffer &&
-        testY >= boundaryBuffer && testY <= gameState.worldHeight - boundaryBuffer) {
+
+    if (
+      testX >= boundaryBuffer &&
+      testX <= gameState.worldWidth - boundaryBuffer &&
+      testY >= boundaryBuffer &&
+      testY <= gameState.worldHeight - boundaryBuffer
+    ) {
       let directionClear = true;
       for (const [playerId, player] of gameState.players.entries()) {
         if (!player.alive) continue;
@@ -690,7 +714,7 @@ function isPositionSafe(x, y, radius, minDistance = 200) {
       if (directionClear) clearDirections++;
     }
   }
-  
+
   if (clearDirections < 2) {
     console.log(
       `❌ DEBUG: Position unsafe - insufficient clear directions (${clearDirections}/4)`
@@ -699,7 +723,9 @@ function isPositionSafe(x, y, radius, minDistance = 200) {
   }
 
   console.log(
-    `✅ DEBUG: Position is safe at (${x.toFixed(2)}, ${y.toFixed(2)}) with ${clearDirections} clear directions`
+    `✅ DEBUG: Position is safe at (${x.toFixed(2)}, ${y.toFixed(
+      2
+    )}) with ${clearDirections} clear directions`
   );
   return true;
 }
@@ -797,16 +823,16 @@ function findSafeSpawnPosition(radius) {
   console.log(
     `🚨 DEBUG: Enhanced fallback failed, trying emergency strategies`
   );
-  
+
   // Strategy 1: Emergency scatter spawn with relaxed safety requirements
   for (let retry = 0; retry < maxRetries; retry++) {
     console.log(`🔄 DEBUG: Emergency retry ${retry + 1}/${maxRetries}`);
     let bestPosition = null;
     let maxMinDistance = 0;
-    const relaxedMinDistance = Math.max(50, 150 - (retry * 30)); // Gradually relax requirements
+    const relaxedMinDistance = Math.max(50, 150 - retry * 30); // Gradually relax requirements
 
     for (let attempt = 0; attempt < 75; attempt++) {
-      const margin = 120 - (retry * 20); // Gradually reduce margin
+      const margin = 120 - retry * 20; // Gradually reduce margin
       const x = margin + Math.random() * (gameState.worldWidth - 2 * margin);
       const y = margin + Math.random() * (gameState.worldHeight - 2 * margin);
 
@@ -824,29 +850,34 @@ function findSafeSpawnPosition(radius) {
       }
     }
 
-    if (bestPosition && isPositionSafe(bestPosition.x, bestPosition.y, radius, relaxedMinDistance)) {
+    if (
+      bestPosition &&
+      isPositionSafe(bestPosition.x, bestPosition.y, radius, relaxedMinDistance)
+    ) {
       console.log(
         `🚨 DEBUG: Found emergency position at (${bestPosition.x.toFixed(
           2
         )}, ${bestPosition.y.toFixed(
           2
-        )}) with min distance ${maxMinDistance.toFixed(2)} on retry ${retry + 1}`
+        )}) with min distance ${maxMinDistance.toFixed(2)} on retry ${
+          retry + 1
+        }`
       );
       return bestPosition;
     }
   }
-  
+
   // Strategy 2: Grid-based systematic search
   console.log(`🔍 DEBUG: Trying systematic grid search`);
   const gridSize = 8;
   const stepX = (gameState.worldWidth - 200) / gridSize;
   const stepY = (gameState.worldHeight - 200) / gridSize;
-  
+
   for (let gx = 0; gx < gridSize; gx++) {
     for (let gy = 0; gy < gridSize; gy++) {
       const x = 100 + gx * stepX + Math.random() * stepX * 0.5;
       const y = 100 + gy * stepY + Math.random() * stepY * 0.5;
-      
+
       if (isPositionSafe(x, y, radius, 80)) {
         console.log(
           `🔍 DEBUG: Found grid position at (${x.toFixed(2)}, ${y.toFixed(2)})`
@@ -921,7 +952,8 @@ function calculateSafeSpawnDirection(x, y, radius) {
   }
 
   // Generate safe angle ranges avoiding problematic borders and players
-  for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 12) { // More precise angle testing
+  for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 12) {
+    // More precise angle testing
     const testDistance = 200; // Increased distance to test in this direction
     const testX = x + Math.cos(angle) * testDistance;
     const testY = y + Math.sin(angle) * testDistance;
@@ -1022,9 +1054,10 @@ function createBot(id) {
   );
 
   // Bot personality types for diverse behavior
-  const personalityTypes = ['explorer', 'hunter', 'wanderer'];
-  const personality = personalityTypes[Math.floor(Math.random() * personalityTypes.length)];
-  
+  const personalityTypes = ["explorer", "hunter", "wanderer"];
+  const personality =
+    personalityTypes[Math.floor(Math.random() * personalityTypes.length)];
+
   const bot = {
     id: id,
     socketId: null, // Bots don't have socket connections
@@ -1033,7 +1066,7 @@ function createBot(id) {
     points: [],
     angle: safeAngle,
     radius: botRadius,
-    speed: 1.1,
+    speed: 1.5,
     color: getRandomColor(),
     score: POINT,
     alive: true,
@@ -1042,19 +1075,19 @@ function createBot(id) {
     spawnTime: Date.now(),
     lastDirectionChange: Date.now(), // Timer for straight movement preference
     straightMovementDuration: 4000 + Math.random() * 4000, // 4-8 seconds of straight movement
-    
+
     // Enhanced bot properties for improved movement
     personality: personality,
     explorationRadius: 120 + Math.random() * 30, // 120-150 pixels
     currentSector: null,
     visitedSectors: new Set(),
     lastSectorChange: Date.now(),
-    movementPattern: 'straight',
+    movementPattern: "straight",
     patternStartTime: Date.now(),
     patternDuration: 3000 + Math.random() * 2000,
     momentum: { x: 0, y: 0 },
     wanderTarget: null,
-    lastWanderTime: Date.now()
+    lastWanderTime: Date.now(),
   };
 
   console.log(
@@ -1142,16 +1175,40 @@ function handleBotDeath(bot) {
 
   bot.alive = false;
 
-  // Convert bot's body points to dead points with random colors
-  const deadPoints = bot.points.map((point) => ({
-    x: point.x,
-    y: point.y,
-    radius: point.radius,
-    color: getRandomColor(), // Use random color for multicolored food
-  }));
+  // Convert bot's body points to food items (bots default to pizza_01 since they don't track food types)
+  const newFoodItems = [];
+  bot.points.forEach((point) => {
+    // Use food type from point if available, otherwise default to pizza_01
+    const type = point.type || "pizza_01";
+    const foodId = `${type}_bot_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+    
+    // Determine color based on food type
+    let foodColor = "orange"; // Default pizza color
+    if (type === "apple_01") foodColor = "red";
+    else if (type === "banana_01") foodColor = "yellow";
+    else if (type === "grape_01") foodColor = "purple";
+    else if (type === "cherry_01") foodColor = "darkred";
+    else if (type === "orange_01") foodColor = "orange";
+    
+    const foodItem = {
+      id: foodId,
+      x: point.x,
+      y: point.y,
+      radius: point.radius * 1.1,
+      color: foodColor,
+      type: type,
+      createdAt: Date.now(),
+    };
 
-  // Add dead points to game state
-  gameState.deadPoints.push(...deadPoints);
+    gameState.foods.push(foodItem);
+    newFoodItems.push(foodItem);
+  });
+
+  console.log(
+    `🍕 Bot death: Created ${newFoodItems.length} food items from bot ${bot.id} segments (types: ${newFoodItems.map(f => f.type).join(', ')})`
+  );
 
   // Remove bot from game state
   gameState.players.delete(bot.id);
@@ -1161,11 +1218,15 @@ function handleBotDeath(bot) {
   // const totalPlayers = gameState.players.size;
   // console.log(`🤖 Bot Death: ${bot.id} died at (${bot.x.toFixed(2)}, ${bot.y.toFixed(2)}) | Score: ${bot.score.toFixed(1)} | Remaining bots: ${remainingBots} | Total players: ${totalPlayers}`);
 
-  // Broadcast bot death and dead points
+  // Broadcast bot death and new food items
   io.emit("playerDied", {
     playerId: bot.id,
-    deadPoints: deadPoints,
+    deadPoints: [], // No dead points anymore
+    newFoods: newFoodItems, // Send new pizza_01 food items
   });
+
+  // Also broadcast food update to sync all clients
+  io.emit("foodsUpdated", newFoodItems);
 
   // Broadcast bot removal
   io.emit("playerDisconnected", bot.id);
@@ -1543,7 +1604,7 @@ function updateBots() {
     let targetFound = false;
     let targetAngle = player.angle;
     const seekRadius = player.explorationRadius; // Use bot's individual exploration radius (120-150)
-    
+
     // Update current sector for sector-based exploration
     const sectorsPerRow = 4;
     const sectorWidth = gameState.worldWidth / sectorsPerRow;
@@ -1551,23 +1612,27 @@ function updateBots() {
     const currentSectorX = Math.floor(player.x / sectorWidth);
     const currentSectorY = Math.floor(player.y / sectorHeight);
     const currentSector = `${currentSectorX}-${currentSectorY}`;
-    
+
     if (player.currentSector !== currentSector) {
       player.currentSector = currentSector;
       player.visitedSectors.add(currentSector);
       player.lastSectorChange = Date.now();
     }
-    
+
     // Personality-based target seeking
     let nearestDeadPoint = null;
     let nearestDeadDistance = Infinity;
     let nearestFood = null;
     let nearestFoodDistance = Infinity;
-    
+
     // Reduce food-seeking frequency based on personality
-    const seekingChance = player.personality === 'hunter' ? 0.8 : 
-                         player.personality === 'explorer' ? 0.3 : 0.5;
-    
+    const seekingChance =
+      player.personality === "hunter"
+        ? 0.8
+        : player.personality === "explorer"
+        ? 0.3
+        : 0.5;
+
     if (Math.random() < seekingChance) {
       // Find nearest dead point within seek radius
       for (const deadPoint of gameState.deadPoints) {
@@ -1580,7 +1645,7 @@ function updateBots() {
           nearestDeadDistance = distance;
         }
       }
-      
+
       // Find nearest food within seek radius
       for (const food of gameState.foods) {
         const distance = Math.hypot(food.x - player.x, food.y - player.y);
@@ -1590,11 +1655,11 @@ function updateBots() {
         }
       }
     }
-    
+
     // Personality-based target prioritization
-    const deadPointThreshold = player.personality === 'hunter' ? 80 : 50;
-    const foodThreshold = player.personality === 'hunter' ? 60 : 40;
-    
+    const deadPointThreshold = player.personality === "hunter" ? 80 : 50;
+    const foodThreshold = player.personality === "hunter" ? 60 : 40;
+
     if (nearestDeadPoint && nearestDeadDistance < deadPointThreshold) {
       targetAngle = Math.atan2(
         nearestDeadPoint.y - player.y,
@@ -1626,20 +1691,22 @@ function updateBots() {
     } else if (!boundaryAvoidanceApplied) {
       // Enhanced movement patterns with personality-based behavior
       const currentTime = Date.now();
-      
+
       // Update movement pattern based on duration
       if (currentTime - player.patternStartTime > player.patternDuration) {
-        const patterns = ['straight', 'spiral', 'zigzag', 'wander'];
+        const patterns = ["straight", "spiral", "zigzag", "wander"];
         const personalityWeights = {
           explorer: [0.3, 0.2, 0.2, 0.3],
           hunter: [0.5, 0.1, 0.2, 0.2],
-          wanderer: [0.2, 0.3, 0.2, 0.3]
+          wanderer: [0.2, 0.3, 0.2, 0.3],
         };
-        
-        const weights = personalityWeights[player.personality] || [0.25, 0.25, 0.25, 0.25];
+
+        const weights = personalityWeights[player.personality] || [
+          0.25, 0.25, 0.25, 0.25,
+        ];
         const rand = Math.random();
         let cumulative = 0;
-        
+
         for (let i = 0; i < patterns.length; i++) {
           cumulative += weights[i];
           if (rand < cumulative) {
@@ -1647,51 +1714,63 @@ function updateBots() {
             break;
           }
         }
-        
+
         player.patternStartTime = currentTime;
         player.patternDuration = 3000 + Math.random() * 4000; // 3-7 seconds
       }
-      
+
       // Long-distance wandering for explorers
-      if (player.personality === 'explorer' && (!player.wanderTarget || 
-          Math.hypot(player.x - player.wanderTarget.x, player.y - player.wanderTarget.y) < 50)) {
+      if (
+        player.personality === "explorer" &&
+        (!player.wanderTarget ||
+          Math.hypot(
+            player.x - player.wanderTarget.x,
+            player.y - player.wanderTarget.y
+          ) < 50)
+      ) {
         // Set new wander target in unexplored or less visited sectors
         const unvisitedSectors = [];
         for (let x = 0; x < 4; x++) {
           for (let y = 0; y < 4; y++) {
             const sector = `${x}-${y}`;
             if (!player.visitedSectors.has(sector)) {
-              unvisitedSectors.push({x: x * sectorWidth + sectorWidth/2, y: y * sectorHeight + sectorHeight/2});
+              unvisitedSectors.push({
+                x: x * sectorWidth + sectorWidth / 2,
+                y: y * sectorHeight + sectorHeight / 2,
+              });
             }
           }
         }
-        
+
         if (unvisitedSectors.length > 0) {
-          player.wanderTarget = unvisitedSectors[Math.floor(Math.random() * unvisitedSectors.length)];
+          player.wanderTarget =
+            unvisitedSectors[
+              Math.floor(Math.random() * unvisitedSectors.length)
+            ];
         } else {
           // All sectors visited, pick random distant point
           player.wanderTarget = {
             x: Math.random() * gameState.worldWidth,
-            y: Math.random() * gameState.worldHeight
+            y: Math.random() * gameState.worldHeight,
           };
         }
       }
-      
+
       // Apply movement pattern
       switch (player.movementPattern) {
-        case 'spiral':
+        case "spiral":
           const spiralTime = (currentTime - player.patternStartTime) / 1000;
           player.angle += 0.1 + Math.sin(spiralTime) * 0.05;
           break;
-          
-        case 'zigzag':
+
+        case "zigzag":
           if (currentTime - player.lastDirectionChange > 1000) {
             player.angle += (Math.random() - 0.5) * Math.PI * 0.5;
             player.lastDirectionChange = currentTime;
           }
           break;
-          
-        case 'wander':
+
+        case "wander":
           if (player.wanderTarget) {
             const wanderAngle = Math.atan2(
               player.wanderTarget.y - player.y,
@@ -1700,11 +1779,12 @@ function updateBots() {
             let angleDiff = wanderAngle - player.angle;
             while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
             while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-            
-            player.angle += Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), 0.05);
+
+            player.angle +=
+              Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), 0.05);
           }
           break;
-          
+
         default: // straight
           // Force exploration if stuck or haven't explored for long
           if (isStuck || currentTime - player.lastExploreTime > 15000) {
@@ -1839,6 +1919,9 @@ function updateBots() {
       if (isCollided(botHead, food)) {
         // Bot eats food - same logic as human players
         player.score += POINT;
+        
+        // Extract the food type that was eaten (for potential future bot food type tracking)
+        const eatentype = food.type || 'pizza';
 
         // Add new point to bot's body using bot's main color
         if (player.points.length > 0) {
@@ -1848,14 +1931,17 @@ function updateBots() {
             y: tail.y,
             radius: player.radius,
             color: player.color, // Use bot's main color instead of food color
+            type: eatentype, // Store food type for when bot dies
           });
         }
 
         // Regenerate food with logging
         const oldPos = { x: food.x, y: food.y };
+        const newtype = getRandomFood();
         food.x = Math.random() * gameState.worldWidth;
         food.y = Math.random() * gameState.worldHeight;
-        food.color = getRandomColor();
+        food.color = getFoodColorByType(newtype);
+        food.type = newtype;
 
         // console.log(`🍎 Bot ${player.id} ate food ${food.id}: regenerated from (${oldPos.x.toFixed(2)}, ${oldPos.y.toFixed(2)}) to (${food.x.toFixed(2)}, ${food.y.toFixed(2)})`);
 
@@ -2002,7 +2088,7 @@ io.on("connection", (socket) => {
       points: [],
       angle: safeAngle,
       radius: playerRadius,
-      speed: 0.8,
+      speed: 0.9,
       color: getRandomColor(),
       score: 0,
       alive: true,
@@ -2134,11 +2220,16 @@ io.on("connection", (socket) => {
       if (!player.isBot) {
         updatePlayerActivity();
       }
+      // Extract the food type that was eaten
+      const eatentype = food.type || 'pizza';
+      
       // Regenerate food with logging
       const oldPos = { x: food.x, y: food.y };
+      const newtype = getRandomFood();
       food.x = Math.random() * gameState.worldWidth;
       food.y = Math.random() * gameState.worldHeight;
-      food.color = getRandomColor();
+      food.color = getFoodColorByType(newtype);
+      food.type = newtype;
 
       player.score += POINT;
       performanceMetrics.foodEaten++;
@@ -2155,6 +2246,13 @@ io.on("connection", (socket) => {
 
       // Broadcast food regeneration to all players
       io.emit("foodRegenerated", food);
+      
+      // Broadcast the eaten food type to the client for snake segment storage
+      io.emit("typeEaten", { 
+        playerId, 
+        foodId, 
+        eatentype 
+      });
 
       // Broadcast score update
       io.emit("scoreUpdate", {
@@ -2228,17 +2326,52 @@ io.on("connection", (socket) => {
 
       player.alive = false;
 
-      // Add dead points to game state
+      // Convert dead points to food items preserving their original types
       const deadPoints = data.deadPoints;
+      const newFoodItems = [];
+
       deadPoints.forEach((dp) => {
-        createDeadPoint(dp.x, dp.y, dp.radius, dp.color);
+        // Use the food type from the dead point, default to pizza_01 if not specified
+        const type = dp.type || "pizza_01";
+        const foodId = `${type}_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
+        
+        // Determine color based on food type
+        let foodColor = "orange"; // Default pizza color
+        if (type === "apple_01") foodColor = "red";
+        else if (type === "banana_01") foodColor = "yellow";
+        else if (type === "grape_01") foodColor = "purple";
+        else if (type === "cherry_01") foodColor = "darkred";
+        else if (type === "orange_01") foodColor = "orange";
+        
+        const foodItem = {
+          id: foodId,
+          x: dp.x,
+          y: dp.y,
+          radius: 8, // Slightly larger than regular food
+          color: foodColor,
+          type: type,
+          createdAt: Date.now(),
+        };
+
+        gameState.foods.push(foodItem);
+        newFoodItems.push(foodItem);
       });
 
-      // Broadcast player death and dead points
+      console.log(
+        `🍕 Player death: Created ${newFoodItems.length} food items from snake segments (types: ${newFoodItems.map(f => f.type).join(', ')})`
+      );
+
+      // Broadcast player death and new food items
       io.emit("playerDied", {
         playerId: data.playerId,
-        deadPoints: deadPoints,
+        deadPoints: [], // No dead points anymore
+        newFoods: newFoodItems, // Send new pizza_01 food items
       });
+
+      // Also broadcast food update to sync all clients
+      io.emit("foodsUpdated", newFoodItems);
 
       // Only respawn human players, remove bots from arena
       if (player.isBot) {
@@ -2441,7 +2574,6 @@ function startCleanupInterval() {
 
 // Start initial cleanup interval
 startCleanupInterval();
-
 
 // ===== OPTIMIZED BOT MANAGEMENT SYSTEM =====
 

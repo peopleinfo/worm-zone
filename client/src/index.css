@@ -107,7 +107,7 @@ body {
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  background-image: url("/splash-screen.jpg") !important;
+  background-image: url("/bg-black.jpg") !important;
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
@@ -277,11 +277,59 @@ body {
   margin-top: -50vw;
   margin-left: -50vh;
   overflow: hidden;
-  /* Hardware acceleration for smoother performance */
+  /* Enhanced hardware acceleration for maximum performance */
   will-change: transform;
   backface-visibility: hidden;
-  -webkit-transform: rotate3d(0, 0, 1, 90deg);
   -webkit-backface-visibility: hidden;
+  -webkit-transform: rotate3d(0, 0, 1, 90deg);
+  /* Force GPU layer creation for smooth rendering */
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  /* Optimize for high-DPI displays */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Reduce layout thrashing */
+  contain: layout style paint size;
+}
+
+/* Game container - rotated for landscape mode */
+.game-container {
+  width: 100vh;
+  height: 100vw;
+  transform: rotate3d(0, 0, 1, 90deg);
+  transform-origin: center center;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  margin-top: -50vw;
+  margin-left: -50vh;
+  overflow: hidden;
+  
+  /* HIGH QUALITY - Maximum performance and visual quality */
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: rotate3d(0, 0, 1, 90deg);
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  contain: layout style paint size;
+  
+  /* MEDIUM QUALITY - Balanced performance (uncomment to use)
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: rotate3d(0, 0, 1, 90deg);
+  -webkit-font-smoothing: antialiased;
+  contain: layout style paint;
+  */
+  
+  /* LOW QUALITY - Basic optimization (uncomment to use)
+  will-change: auto;
+  -webkit-transform: rotate3d(0, 0, 1, 90deg);
+  contain: layout;
+  */
 }
 
 /* Game Layout Optimization for Landscape Mode */
@@ -297,6 +345,20 @@ body {
   flex-direction: column;
   margin: 0;
   padding: 0;
+  
+  /* HIGH QUALITY - Full optimization */
+  contain: layout style paint;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  
+  /* MEDIUM QUALITY - Moderate optimization (uncomment to use)
+  contain: layout style;
+  transform: translateZ(0);
+  */
+  
+  /* LOW QUALITY - Minimal optimization (uncomment to use)
+  contain: layout;
+  */
 }
 
 /* Full-screen canvas optimization */
@@ -304,6 +366,23 @@ canvas {
   display: block;
   margin: 0;
   padding: 0;
+  
+  /* HIGH QUALITY - Crisp pixel-perfect rendering */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
+  
+  /* MEDIUM QUALITY - Smooth with some anti-aliasing (uncomment to use)
+  image-rendering: auto;
+  image-rendering: smooth;
+  -ms-interpolation-mode: bicubic;
+  */
+  
+  /* LOW QUALITY - Basic rendering (uncomment to use)
+  image-rendering: auto;
+  */
 }
 
 /* Game canvas specific styling for rotated landscape mode */
@@ -317,18 +396,136 @@ canvas {
   z-index: 1;
   margin: 0;
   padding: 0;
-  /* Optimize canvas for mobile performance and quality */
+  
+  /* HIGH QUALITY - Maximum visual and performance optimization */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
+  transform: translateZ(0) scale(1);
+  -webkit-transform: translateZ(0) scale(1);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout style paint size;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  will-change: transform, opacity;
+  -webkit-perspective: 1000px;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  
+  /* MEDIUM QUALITY - Balanced performance and quality (uncomment to use)
   image-rendering: auto;
   image-rendering: smooth;
+  -ms-interpolation-mode: bicubic;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout style paint;
+  -webkit-font-smoothing: antialiased;
+  will-change: transform;
+  */
+  
+  /* LOW QUALITY - Basic optimization for weak devices (uncomment to use)
+  image-rendering: auto;
   transform: translateZ(0);
   backface-visibility: hidden;
-  /* Reduce GPU overhead while maintaining quality */
-  contain: layout style paint;
-  /* Optimize for mobile touch interactions */
+  contain: layout;
+  will-change: auto;
+  */
+  
+  /* Touch interaction optimization (applies to all quality levels) */
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: auto;
+}
+
+/* Game Layout Optimization for Landscape Mode */
+.game-layout {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  /* Optimize layout performance */
+  contain: layout style paint;
+  /* Ensure crisp rendering */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Full-screen canvas optimization */
+canvas {
+  display: block;
+  margin: 0;
+  padding: 0;
+  /* High-quality image rendering for all browsers */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  /* Fallback for older browsers */
+  -ms-interpolation-mode: nearest-neighbor;
+}
+
+/* Game canvas specific styling for rotated landscape mode */
+#gameCanvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  /* Maximum quality rendering optimizations */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
+  /* Enhanced GPU acceleration */
+  transform: translateZ(0) scale(1);
+  -webkit-transform: translateZ(0) scale(1);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Maximum performance containment */
+  contain: layout style paint size;
+  /* Optimized for mobile touch interactions */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent selection and context menus */
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: auto;
+  /* Enhanced anti-aliasing for smoother edges */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Optimize for high refresh rate displays */
+  will-change: transform, opacity;
+  /* Prevent flickering and tearing */
+  -webkit-backface-visibility: hidden;
+  -webkit-perspective: 1200px;
+  /* Memory optimization for large canvases */
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
 }
 
 /* Joypad canvas styling for rotated landscape */
@@ -846,7 +1043,7 @@ canvas:not(#gameCanvas) {
   border: 2px solid var(--color-primary);
   border-radius: 40px;
   box-shadow: 0px 3px 0px #512d15, inset 2px 4px 4px rgba(255, 255, 255, 0.67);
-  padding: 12px;
+  padding: 16;
   pointer-events: auto;
 }
 

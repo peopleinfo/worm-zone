@@ -5,19 +5,21 @@ export class Point {
   y: number;
   radius: number;
   color: string;
+  type?: any; // Optional food type for snake segments
   private static pool: Point[] = [];
   private static poolSize = 0;
-  private static readonly MAX_POOL_SIZE = 500;
+  private static readonly MAX_POOL_SIZE = 300;
 
-  constructor(x: number = 0, y: number = 0, radius: number = 0, color: string = '') {
+  constructor(x: number = 0, y: number = 0, radius: number = 0, color: string = '', type?: any) {
     this.x = x;
     this.y = y;
     this.radius = radius;
     this.color = color;
+    this.type = type;
   }
 
   // Object pooling for better memory management
-  static create(x: number, y: number, radius: number, color: string): Point {
+  static create(x: number, y: number, radius: number, color: string, type?: string): Point {
     let point: Point;
     
     if (Point.poolSize > 0) {
@@ -26,8 +28,9 @@ export class Point {
       point.y = y;
       point.radius = radius;
       point.color = color;
+      point.type = type;
     } else {
-      point = new Point(x, y, radius, color);
+      point = new Point(x, y, radius, color, type);
     }
     
     return point;
@@ -39,13 +42,28 @@ export class Point {
     }
   }
 
-  // Optimized draw method without shadows for better mobile performance
-  draw(ctx: CanvasRenderingContext2D): void {
-    // Simplified rendering - no shadows to prevent device overheating
+  // Optimized draw method with optional shadow support
+  draw(ctx: CanvasRenderingContext2D, enableShadow: boolean = false, shadowColor: string = 'rgba(0, 0, 0, 0.3)', shadowBlur: number = 3, shadowOffsetX: number = 1, shadowOffsetY: number = 1): void {
+    // Apply shadow if enabled and supported
+    if (enableShadow) {
+      ctx.shadowColor = shadowColor;
+      ctx.shadowBlur = shadowBlur;
+      ctx.shadowOffsetX = shadowOffsetX;
+      ctx.shadowOffsetY = shadowOffsetY;
+    }
+
     ctx.fillStyle = this.color;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
+
+    // Reset shadow settings to prevent affecting other drawings
+    if (enableShadow) {
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
   }
 
   // Check if point is within viewport (for culling)
