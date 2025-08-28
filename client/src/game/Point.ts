@@ -48,7 +48,7 @@ export class Point {
     }
   }
 
-  // Optimized draw method with quality-based shadow support
+  // Optimized draw method with quality-based shadow support and DPI scaling
   draw(ctx: CanvasRenderingContext2D, enableShadow: boolean = false): void {
     // Get current quality settings
     let quality: "low" | "medium" | "hd" = "hd";
@@ -62,6 +62,7 @@ export class Point {
     if (enableShadow && shouldDrawShadow(quality)) {
       const shadowConfig = getShadowConfig(quality);
       ctx.shadowColor = shadowConfig.shadowColor;
+      // Use shadow properties directly - context scaling handles DPI automatically
       ctx.shadowBlur = shadowConfig.shadowBlur;
       ctx.shadowOffsetX = shadowConfig.shadowOffsetX;
       ctx.shadowOffsetY = shadowConfig.shadowOffsetY;
@@ -69,6 +70,7 @@ export class Point {
 
     ctx.fillStyle = this.color;
     ctx.beginPath();
+    // Use logical coordinates (already scaled by context transformation)
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
 

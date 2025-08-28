@@ -315,6 +315,15 @@ export class Snake implements SnakeInterface {
     const qualityConfig = getQualityConfig(quality);
     const enableShadows = shouldDrawShadow(quality);
 
+    // Enable anti-aliasing and smooth rendering for crisp mobile display
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    // Additional mobile-optimized rendering settings
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
     // Draw body segments with overlap to create continuous appearance
     // Use smaller increment to ensure segments overlap and connect seamlessly
     const segmentSpacing = Math.max(
@@ -368,6 +377,9 @@ export class Snake implements SnakeInterface {
     if (!this.ai && qualityConfig.detailLevel >= 3) {
       this.drawDirectionIndicator(ctx);
     }
+    
+    // Restore canvas context
+    ctx.restore();
   }
 
   private drawEye(ctx: CanvasRenderingContext2D): void {

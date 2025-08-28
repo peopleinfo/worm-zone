@@ -40,10 +40,10 @@ export const getQualityConfig = (quality: QualityLevel): QualityConfig => {
       return {
         imageSmoothing: true,
         shadowEnabled: true,
-        shadowBlur: 4,
-        shadowOffsetX: 2,
-        shadowOffsetY: 2,
-        lineWidth: 2,
+        shadowBlur: 7,
+        shadowOffsetX: 3,
+        shadowOffsetY: 3,
+        lineWidth: 4,
         detailLevel: 3,
         antiAliasing: true,
       };
@@ -56,8 +56,44 @@ export const applyQualityToContext = (
 ): void => {
   const config = getQualityConfig(quality);
   
+  // Enhanced image smoothing for HD quality
   ctx.imageSmoothingEnabled = config.imageSmoothing;
+  
+  if (config.antiAliasing) {
+    ctx.imageSmoothingQuality = 'high';
+  } else {
+    ctx.imageSmoothingQuality = 'low';
+  }
+  
+  // Set line properties for crisp rendering
   ctx.lineWidth = config.lineWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  
+  // Additional HD quality settings for crisp rendering
+  if (quality === 'hd') {
+    // Force high-quality rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    // Enhanced line rendering for HD
+    ctx.miterLimit = 10;
+    
+    // @ts-ignore - Browser-specific optimizations
+    if ('textRenderingOptimization' in ctx) {
+      ctx.textRenderingOptimization = 'optimizeQuality';
+    }
+    
+    // @ts-ignore - Webkit-specific optimizations
+    if ('webkitImageSmoothingEnabled' in ctx) {
+      ctx.webkitImageSmoothingEnabled = true;
+    }
+    
+    // @ts-ignore - Mozilla-specific optimizations
+    if ('mozImageSmoothingEnabled' in ctx) {
+      ctx.mozImageSmoothingEnabled = true;
+    }
+  }
   
   // Reset shadow settings
   ctx.shadowColor = "transparent";
@@ -73,7 +109,7 @@ export const shouldDrawShadow = (quality: QualityLevel): boolean => {
 export const getShadowConfig = (quality: QualityLevel) => {
   const config = getQualityConfig(quality);
   return {
-    shadowColor: "rgba(0, 0, 0, 0.3)",
+    shadowColor: "rgba(0, 0, 0, 0.7)",
     shadowBlur: config.shadowBlur,
     shadowOffsetX: config.shadowOffsetX,
     shadowOffsetY: config.shadowOffsetY,
