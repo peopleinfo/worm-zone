@@ -45,7 +45,7 @@ export class Food extends Point {
     }
 
     const canvas = document.createElement('canvas');
-    const size = this.radius * 3;
+    const size = this.radius * 2.1;
     
     // High-DPI support for crisp rendering
     const devicePixelRatio = window.devicePixelRatio || 1;
@@ -351,7 +351,7 @@ export class Food extends Point {
       ctx.clearRect(0, 0, size, size);
       
       // Calculate the image size to fit within the food radius
-      const imageSize = radius * 3;
+      const imageSize = radius * 2.1;
       const imageX = x - imageSize / 2;
       const imageY = y - imageSize / 2;
       
@@ -428,7 +428,7 @@ export class Food extends Point {
       const foodImage = Food.imageCache.get(cacheKey);
       
       if (foodImage) {
-        const size = this.radius * 3;
+        const size = this.radius * 2.1;
         
         // Apply high-quality image rendering
         ctx.drawImage(

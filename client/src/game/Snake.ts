@@ -495,7 +495,7 @@ export class Snake implements SnakeInterface {
     
     // Outline arrow
     ctx.strokeStyle = "rgba(255, 165, 0, 0.9)";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.7;
     ctx.beginPath();
     ctx.moveTo(tipX, tipY);
     ctx.lineTo(leftBaseX, leftBaseY);
