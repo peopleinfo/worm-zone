@@ -1,6 +1,8 @@
 import { POINT } from '../config/gameConfig';
 import { getRandomColor, getRandX, getRandY, lerp } from '../utils/gameUtils';
 import { Point } from './Point';
+import { useSettingsStore } from '../stores/settingsStore';
+import { shouldDrawShadow, getShadowConfig, getQualityConfig } from '../utils/qualityUtils';
 
 type Type = 'pizza' | 'apple' | 'cherry' | 'donut' | 'burger';
   
@@ -407,9 +409,19 @@ export class Food extends Point {
     // Save current context state
     ctx.save();
     
-    // Enable high-quality rendering for the main canvas
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    // Get current quality settings
+    let quality: "low" | "medium" | "hd" = "hd";
+    try {
+      quality = useSettingsStore.getState().quality;
+    } catch (error) {
+      console.warn('Failed to get quality settings:', error);
+    }
+
+    const qualityConfig = getQualityConfig(quality);
+    
+    // Apply quality settings to context
+    ctx.imageSmoothingEnabled = qualityConfig.imageSmoothing;
+    ctx.imageSmoothingQuality = qualityConfig.imageSmoothing ? 'high' : 'low';
     
     // Use cached food image if available, otherwise fallback to circle
     if (this.imageReady) {
@@ -437,28 +449,37 @@ export class Food extends Point {
     // Enhanced fallback rendering with gradients and anti-aliasing
     const drawColor = this.color;
     
-    // Add subtle shadow for depth
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-    ctx.shadowBlur = 3;
-    ctx.shadowOffsetX = 1;
-    ctx.shadowOffsetY = 1;
+    // Add shadow based on quality settings
+    if (shouldDrawShadow(quality)) {
+      const shadowConfig = getShadowConfig(quality);
+      ctx.shadowColor = shadowConfig.shadowColor;
+      ctx.shadowBlur = shadowConfig.shadowBlur;
+      ctx.shadowOffsetX = shadowConfig.shadowOffsetX;
+      ctx.shadowOffsetY = shadowConfig.shadowOffsetY;
+    }
     
-    // Create gradient for better visual appeal
-    const gradient = ctx.createRadialGradient(
-      this.x - this.radius * 0.3, this.y - this.radius * 0.3, 0,
-      this.x, this.y, this.radius
-    );
+    // Create gradient for better visual appeal (only for medium and HD quality)
+    if (qualityConfig.detailLevel >= 2) {
+      const gradient = ctx.createRadialGradient(
+        this.x - this.radius * 0.3, this.y - this.radius * 0.3, 0,
+        this.x, this.y, this.radius
+      );
+      
+      // Parse color and create lighter/darker variants
+      const baseColor = drawColor;
+      const lighterColor = this.lightenColor(baseColor, 0.3);
+      const darkerColor = this.darkenColor(baseColor, 0.2);
+      
+      gradient.addColorStop(0, lighterColor);
+      gradient.addColorStop(0.7, baseColor);
+      gradient.addColorStop(1, darkerColor);
+      
+      ctx.fillStyle = gradient;
+    } else {
+      // Simple solid color for low quality
+      ctx.fillStyle = drawColor;
+    }
     
-    // Parse color and create lighter/darker variants
-    const baseColor = drawColor;
-    const lighterColor = this.lightenColor(baseColor, 0.3);
-    const darkerColor = this.darkenColor(baseColor, 0.2);
-    
-    gradient.addColorStop(0, lighterColor);
-    gradient.addColorStop(0.7, baseColor);
-    gradient.addColorStop(1, darkerColor);
-    
-    ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -466,18 +487,20 @@ export class Food extends Point {
     // Reset shadow for border
     ctx.shadowColor = 'transparent';
     
-    // Enhanced border with gradient
-    const borderGradient = ctx.createLinearGradient(
-      this.x - this.radius, this.y - this.radius,
-      this.x + this.radius, this.y + this.radius
-    );
-    borderGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-    borderGradient.addColorStop(1, 'rgba(255, 255, 255, 0.3)');
-    
-    ctx.strokeStyle = borderGradient;
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.stroke();
+    // Enhanced border with gradient (only for HD quality)
+    if (qualityConfig.detailLevel >= 3) {
+      const borderGradient = ctx.createLinearGradient(
+        this.x - this.radius, this.y - this.radius,
+        this.x + this.radius, this.y + this.radius
+      );
+      borderGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+      borderGradient.addColorStop(1, 'rgba(255, 255, 255, 0.3)');
+      
+      ctx.strokeStyle = borderGradient;
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
     
     // Restore context state
     ctx.restore();

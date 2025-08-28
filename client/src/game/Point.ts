@@ -1,6 +1,6 @@
-// Removed unused import
-
 import { CLEANUP_INTERVAL } from "../config/gameConfig";
+import { useSettingsStore } from "../stores/settingsStore";
+import { shouldDrawShadow, getShadowConfig } from "../utils/qualityUtils";
 
 export class Point {
   x: number;
@@ -48,14 +48,23 @@ export class Point {
     }
   }
 
-  // Optimized draw method with optional shadow support
-  draw(ctx: CanvasRenderingContext2D, enableShadow: boolean = false, shadowColor: string = 'rgba(0, 0, 0, 0.3)', shadowBlur: number = 3, shadowOffsetX: number = 1, shadowOffsetY: number = 1): void {
-    // Apply shadow if enabled and supported
-    if (enableShadow) {
-      ctx.shadowColor = shadowColor;
-      ctx.shadowBlur = shadowBlur;
-      ctx.shadowOffsetX = shadowOffsetX;
-      ctx.shadowOffsetY = shadowOffsetY;
+  // Optimized draw method with quality-based shadow support
+  draw(ctx: CanvasRenderingContext2D, enableShadow: boolean = false): void {
+    // Get current quality settings
+    let quality: "low" | "medium" | "hd" = "hd";
+    try {
+      quality = useSettingsStore.getState().quality;
+    } catch (error) {
+      console.warn('Failed to get quality settings:', error);
+    }
+
+    // Apply shadow if enabled and quality supports it
+    if (enableShadow && shouldDrawShadow(quality)) {
+      const shadowConfig = getShadowConfig(quality);
+      ctx.shadowColor = shadowConfig.shadowColor;
+      ctx.shadowBlur = shadowConfig.shadowBlur;
+      ctx.shadowOffsetX = shadowConfig.shadowOffsetX;
+      ctx.shadowOffsetY = shadowConfig.shadowOffsetY;
     }
 
     ctx.fillStyle = this.color;
@@ -64,7 +73,7 @@ export class Point {
     ctx.fill();
 
     // Reset shadow settings to prevent affecting other drawings
-    if (enableShadow) {
+    if (enableShadow && shouldDrawShadow(quality)) {
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
       ctx.shadowOffsetX = 0;

@@ -6,6 +6,8 @@ import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
 import { CLEANUP_INTERVAL, MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH, TARGET_FPS, FORCE_FPS_LIMIT } from '../config/gameConfig';
 import { performanceManager } from '../utils/performanceUtils';
+import { useSettingsStore } from '../stores/settingsStore';
+import { applyQualityToContext } from '../utils/qualityUtils';
 
 export class GameEngine {
   private canvas: HTMLCanvasElement;
@@ -26,9 +28,38 @@ export class GameEngine {
   // Dynamic frame rate limiting based on device performance
   private frameStartTime: number = 0;
   
+  // Quality settings
+  private quality: string = "hd";
+  
   // World coordinate system - consistent boundaries for collision and rendering
   private readonly WORLD_WIDTH: number = WORLD_WIDTH;
   private readonly WORLD_HEIGHT: number = WORLD_HEIGHT;
+
+  private updateQualitySettings(): void {
+    // Get quality from settings store
+    try {
+      const settingsStore = useSettingsStore.getState();
+      this.quality = settingsStore.quality;
+      this.applyQualityToCanvas();
+      
+      // Subscribe to quality changes
+      useSettingsStore.subscribe((state) => {
+        if (state.quality !== this.quality) {
+          this.quality = state.quality;
+          this.applyQualityToCanvas();
+        }
+      });
+    } catch (error) {
+      console.warn('Failed to get quality settings:', error);
+      this.quality = "hd"; // Default to HD
+    }
+  }
+
+  private applyQualityToCanvas(): void {
+    if (this.ctx) {
+      applyQualityToContext(this.ctx, this.quality as "low" | "medium" | "hd");
+    }
+  }
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -36,6 +67,7 @@ export class GameEngine {
     this.setupCanvas();
     this.initializeGame();
     this.setupVisibilityHandler();
+    this.updateQualitySettings();
   }
 
   private setupCanvas(): void {
@@ -55,8 +87,8 @@ export class GameEngine {
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
     
-    // Performance optimizations for mobile devices
-    this.ctx.imageSmoothingEnabled = parseInt(devicePerf.tier.toString()) >= 2; // Only enable on higher-end devices
+    // Apply quality settings to canvas context
+    this.applyQualityToCanvas();
     
     // Enhanced hardware acceleration hints
     this.canvas.style.willChange = 'transform';
@@ -66,8 +98,6 @@ export class GameEngine {
     
     // Additional canvas optimizations for mobile
     if (devicePerf.isMobile) {
-      // Disable anti-aliasing on mobile for better performance
-      this.ctx.imageSmoothingEnabled = false;
       // Use faster composite operations
       this.ctx.globalCompositeOperation = 'source-over';
     }
@@ -93,7 +123,9 @@ export class GameEngine {
     // Restore canvas context properties with performance optimizations
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
-    this.ctx.imageSmoothingEnabled = parseInt(devicePerf.tier.toString()) >= 2 && !devicePerf.isMobile;
+    
+    // Apply quality settings after resize
+    this.applyQualityToCanvas();
     
     // Restore mobile-specific optimizations
     if (devicePerf.isMobile) {

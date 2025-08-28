@@ -9,7 +9,8 @@ const io = socketIo(server, {
     origin: "*",
     methods: ["GET", "POST"],
   },
-  transports: ["websocket", "polling"],
+  transports: ["websocket"],
+  // transports: ["websocket", "polling"],
   allowEIO3: true,
 });
 

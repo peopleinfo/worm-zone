@@ -5,7 +5,8 @@ import {
   coeffD2R,
   INFINITY,
 } from "../utils/gameUtils";
-import { performanceManager } from "../utils/performanceUtils";
+import { useSettingsStore }	 from "../stores/settingsStore";
+import { shouldDrawShadow, getQualityConfig } from "../utils/qualityUtils";
 import {
   SHADOW_COLOR,
   SHADOW_BLUR,
@@ -303,9 +304,16 @@ export class Snake implements SnakeInterface {
   draw(ctx: CanvasRenderingContext2D): void {
     if (!this.isAlive || this.points.length === 0) return;
 
-    // Check if shadows should be enabled based on device performance
-    const devicePerf = performanceManager.getDevicePerformance();
-    const enableShadows = devicePerf.enableShadows;
+    // Get current quality settings
+    let quality: "low" | "medium" | "hd" = "hd";
+    try {
+      quality = useSettingsStore.getState().quality;
+    } catch (error) {
+      console.warn('Failed to get quality settings:', error);
+    }
+
+    const qualityConfig = getQualityConfig(quality);
+    const enableShadows = shouldDrawShadow(quality);
 
     // Draw body segments with overlap to create continuous appearance
     // Use smaller increment to ensure segments overlap and connect seamlessly
@@ -341,35 +349,23 @@ export class Snake implements SnakeInterface {
     // Draw body segments (excluding head - index 0) from tail to head
     // This ensures newer segments appear on top when snake overlaps itself
     for (let i = this.points.length - 1; i >= 1; i -= segmentSpacing) {
-      this.points[i].draw(
-        ctx,
-        enableShadows,
-        SHADOW_COLOR,
-        SHADOW_BLUR,
-        SHADOW_OFFSET_X,
-        SHADOW_OFFSET_Y
-      );
+      this.points[i].draw(ctx, enableShadows);
     }
 
     // Draw head on top of all body segments
     if (this.points.length > 0) {
-      this.points[0].draw(
-        ctx,
-        enableShadows,
-        SHADOW_COLOR,
-        SHADOW_BLUR,
-        SHADOW_OFFSET_X,
-        SHADOW_OFFSET_Y
-      );
+      this.points[0].draw(ctx, enableShadows);
     }
 
-    // Draw facial features on top of head
-    this.drawEye(ctx);
-    this.drawEar(ctx);
-    this.drawMouth(ctx);
+    // Draw facial features on top of head (only for medium and HD quality)
+    if (qualityConfig.detailLevel >= 2) {
+      this.drawEye(ctx);
+      this.drawEar(ctx);
+      this.drawMouth(ctx);
+    }
     
-    // Draw direction indicator for player snakes (non-AI)
-    if (!this.ai) {
+    // Draw direction indicator for player snakes (non-AI) - only for HD quality
+    if (!this.ai && qualityConfig.detailLevel >= 3) {
       this.drawDirectionIndicator(ctx);
     }
   }

@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { SupportedLanguage } from "../i18n";
 
+export type QualityLevel = "low" | "medium" | "hd";
+
 export interface SoundSettings {
   master: number;
   music: number;
@@ -11,20 +13,22 @@ export interface SoundSettings {
   effectsMuted: boolean;
 }
 
-export type SettingsTab = "language" | "sound";
+
 
 interface SettingsState {
   // UI State
   isSettingsModalOpen: boolean;
   isTopPlayersModalOpen: boolean;
   isProfileModalOpen: boolean;
-  activeSettingsTab: SettingsTab;
 
   // Language
   language: SupportedLanguage;
 
   // Sound Settings
   sound: SoundSettings;
+
+  // Graphics Settings
+  quality: QualityLevel;
 
   // Actions
   openSettingsModal: () => void;
@@ -38,7 +42,7 @@ interface SettingsState {
   toggleProfileModal: () => void;
   setLanguage: (language: SupportedLanguage) => void;
   updateSoundSettings: (settings: Partial<SoundSettings>) => void;
-  setActiveSettingsTab: (tab: SettingsTab) => void;
+  setQuality: (quality: QualityLevel) => void;
   resetSettings: () => void;
 }
 
@@ -46,7 +50,6 @@ const defaultSettings = {
   isSettingsModalOpen: false,
   isTopPlayersModalOpen: false,
   isProfileModalOpen: false,
-  activeSettingsTab: "language" as SettingsTab,
   language: "en" as SupportedLanguage,
   sound: {
     master: 0.8,
@@ -56,6 +59,7 @@ const defaultSettings = {
     musicMuted: false,
     effectsMuted: false,
   },
+  quality: "hd" as QualityLevel,
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -123,8 +127,8 @@ export const useSettingsStore = create<SettingsState>()(
           return { sound: newSound };
         }),
 
-      setActiveSettingsTab: (tab) => {
-        set({ activeSettingsTab: tab });
+      setQuality: (quality) => {
+        set({ quality });
       },
 
       resetSettings: () => set(defaultSettings),
@@ -134,6 +138,7 @@ export const useSettingsStore = create<SettingsState>()(
       partialize: (state) => ({
         language: state.language,
         sound: state.sound,
+        quality: state.quality,
       }),
     }
   )

@@ -11,9 +11,9 @@ export const CLEANUP_INTERVAL = 30000; // 30 seconds
 
 // Frame Rate Configuration
 export const FORCE_FPS_LIMIT = true; // Enable/disable forced FPS limiting
-export const TARGET_FPS = 40; // Configurable FPS between 30-40
-export const MIN_FPS = 32; // Minimum allowed FPS
-export const MAX_FPS = 40; // Maximum allowed FPS
+export const TARGET_FPS = 40; // Configurable FPS between 30-45
+export const MIN_FPS = 35; // Minimum allowed FPS
+export const MAX_FPS = 45; // Maximum allowed FPS
 
 // Shadow Configuration
 export const ENABLE_SHADOWS = true; // Enable/disable shadow effects
