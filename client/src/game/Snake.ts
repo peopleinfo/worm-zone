@@ -55,7 +55,7 @@ export class Snake implements SnakeInterface {
     
     // Get random food type for initial segments
     const getRandomFoodType = (): string => {
-      const types = ['pizza', 'cherry', 'donut', 'burger'];
+      const types = ['pizza', 'cherry', 'apple', 'burger'];
       return types[Math.floor(Math.random() * types.length)];
     };
     
@@ -374,7 +374,7 @@ export class Snake implements SnakeInterface {
     }
     
     // Draw direction indicator for player snakes (non-AI) - only for HD quality
-    if (!this.ai && qualityConfig.detailLevel >= 3) {
+    if (!this.ai) {
       this.drawDirectionIndicator(ctx);
     }
     
@@ -461,7 +461,7 @@ export class Snake implements SnakeInterface {
   private drawDirectionIndicator(ctx: CanvasRenderingContext2D): void {
     const head = this.getHead();
     const indicatorDistance = this.radius * 2.5; // Increased distance from head center
-    const arrowSize = this.radius * 0.6; // Size of the arrow
+    const arrowSize = this.radius * 0.7; // Size of the arrow
     
     // Calculate arrow tip position based on movement direction
     const tipX = head.x + indicatorDistance * this.velocity.x;

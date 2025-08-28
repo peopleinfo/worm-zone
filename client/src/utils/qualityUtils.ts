@@ -32,7 +32,7 @@ export const getQualityConfig = (quality: QualityLevel): QualityConfig => {
         shadowOffsetX: 1,
         shadowOffsetY: 1,
         lineWidth: 2,
-        detailLevel: 2,
+        detailLevel: 3,
         antiAliasing: true,
       };
     case "hd":

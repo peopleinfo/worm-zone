@@ -4,7 +4,7 @@ import { Point } from './Point';
 import { useSettingsStore } from '../stores/settingsStore';
 import { shouldDrawShadow, getShadowConfig, getQualityConfig } from '../utils/qualityUtils';
 
-type Type = 'pizza' | 'apple' | 'cherry' | 'donut' | 'burger';
+type Type = 'pizza' | 'apple' | 'cherry' | 'burger';
   
 export class Food extends Point {
   static i: number = 0;
@@ -21,7 +21,7 @@ export class Food extends Point {
   }
 
   private getRandomFood(): Type {
-    const types: Type[] = ['pizza', 'cherry', 'donut', 'burger'];   
+    const types: Type[] = ['pizza', 'apple', 'cherry', 'burger'];   
     return types[Math.floor(Math.random() * types.length)];
   }
 
@@ -31,8 +31,7 @@ export class Food extends Point {
       case 'pizza': return 1;
       case 'apple': return 2;
       case 'cherry': return 3;
-      case 'donut': return 4;
-      case 'burger': return 5;
+      case 'burger': return 4;
       default: return POINT; // fallback
     }
   }
@@ -46,7 +45,7 @@ export class Food extends Point {
     }
 
     const canvas = document.createElement('canvas');
-    const size = this.radius * 2.5;
+    const size = this.radius * 3;
     
     // High-DPI support for crisp rendering
     const devicePixelRatio = window.devicePixelRatio || 1;
@@ -352,7 +351,7 @@ export class Food extends Point {
       ctx.clearRect(0, 0, size, size);
       
       // Calculate the image size to fit within the food radius
-      const imageSize = radius * 2;
+      const imageSize = radius * 3;
       const imageX = x - imageSize / 2;
       const imageY = y - imageSize / 2;
       
@@ -429,7 +428,7 @@ export class Food extends Point {
       const foodImage = Food.imageCache.get(cacheKey);
       
       if (foodImage) {
-        const size = this.radius * 2.5;
+        const size = this.radius * 3;
         
         // Apply high-quality image rendering
         ctx.drawImage(

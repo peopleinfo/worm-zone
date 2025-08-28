@@ -509,7 +509,7 @@ function getRandomColor() {
 
 // Get random food type matching client-side Food.ts types
 function getRandomFood() {
-  const types = ['pizza', 'apple', 'cherry', 'donut', 'burger', 'pizza'];
+  const types = ['pizza', 'apple', 'cherry', 'burger', 'pizza'];
   return types[Math.floor(Math.random() * types.length)];
 }
 
@@ -531,8 +531,7 @@ function getPointValueByType(type) {
     case 'pizza': return 1;
     case 'apple': return 2;
     case 'cherry': return 3;
-    case 'donut': return 4;
-    case 'burger': return 5;
+    case 'burger': return 4;
     default: return POINT;
   }
 }
