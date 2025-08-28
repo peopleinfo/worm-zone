@@ -2562,7 +2562,7 @@ io.on("connection", (socket) => {
           id: foodId,
           x: dp.x,
           y: dp.y,
-          radius: 8, // Slightly larger than regular food
+          radius: 5, // Slightly larger than regular food
           color: foodColor,
           type: type,
           createdAt: Date.now(),
