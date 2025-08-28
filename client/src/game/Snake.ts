@@ -1,13 +1,12 @@
 import { Point } from "./Point";
 import type { Snake as SnakeInterface, Controls } from "../types/game";
 import {
-  getRandomColor,
   isCollided,
   coeffD2R,
   INFINITY,
-  defRad,
 } from "../utils/gameUtils";
-import { performanceManager } from "../utils/performanceUtils";
+import { useSettingsStore }	 from "../stores/settingsStore";
+import { shouldDrawShadow, getQualityConfig } from "../utils/qualityUtils";
 import {
   SHADOW_COLOR,
   SHADOW_BLUR,
@@ -53,7 +52,14 @@ export class Snake implements SnakeInterface {
     this.speed = 0.6;
     this.turningSpeed = 6;
     this.baseSpeed = 0.5; // Base speed for platform consistency
-    this.points = [new Point(x, y, this.radius, color)];
+    
+    // Get random food type for initial segments
+    const getRandomFoodType = (): string => {
+      const types = ['pizza', 'cherry', 'apple', 'burger'];
+      return types[Math.floor(Math.random() * types.length)];
+    };
+    
+    this.points = [new Point(x, y, this.radius, color, getRandomFoodType())];
     this.velocity = { x: 1, y: 0 };
     this.overPos = { x: 0, y: 0 };
     this.color = color;
@@ -63,7 +69,7 @@ export class Snake implements SnakeInterface {
     this.isAlive = true;
 
     for (let i = 1; i < length; i++) {
-      this.points.push(new Point(INFINITY, INFINITY, this.radius, color));
+      this.points.push(new Point(INFINITY, INFINITY, this.radius, color, getRandomFoodType()));
     }
   }
 
@@ -77,11 +83,17 @@ export class Snake implements SnakeInterface {
   }
 
   eatSnake(points: number): void {
-    // Award points equal to the length of the eaten snake
-    for (let i = 0; i < points; i++) {
-      const tail = this.points[this.points.length - 1];
-      const newPoint = new Point(tail.x, tail.y, tail.radius, this.color);
-      this.points.push(newPoint);
+    // Server will handle score updates and broadcast to all clients
+    // Client only provides visual/audio feedback
+    console.log(`🐍 Snake ${this.id.substring(0,6)} ate snake with ${points} points - server will handle score update`);
+    
+    // Play eat sound effect for player snake only
+    if (!this.ai) {
+      import("../services/audioService").then(({ audioService }) => {
+        audioService.playEatSound();
+      }).catch((error) => {
+        console.warn('Failed to play eat sound:', error);
+      });
     }
   }
 
@@ -216,7 +228,7 @@ export class Snake implements SnakeInterface {
     if (collisionDetected) {
       // console.log(`[FOOD EATEN] Snake ${this.id.substring(0,6)} ate food at (${targetPoint.x.toFixed(1)}, ${targetPoint.y.toFixed(1)}) - Distance: ${distance.toFixed(2)}`);
       // Pass the food type if available (for Food objects) or default to 'pizza'
-      const type = "type" in target ? target.type : "pizza_01";
+      const type = "type" in target ? target.type : "pizza";
       this.eat(target.color, type);
       
       // Play eat sound effect for player snake only
@@ -277,87 +289,40 @@ export class Snake implements SnakeInterface {
     this.isAlive = false;
     const finalScore = this.points.length;
 
-    // Import Food class and game store dynamically to avoid circular dependencies
-    import("../game/Food")
-      .then(({ Food }) => {
-        import("../stores/gameStore")
-          .then(({ useGameStore }) => {
-            const store = useGameStore.getState();
-
-            // Convert snake segments to food items preserving their original types
-            // Add wider spacing by applying random offsets to positions
-            const newFoodItems = this.points.map((p, index) => {
-              // Use the stored food type from the segment, or default to 'pizza' if not available
-              const type = p.type || "pizza_01";
-
-              // Add random offset for wider spacing (within reasonable bounds)
-              const offsetRange = this.radius * 2; // Spacing range based on snake radius
-              const offsetX = (Math.random() - 0.5) * offsetRange;
-              const offsetY = (Math.random() - 0.5) * offsetRange;
-
-              const newX = p.x + offsetX;
-              const newY = p.y + offsetY;
-
-              const food = new Food(
-                `${this.id}_segment_${index}_${Date.now()}`,
-                newX,
-                newY,
-                p.radius,
-                p.color,
-                type
-              );
-              return food;
-            });
-
-            // Add new food items to the game store
-            const currentFoods = store.foods;
-            store.updateFoods([...currentFoods, ...newFoodItems]);
-
-            // Debug logging to show actual food types being created
-            const typeCounts = newFoodItems.reduce((acc, food) => {
-              acc[food.type] = (acc[food.type] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>);
-            const typesSummary = Object.entries(typeCounts)
-              .map(([type, count]) => `${count}x ${type}`)
-              .join(", ");
-            console.log(
-              `🍕 Snake death: Created ${newFoodItems.length} food items: ${typesSummary}`
-            );
-          })
-          .catch((error) => {
-            console.error("Failed to import gameStore:", error);
-            // Fallback to original dead points behavior
-            const latestDeadPoints = this.points.map(
-              (p) => new Point(p.x, p.y, defRad, getRandomColor())
-            );
-            Snake.deadPoints.push(...latestDeadPoints);
-          });
-      })
-      .catch((error) => {
-        console.error("Failed to import Food class:", error);
-        // Fallback to original dead points behavior
-        const latestDeadPoints = this.points.map(
-          (p) => new Point(p.x, p.y, defRad, getRandomColor())
-        );
-        Snake.deadPoints.push(...latestDeadPoints);
-      });
-
+    // Store snake death data for server to handle food creation
     const head = this.getHead();
     this.overPos.x = head.x;
     this.overPos.y = head.y;
+    this.finalScore = finalScore;
 
+    // Clear snake points - server will handle food creation and broadcast to all clients
     this.points.length = 0;
 
-    this.finalScore = finalScore;
+    console.log(`🐍 Snake ${this.id.substring(0,6)} died with score ${finalScore} - server will handle food creation`);
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
     if (!this.isAlive || this.points.length === 0) return;
 
-    // Check if shadows should be enabled based on device performance
-    const devicePerf = performanceManager.getDevicePerformance();
-    const enableShadows = devicePerf.enableShadows;
+    // Get current quality settings
+    let quality: "low" | "medium" | "hd" = "hd";
+    try {
+      quality = useSettingsStore.getState().quality;
+    } catch (error) {
+      console.warn('Failed to get quality settings:', error);
+    }
+
+    const qualityConfig = getQualityConfig(quality);
+    const enableShadows = shouldDrawShadow(quality);
+
+    // Enable anti-aliasing and smooth rendering for crisp mobile display
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    // Additional mobile-optimized rendering settings
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
     // Draw body segments with overlap to create continuous appearance
     // Use smaller increment to ensure segments overlap and connect seamlessly
@@ -366,20 +331,7 @@ export class Snake implements SnakeInterface {
       Math.floor(this.radius * BODY_SEGMENT_SPACING)
     );
 
-    // Draw body segments (excluding head - index 0) from tail to head
-    // This ensures newer segments appear on top when snake overlaps itself
-    for (let i = this.points.length - 1; i >= 1; i -= segmentSpacing) {
-      this.points[i].draw(
-        ctx,
-        enableShadows,
-        SHADOW_COLOR,
-        SHADOW_BLUR,
-        SHADOW_OFFSET_X,
-        SHADOW_OFFSET_Y
-      );
-    }
-
-    // Draw tail with enhanced appearance
+    // FIXED: Draw tail FIRST (at the bottom layer) with enhanced appearance
     if (this.points.length > 1) {
       const lastIndex = this.points.length - 1;
       if (lastIndex % segmentSpacing !== 0 && lastIndex > 0) {
@@ -403,22 +355,31 @@ export class Snake implements SnakeInterface {
       }
     }
 
-    // Draw head on top of all body segments
-    if (this.points.length > 0) {
-      this.points[0].draw(
-        ctx,
-        enableShadows,
-        SHADOW_COLOR,
-        SHADOW_BLUR,
-        SHADOW_OFFSET_X,
-        SHADOW_OFFSET_Y
-      );
+    // Draw body segments (excluding head - index 0) from tail to head
+    // This ensures newer segments appear on top when snake overlaps itself
+    for (let i = this.points.length - 1; i >= 1; i -= segmentSpacing) {
+      this.points[i].draw(ctx, enableShadows);
     }
 
-    // Draw facial features on top of head
-    this.drawEye(ctx);
-    this.drawEar(ctx);
-    this.drawMouth(ctx);
+    // Draw head on top of all body segments
+    if (this.points.length > 0) {
+      this.points[0].draw(ctx, enableShadows);
+    }
+
+    // Draw facial features on top of head (only for medium and HD quality)
+    if (qualityConfig.detailLevel >= 2) {
+      this.drawEye(ctx);
+      this.drawEar(ctx);
+      this.drawMouth(ctx);
+    }
+    
+    // Draw direction indicator for player snakes (non-AI) - only for HD quality
+    if (!this.ai) {
+      this.drawDirectionIndicator(ctx);
+    }
+    
+    // Restore canvas context
+    ctx.restore();
   }
 
   private drawEye(ctx: CanvasRenderingContext2D): void {
@@ -495,5 +456,53 @@ export class Snake implements SnakeInterface {
       Math.PI * 2
     );
     ctx.fill();
+  }
+
+  private drawDirectionIndicator(ctx: CanvasRenderingContext2D): void {
+    const head = this.getHead();
+    const indicatorDistance = this.radius * 2.5; // Increased distance from head center
+    const arrowSize = this.radius * 0.7; // Size of the arrow
+    
+    // Calculate arrow tip position based on movement direction
+    const tipX = head.x + indicatorDistance * this.velocity.x;
+    const tipY = head.y + indicatorDistance * this.velocity.y;
+    
+    // Calculate arrow base points (perpendicular to movement direction)
+    const perpX = -this.velocity.y; // Perpendicular vector
+    const perpY = this.velocity.x;
+    
+    const baseDistance = arrowSize * 0.4;
+    const backDistance = arrowSize * 0.8;
+    
+    // Arrow points
+    const leftBaseX = tipX - backDistance * this.velocity.x + baseDistance * perpX;
+    const leftBaseY = tipY - backDistance * this.velocity.y + baseDistance * perpY;
+    
+    const rightBaseX = tipX - backDistance * this.velocity.x - baseDistance * perpX;
+    const rightBaseY = tipY - backDistance * this.velocity.y - baseDistance * perpY;
+    
+    // Draw arrow with orange fill and dark outline
+    ctx.save();
+    
+    // Fill arrow with orange color
+    ctx.fillStyle = "rgba(255, 165, 0, 0.9)"; // Orange color
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(leftBaseX, leftBaseY);
+    ctx.lineTo(rightBaseX, rightBaseY);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Outline arrow
+    ctx.strokeStyle = "rgba(255, 165, 0, 0.9)";
+    ctx.lineWidth = 1.7;
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(leftBaseX, leftBaseY);
+    ctx.lineTo(rightBaseX, rightBaseY);
+    ctx.closePath();
+    ctx.stroke();
+    
+    ctx.restore();
   }
 }

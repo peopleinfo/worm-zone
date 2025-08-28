@@ -65,7 +65,8 @@ class SocketClient {
               isLoggedIn,
             },
           },
-          transports: ["websocket", "polling"],
+          transports: ["websocket"],
+          // transports: ["websocket", "polling"],
           timeout: 5000,
           upgrade: false,
           rememberUpgrade: false,
@@ -175,9 +176,9 @@ class SocketClient {
 
       store.updateOtherSnakes(otherSnakes);
       store.updateFoods(foods);
-      // Convert server deadPoints to client Point instances
+      // Convert server deadPoints to client Point instances with timestamps
       const deadPoints = data.gameState.deadPoints.map((p: any) =>
-        Point.create(p.x, p.y, p.radius, p.color)
+        Point.create(p.x, p.y, p.radius, p.color, undefined, p.createdAt || Date.now())
       );
       store.addDeadPoints(deadPoints);
       store.setGameState({
@@ -257,8 +258,17 @@ class SocketClient {
           console.log(
             `🍎 Food type eaten: ${data.eatentype} (foodId: ${data.foodId})`
           );
-          // The snake's eat method should already be called from collision detection
-          // This event is mainly for logging and potential future features
+          
+          // The eat() method in Snake.ts adds a new segment to the END of the points array
+          // We need to update this newly created segment with the correct food type
+          // This ensures the food type is preserved when the snake dies
+          if (store.mySnake.points.length > 0) {
+            // The newly created segment is at the end of the array (last index)
+            const newSegment = store.mySnake.points[store.mySnake.points.length - 1];
+            newSegment.type = data.eatentype;
+            console.log(`🔄 Updated newly created segment type to: ${data.eatentype}`);
+            console.log(`🐍 Snake now has ${store.mySnake.points.length} segments`);
+          }
         }
       }
     );
@@ -346,10 +356,10 @@ class SocketClient {
           store.updateFoods(updatedFoods);
         }
 
-        // Convert server deadPoints to client Point instances (fallback for compatibility)
+        // Convert server deadPoints to client Point instances with timestamps (fallback for compatibility)
         if (data.deadPoints && data.deadPoints.length > 0) {
           const deadPoints = data.deadPoints.map(
-            (p: any) => new Point(p.x, p.y, p.radius, p.color)
+            (p: any) => Point.create(p.x, p.y, p.radius, p.color, undefined, p.createdAt || Date.now())
           );
           store.addDeadPoints(deadPoints);
         }
@@ -537,6 +547,7 @@ class SocketClient {
           y: p.y,
           radius: p.radius,
           color: p.color,
+          type: p.type,
         })),
       });
     } catch (error) {
@@ -577,6 +588,7 @@ class SocketClient {
           y: p.y,
           radius: p.radius,
           color: p.color,
+          type: p.type,
         })),
       });
     } catch (error) {
@@ -599,6 +611,7 @@ class SocketClient {
           y: p.y,
           radius: p.radius,
           color: p.color,
+          type: p.type,
         })),
       });
     } catch (error) {

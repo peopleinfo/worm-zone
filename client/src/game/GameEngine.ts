@@ -1,10 +1,13 @@
 import { Snake } from './Snake';
 import { Food } from './Food';
 import { Point } from './Point';
+import { ScoreAnimation } from './ScoreAnimation';
 import { useGameStore } from '../stores/gameStore';
 import { socketClient } from '../services/socketClient';
 import { CLEANUP_INTERVAL, MAP_ZOOM_LEVEL, WORLD_HEIGHT, WORLD_WIDTH, TARGET_FPS, FORCE_FPS_LIMIT } from '../config/gameConfig';
 import { performanceManager } from '../utils/performanceUtils';
+import { useSettingsStore } from '../stores/settingsStore';
+import { applyQualityToContext } from '../utils/qualityUtils';
 
 export class GameEngine {
   private canvas: HTMLCanvasElement;
@@ -20,13 +23,43 @@ export class GameEngine {
   private readonly CLEANUP_INTERVAL = CLEANUP_INTERVAL; // Clean up every 
   private zoom: number = MAP_ZOOM_LEVEL;
   private isTabVisible: boolean = true;
+  private scoreAnimation: ScoreAnimation = new ScoreAnimation();
   
   // Dynamic frame rate limiting based on device performance
   private frameStartTime: number = 0;
   
+  // Quality settings
+  private quality: string = "hd";
+  
   // World coordinate system - consistent boundaries for collision and rendering
   private readonly WORLD_WIDTH: number = WORLD_WIDTH;
   private readonly WORLD_HEIGHT: number = WORLD_HEIGHT;
+
+  private updateQualitySettings(): void {
+    // Get quality from settings store
+    try {
+      const settingsStore = useSettingsStore.getState();
+      this.quality = settingsStore.quality;
+      this.applyQualityToCanvas();
+      
+      // Subscribe to quality changes
+      useSettingsStore.subscribe((state) => {
+        if (state.quality !== this.quality) {
+          this.quality = state.quality;
+          this.applyQualityToCanvas();
+        }
+      });
+    } catch (error) {
+      console.warn('Failed to get quality settings:', error);
+      this.quality = "hd"; // Default to HD
+    }
+  }
+
+  private applyQualityToCanvas(): void {
+    if (this.ctx) {
+      applyQualityToContext(this.ctx, this.quality as "low" | "medium" | "hd");
+    }
+  }
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -34,6 +67,7 @@ export class GameEngine {
     this.setupCanvas();
     this.initializeGame();
     this.setupVisibilityHandler();
+    this.updateQualitySettings();
   }
 
   private setupCanvas(): void {
@@ -53,8 +87,8 @@ export class GameEngine {
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
     
-    // Performance optimizations for mobile devices
-    this.ctx.imageSmoothingEnabled = parseInt(devicePerf.tier.toString()) >= 2; // Only enable on higher-end devices
+    // Apply quality settings to canvas context
+    this.applyQualityToCanvas();
     
     // Enhanced hardware acceleration hints
     this.canvas.style.willChange = 'transform';
@@ -64,8 +98,6 @@ export class GameEngine {
     
     // Additional canvas optimizations for mobile
     if (devicePerf.isMobile) {
-      // Disable anti-aliasing on mobile for better performance
-      this.ctx.imageSmoothingEnabled = false;
       // Use faster composite operations
       this.ctx.globalCompositeOperation = 'source-over';
     }
@@ -91,7 +123,9 @@ export class GameEngine {
     // Restore canvas context properties with performance optimizations
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
-    this.ctx.imageSmoothingEnabled = parseInt(devicePerf.tier.toString()) >= 2 && !devicePerf.isMobile;
+    
+    // Apply quality settings after resize
+    this.applyQualityToCanvas();
     
     // Restore mobile-specific optimizations
     if (devicePerf.isMobile) {
@@ -220,6 +254,9 @@ export class GameEngine {
     // Always update game logic to maintain multiplayer sync
     this.update();
     
+    // Update score animations
+    this.scoreAnimation.update();
+    
     // Only render if tab is visible and performance allows
     const shouldSkipFrame = FORCE_FPS_LIMIT ? false : performanceManager.shouldSkipFrame(now);
     if (this.isTabVisible && !shouldSkipFrame) {
@@ -263,7 +300,28 @@ export class GameEngine {
     // Update player snake
     if (this.mySnake.isAlive) {
       this.mySnake.move(store.controls, deltaTime);
-      this.mySnake.checkCollisionsWithBoundary(this.WORLD_WIDTH, this.WORLD_HEIGHT);
+      
+      // Check boundary collisions and notify server if collision occurs
+      // Capture points BEFORE collision check since over() method clears them
+      const currentPoints = this.mySnake.points.map(p => ({
+        x: p.x,
+        y: p.y,
+        radius: p.radius,
+        color: p.color,
+        type: p.type
+      }));
+      
+      const boundaryCollision = this.mySnake.checkCollisionsWithBoundary(this.WORLD_WIDTH, this.WORLD_HEIGHT);
+      if (boundaryCollision) {
+        // Immediately notify server of player death from boundary collision
+        try {
+          const pointInstances = currentPoints.map(p => Point.create(p.x, p.y, p.radius, p.color, p.type));
+          socketClient.sendPlayerDied(pointInstances);
+          console.log(`🏁 Player boundary collision detected - notified server of death with ${currentPoints.length} points`);
+        } catch (error) {
+          console.warn('Failed to send boundary collision death event:', error);
+        }
+      }
 
       // Food collisions - multiplayer only
       const foodsToCheck = store.foods;
@@ -273,6 +331,14 @@ export class GameEngine {
         if (collision) {
           // The checkCollisionsWithFood method already calls eat() internally with the food's color
           console.log(`[GAME ENGINE] Snake ate food at (${food.x.toFixed(1)}, ${food.y.toFixed(1)})`);
+          
+          // Get point value for this food type and trigger score animation near snake head
+          const pointValue = food.getPointValue();
+          const head = this.mySnake.getHead();
+          // Position animation closer to snake head with small offset
+          const animX = head.x + (this.mySnake.radius * 0.5) * this.mySnake.velocity.x;
+          const animY = head.y + (this.mySnake.radius * 0.5) * this.mySnake.velocity.y;
+          this.scoreAnimation.addAnimation(animX, animY, pointValue);
           
           // Remove the food from local store immediately
           store.removeFood(food.id);
@@ -293,13 +359,26 @@ export class GameEngine {
       for (let i = 0; i < store.deadPoints.length; i++) {
         const point = store.deadPoints[i];
         const collision = this.mySnake.checkCollisionsWithFood(point);
-        if (collision) {
+        if (collision && point.isOldEnoughToConsume()) {
           consumedPoints.push(point);
         }
       }
       
       if (consumedPoints.length > 0) {
-        store.removeDeadPoints(consumedPoints);
+        // Add score animations for consumed dead points
+        consumedPoints.forEach(() => {
+          // Dead points are worth 1 point each - position animation near snake head
+          const head = this.mySnake?.getHead();
+          if (head && this.mySnake?.radius && this.mySnake?.velocity) {
+            const animX = head.x + (this.mySnake.radius * 0.5) * this.mySnake.velocity.x;
+            const animY = head.y + (this.mySnake.radius * 0.5) * this.mySnake.velocity.y;
+            this.scoreAnimation.addAnimation(animX, animY, 1);
+          }
+        });
+        
+        // Removed immediate local removal - let server handle dead point removal authority
+        // Dead points will be removed when server confirms via 'deadPointsRemoved' event
+        
         // Notify server about consumed dead points
         try {
           socketClient.sendDeadPointEaten(consumedPoints);
@@ -315,9 +394,27 @@ export class GameEngine {
         for (let i = 0; i < otherSnakes.length; i++) {
           const snake = otherSnakes[i];
           if (snake.isAlive) {
+            // Capture points BEFORE collision check since over() method clears them
+            const snakePoints = this.mySnake.points.map(p => ({
+              x: p.x,
+              y: p.y,
+              radius: p.radius,
+              color: p.color,
+              type: p.type
+            }));
+            
             const collision = this.mySnake.checkCollisionsWithOtherSnakes(snake);
             if (collision.collided) {
-              // Award points to the snake that caused the collision
+              // Immediately notify server of player death
+              try {
+                const pointInstances = snakePoints.map(p => Point.create(p.x, p.y, p.radius, p.color, p.type));
+                socketClient.sendPlayerDied(pointInstances);
+                console.log(`🐍 Player collision detected - notified server of death with ${snakePoints.length} points`);
+              } catch (error) {
+                console.warn('Failed to send immediate player death event:', error);
+              }
+              
+              // Award points to the snake that caused the collision (client-side visual feedback only)
               if (collision.collidedWith && collision.points) {
                 collision.collidedWith.eatSnake(collision.points);
               }
@@ -340,12 +437,7 @@ export class GameEngine {
       // Update store with current snake state
       store.updateMySnake(this.mySnake);
     } else {
-      // Snake is dead - send death event to server
-      try {
-        socketClient.sendPlayerDied(Snake.deadPoints);
-      } catch (error) {
-        console.warn('Failed to send player death event:', error);
-      }
+      // Snake is dead - end game (death event already sent during collision)
       store.endGame(this.mySnake.finalScore || 0, this.mySnake.finalRank || 1);
     }
 
@@ -425,6 +517,9 @@ export class GameEngine {
       }
     }
 
+    // Render score animations (after all game objects but before restoring context)
+    this.scoreAnimation.render(this.ctx);
+
     this.ctx.restore();
   }
 
@@ -445,6 +540,9 @@ export class GameEngine {
     // Reset timing
     this.lastSocketUpdate = 0;
     this.lastFrameTime = 0;
+    
+    // Clear score animations
+    this.scoreAnimation.clear();
     
     // Reinitialize game
     this.initializeGame();
@@ -479,6 +577,9 @@ export class GameEngine {
     
     // Clear game objects
     this.mySnake = null;
+    
+    // Clear score animations
+    this.scoreAnimation.clear();
     
     // Reset timing variables
     this.lastSocketUpdate = 0;

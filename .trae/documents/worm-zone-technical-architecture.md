@@ -364,8 +364,18 @@ interface FoodItem {
   id: string;
   position: { x: number; y: number };
   value: number;
-  type: 'normal' | 'bonus' | 'speed';
+  type: 'apple' | 'cherry' | 'donut' | 'burger' | 'pizza';
   spawnTime: number;
+  color: string;
+}
+
+interface DeadPoint {
+  x: number;
+  y: number;
+  radius: number;
+  color: string;
+  type?: 'apple' | 'cherry' | 'donut' | 'burger' | 'pizza';
+  createdAt: number;
 }
 
 type Direction = 'up' | 'down' | 'left' | 'right';
@@ -398,8 +408,122 @@ const GAME_CONFIG = {
   FOOD_SPAWN_RATE: 2000, // ms
   GAME_TICK_RATE: 60, // fps
   COUNTDOWN_DURATION: 3000, // ms
-  GLOBAL_LEADERBOARD_SIZE: 10 // top 10 records
+  GLOBAL_LEADERBOARD_SIZE: 10, // top 10 records
+  FOOD_TYPES: ['apple', 'cherry', 'donut', 'burger', 'pizza'] as const,
+  DEAD_POINT_CLEANUP_INTERVAL: 30000 // 30 seconds
 };
+
+### 6.3 Food Type Preservation System Architecture
+
+**System Overview**: The food type preservation system ensures consistent food type display throughout the entire game lifecycle, from initial food spawning to final dead food consumption.
+
+**Client-Side Implementation**:
+
+```typescript
+// Point class with type support
+class Point {
+  x: number;
+  y: number;
+  radius: number;
+  color: string;
+  type?: 'apple' | 'cherry' | 'donut' | 'burger' | 'pizza';
+  
+  static create(x: number, y: number, radius: number, color: string, type?: string): Point {
+    const point = new Point(x, y, radius, color);
+    if (type) point.type = type as any;
+    return point;
+  }
+}
+
+// Snake class with type preservation
+class Snake {
+  eat(type?: string): void {
+    // Preserve food type in new segment
+    const newPoint = Point.create(
+      this.points[0].x,
+      this.points[0].y,
+      this.radius,
+      this.color,
+      type
+    );
+    this.points.unshift(newPoint);
+  }
+  
+  over(): void {
+    // Convert segments to food with preserved types
+    this.points.forEach(p => {
+      const food = new Food(
+        p.x, p.y, p.radius,
+        p.type || 'pizza' // Fallback only when type is genuinely missing
+      );
+      store.foods.push(food);
+    });
+  }
+}
+```
+
+**Server-Side Implementation**:
+
+```typescript
+// Food type to color mapping
+function getFoodColorByType(type: string): string {
+  const colorMap = {
+    'apple': '#FF0000',    // Red
+    'cherry': '#DC143C',   // Dark red
+    'donut': '#DDA0DD',    // Plum
+    'burger': '#8B4513',   // Saddle brown
+    'pizza': '#FF8C00'     // Dark orange
+  };
+  return colorMap[type] || colorMap['pizza'];
+}
+
+// Bot death handler with type preservation
+function handleBotDeath(bot) {
+  bot.points.forEach(point => {
+    const foodType = point.type || 'pizza';
+    const newFood = {
+      id: generateFoodId(),
+      x: point.x,
+      y: point.y,
+      radius: point.radius,
+      type: foodType,
+      color: getFoodColorByType(foodType)
+    };
+    gameState.foods.push(newFood);
+  });
+}
+
+// Player death handler with type preservation
+socket.on('playerDied', (data) => {
+  data.deadPoints.forEach(point => {
+    const foodType = point.type || 'pizza';
+    const newFood = {
+      id: generateFoodId(),
+      x: point.x,
+      y: point.y,
+      radius: point.radius,
+      type: foodType,
+      color: getFoodColorByType(foodType)
+    };
+    gameState.foods.push(newFood);
+  });
+});
+```
+
+**Cross-Platform Synchronization**:
+
+1. **Unified Type System**: Both client and server use identical food type definitions
+2. **Consistent Color Mapping**: Same color-to-type mapping functions on both sides
+3. **Type Validation**: Proper fallback mechanisms when type data is missing
+4. **Socket Event Sync**: Food type information included in all relevant socket events
+5. **Dead Point Lifecycle**: Type preservation throughout the 30-second cleanup cycle
+
+**Performance Considerations**:
+
+- Type information adds minimal memory overhead (string reference)
+- Color mapping functions are optimized with lookup tables
+- Type validation occurs only during food creation/conversion
+- No impact on collision detection or movement calculations
 ```
 
 ## 7. Landscape Orientation Implementation

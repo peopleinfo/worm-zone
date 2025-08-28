@@ -1,8 +1,12 @@
 // Performance utilities for mobile optimization
-import { TARGET_FPS, FORCE_FPS_LIMIT, ENABLE_SHADOWS } from '../config/gameConfig';
+import {
+  TARGET_FPS,
+  FORCE_FPS_LIMIT,
+  ENABLE_SHADOWS,
+} from "../config/gameConfig";
 
 export interface DevicePerformance {
-  tier: 'low' | 'medium' | 'high';
+  tier: "low" | "medium" | "high";
   isMobile: boolean;
   targetFPS: number;
   canvasScale: number;
@@ -10,7 +14,7 @@ export interface DevicePerformance {
   maxDeadPoints: number;
   batteryLevel?: number;
   isCharging?: boolean;
-  thermalState: 'normal' | 'warm' | 'hot' | 'critical';
+  thermalState: "normal" | "warm" | "hot" | "critical";
 }
 
 export class PerformanceManager {
@@ -36,36 +40,13 @@ export class PerformanceManager {
   }
 
   private detectDevicePerformance(): DevicePerformance {
-    const userAgent = navigator.userAgent.toLowerCase();
-    const isMobile = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(userAgent);
-
-    // Get device memory if available (Chrome only)
-    const deviceMemory = (navigator as any).deviceMemory || 4;
-
+    const isMobile = true;
     // Get hardware concurrency (number of CPU cores)
-    const cores = navigator.hardwareConcurrency || 4;
 
     // Detect device tier based on available information
-    let tier: 'low' | 'medium' | 'high' = 'medium';
+    let tier: "low" | "medium" | "high" = "medium";
 
-    if (isMobile) {
-      // Mobile device detection
-      if (deviceMemory <= 2 || cores <= 4) {
-        tier = 'low';
-      } else if (deviceMemory <= 4 || cores <= 6) {
-        tier = 'medium';
-      } else {
-        tier = 'high';
-      }
-
-      // iOS devices tend to have better performance optimization
-      if (/iphone|ipad|ipod/.test(userAgent)) {
-        if (tier === 'low') tier = 'medium';
-      }
-    } else {
-      // Desktop - generally higher performance
-      tier = 'high';
-    }
+    tier = "high";
 
     return {
       tier,
@@ -76,21 +57,29 @@ export class PerformanceManager {
       maxDeadPoints: this.getMaxDeadPoints(tier),
       batteryLevel: undefined,
       isCharging: undefined,
-      thermalState: 'normal'
+      thermalState: "normal",
     };
   }
 
-  private getTargetFPS(tier: 'low' | 'medium' | 'high', isMobile: boolean): number {
+  private getTargetFPS(
+    tier: "low" | "medium" | "high",
+    isMobile: boolean
+  ): number {
     // Use forced FPS if enabled in config
     if (FORCE_FPS_LIMIT) {
       return TARGET_FPS;
     }
-    
+
     if (isMobile) {
       switch (tier) {
-        case 'low': return 25;
-        case 'medium': return 28;
-        case 'high': return 30;
+        case "low":
+          return 25;
+        case "medium":
+          return 28;
+        case "high":
+          return 30;
+        default:
+          return 30;
       }
     }
     console.log("tier", tier);
@@ -98,19 +87,24 @@ export class PerformanceManager {
     return 30; // Desktop
   }
 
-  private getCanvasScale(tier: 'low' | 'medium' | 'high'): number {
+  private getCanvasScale(tier: "low" | "medium" | "high"): number {
     switch (tier) {
-      case 'low': return 0.75;
-      case 'medium': return 0.85;
-      case 'high': return 1.0;
+      // case 'low': return 0.75;
+      // case 'medium': return 0.85;
+      // case 'high': return 1.0;
+      default:
+        return 1.0;
     }
   }
 
-  private getMaxDeadPoints(tier: 'low' | 'medium' | 'high'): number {
+  private getMaxDeadPoints(tier: "low" | "medium" | "high"): number {
     switch (tier) {
-      case 'low': return 200;
-      case 'medium': return 300;
-      case 'high': return 350;
+      case "low":
+        return 200;
+      case "medium":
+        return 300;
+      case "high":
+        return 350;
     }
   }
 
@@ -133,17 +127,29 @@ export class PerformanceManager {
 
     // Check for thermal throttling
     if (this.frameTimeHistory.length >= 30) {
-      const avgFrameTime = this.frameTimeHistory.reduce((a, b) => a + b, 0) / this.frameTimeHistory.length;
+      const avgFrameTime =
+        this.frameTimeHistory.reduce((a, b) => a + b, 0) /
+        this.frameTimeHistory.length;
       const targetFrameTime = this.getFrameInterval();
 
       // If average frame time is significantly higher than target, reduce FPS
       // Only apply thermal throttling if FPS is not forced
-      if (avgFrameTime > targetFrameTime * 1.5 && !this.thermalThrottleDetected && !FORCE_FPS_LIMIT) {
-        console.log('🔥 Thermal throttling detected, reducing performance');
+      if (
+        avgFrameTime > targetFrameTime * 1.5 &&
+        !this.thermalThrottleDetected &&
+        !FORCE_FPS_LIMIT
+      ) {
+        console.log("🔥 Thermal throttling detected, reducing performance");
         this.thermalThrottleDetected = true;
-        this.devicePerformance.targetFPS = Math.max(10, this.devicePerformance.targetFPS - 2);
+        this.devicePerformance.targetFPS = Math.max(
+          10,
+          this.devicePerformance.targetFPS - 2
+        );
         this.devicePerformance.enableShadows = ENABLE_SHADOWS;
-        this.devicePerformance.canvasScale = Math.max(0.5, this.devicePerformance.canvasScale - 0.1);
+        this.devicePerformance.canvasScale = Math.max(
+          0.5,
+          this.devicePerformance.canvasScale - 0.1
+        );
       }
     }
   }
@@ -172,16 +178,23 @@ export class PerformanceManager {
     if (!this.devicePerformance.isMobile) return;
 
     // Check if Battery API is available
-    if ('getBattery' in navigator) {
-      (navigator as any).getBattery().then((battery: any) => {
-        this.updateBatteryInfo(battery);
+    if ("getBattery" in navigator) {
+      (navigator as any)
+        .getBattery()
+        .then((battery: any) => {
+          this.updateBatteryInfo(battery);
 
-        // Listen for battery events
-        battery.addEventListener('levelchange', () => this.updateBatteryInfo(battery));
-        battery.addEventListener('chargingchange', () => this.updateBatteryInfo(battery));
-      }).catch(() => {
-        console.log('Battery API not supported');
-      });
+          // Listen for battery events
+          battery.addEventListener("levelchange", () =>
+            this.updateBatteryInfo(battery)
+          );
+          battery.addEventListener("chargingchange", () =>
+            this.updateBatteryInfo(battery)
+          );
+        })
+        .catch(() => {
+          console.log("Battery API not supported");
+        });
     }
   }
 
@@ -192,12 +205,21 @@ export class PerformanceManager {
 
     // Reduce performance when battery is low and not charging
     // Only reduce FPS if it's not forced
-    if (this.devicePerformance.batteryLevel! < 20 && !this.devicePerformance.isCharging) {
-      console.log('🔋 Low battery detected, reducing performance');
+    if (
+      this.devicePerformance.batteryLevel! < 20 &&
+      !this.devicePerformance.isCharging
+    ) {
+      console.log("🔋 Low battery detected, reducing performance");
       if (!FORCE_FPS_LIMIT) {
-        this.devicePerformance.targetFPS = Math.max(10, this.devicePerformance.targetFPS - 2);
+        this.devicePerformance.targetFPS = Math.max(
+          10,
+          this.devicePerformance.targetFPS - 2
+        );
       }
-      this.devicePerformance.canvasScale = Math.max(0.6, this.devicePerformance.canvasScale - 0.1);
+      this.devicePerformance.canvasScale = Math.max(
+        0.6,
+        this.devicePerformance.canvasScale - 0.1
+      );
     }
   }
 
@@ -215,53 +237,68 @@ export class PerformanceManager {
     if (this.frameTimeHistory.length < 10) return;
 
     const recentFrameTimes = this.frameTimeHistory.slice(-10);
-    const avgRecentFrameTime = recentFrameTimes.reduce((a, b) => a + b, 0) / recentFrameTimes.length;
+    const avgRecentFrameTime =
+      recentFrameTimes.reduce((a, b) => a + b, 0) / recentFrameTimes.length;
     const targetFrameTime = this.getFrameInterval();
 
     // Determine thermal state based on frame performance
     if (avgRecentFrameTime > targetFrameTime * 2.5) {
-      this.devicePerformance.thermalState = 'critical';
-      this.applyThermalThrottling('critical');
+      this.devicePerformance.thermalState = "critical";
+      this.applyThermalThrottling("critical");
     } else if (avgRecentFrameTime > targetFrameTime * 2.0) {
-      this.devicePerformance.thermalState = 'hot';
-      this.applyThermalThrottling('hot');
+      this.devicePerformance.thermalState = "hot";
+      this.applyThermalThrottling("hot");
     } else if (avgRecentFrameTime > targetFrameTime * 1.5) {
-      this.devicePerformance.thermalState = 'warm';
-      this.applyThermalThrottling('warm');
+      this.devicePerformance.thermalState = "warm";
+      this.applyThermalThrottling("warm");
     } else {
-      this.devicePerformance.thermalState = 'normal';
+      this.devicePerformance.thermalState = "normal";
     }
   }
 
   // Apply thermal throttling based on thermal state
-  private applyThermalThrottling(state: 'warm' | 'hot' | 'critical'): void {
+  private applyThermalThrottling(state: "warm" | "hot" | "critical"): void {
     // Don't modify FPS if it's forced, but still apply other optimizations
     switch (state) {
-      case 'warm':
+      case "warm":
         if (!this.thermalThrottleDetected) {
-          console.log('🌡️ Device warming up, applying light throttling');
+          console.log("🌡️ Device warming up, applying light throttling");
           if (!FORCE_FPS_LIMIT) {
-            this.devicePerformance.targetFPS = Math.max(12, this.devicePerformance.targetFPS - 1);
+            this.devicePerformance.targetFPS = Math.max(
+              12,
+              this.devicePerformance.targetFPS - 1
+            );
           }
           this.thermalThrottleDetected = true;
         }
         break;
-      case 'hot':
-        console.log('🔥 Device getting hot, applying moderate throttling');
+      case "hot":
+        console.log("🔥 Device getting hot, applying moderate throttling");
         if (!FORCE_FPS_LIMIT) {
-          this.devicePerformance.targetFPS = Math.max(10, this.devicePerformance.targetFPS - 2);
+          this.devicePerformance.targetFPS = Math.max(
+            10,
+            this.devicePerformance.targetFPS - 2
+          );
         }
-        this.devicePerformance.canvasScale = Math.max(0.6, this.devicePerformance.canvasScale - 0.1);
+        this.devicePerformance.canvasScale = Math.max(
+          0.6,
+          this.devicePerformance.canvasScale - 0.1
+        );
         this.devicePerformance.enableShadows = ENABLE_SHADOWS;
         break;
-      case 'critical':
-        console.log('🚨 Critical thermal state, applying aggressive throttling');
+      case "critical":
+        console.log(
+          "🚨 Critical thermal state, applying aggressive throttling"
+        );
         if (!FORCE_FPS_LIMIT) {
           this.devicePerformance.targetFPS = 8;
         }
         this.devicePerformance.canvasScale = 0.5;
         this.devicePerformance.enableShadows = ENABLE_SHADOWS;
-        this.devicePerformance.maxDeadPoints = Math.min(50, this.devicePerformance.maxDeadPoints);
+        this.devicePerformance.maxDeadPoints = Math.min(
+          50,
+          this.devicePerformance.maxDeadPoints
+        );
         break;
     }
   }

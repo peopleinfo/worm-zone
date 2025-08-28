@@ -16,8 +16,6 @@ export const Joypad: React.FC<JoypadProps> = React.memo(({ radius = 50 }) => {
   const updateSnakeAngle = useGameStore((state) => state.updateSnakeAngle);
   const isPlaying = useGameStore((state) => state.isPlaying);
 
-
-
   const handleDown = useCallback((clientX: number, clientY: number) => {
     if (!canvasRef.current) return;
     
@@ -137,7 +135,7 @@ export const Joypad: React.FC<JoypadProps> = React.memo(({ radius = 50 }) => {
     };
   }, [isActive, handleMove, handleUp]);
 
-  // Draw joypad
+  // Draw joypad - now completely invisible but still functional
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -148,20 +146,21 @@ export const Joypad: React.FC<JoypadProps> = React.memo(({ radius = 50 }) => {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (!isActive) return;
-
     // Draw outer circle
-    ctx.beginPath();
-    ctx.strokeStyle = 'yellow';
-    ctx.lineWidth = 2;
-    ctx.arc(position.x, position.y, outerRadius, 0, Math.PI * 2);
-    ctx.stroke();
+    // ctx.beginPath();
+    // ctx.strokeStyle = 'yellow';
+    // ctx.lineWidth = 2;
+    // ctx.arc(position.x, position.y, outerRadius, 0, Math.PI * 2);
+    // ctx.stroke();
 
-    // Draw inner circle
-    ctx.beginPath();
-    ctx.fillStyle = 'red';
-    ctx.arc(innerPosition.x, innerPosition.y, radius, 0, Math.PI * 2);
-    ctx.fill();
+    // // Draw inner circle
+    // ctx.beginPath();
+    // ctx.fillStyle = 'red';
+    // ctx.arc(innerPosition.x, innerPosition.y, radius, 0, Math.PI * 2);
+    // ctx.fill();
+
+    // No visual elements drawn - completely invisible joypad
+    // All functionality remains intact for background operation
   }, [isActive, position, innerPosition, radius, outerRadius]);
 
   return (

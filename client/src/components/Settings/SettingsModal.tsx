@@ -6,6 +6,7 @@ import { audioService } from "../../services/audioService";
 import { MusicMuteButton } from "../Game/MusicMuteButton";
 import { EffectsMuteButton } from "../Game/EffectsMuteButton";
 import { LanguageSelector } from "./LanguageSelector";
+import { QualitySelector } from "./QualitySelector";
 
 export const SettingsModal: React.FC = () => {
   const { t } = useTranslation("common");
@@ -19,6 +20,7 @@ export const SettingsModal: React.FC = () => {
   const updateSoundSettings = useSettingsStore(
     (state) => state.updateSoundSettings
   );
+
 
   // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -51,63 +53,60 @@ export const SettingsModal: React.FC = () => {
 
         {/* Modal Content */}
         <div className="modal-content">
-          {/* Tab Content */}
-          <div className="tab-content">
-            <div className="tab-panel">
-              <div className="settings-section">
-                <div className="setting-item">
-                  <div className="tab-panel">
-                    <LanguageSelector />
-                  </div>
-                </div>
-                <div className="setting-item">
-                  <label>{t("settings.music")}</label>
-                  <MusicMuteButton isAbsolute={false} />
-                  <div className="slider-container">
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={sound.music}
-                      onChange={(e) => {
-                        handleSettingsButtonClick();
-                        updateSoundSettings({
-                          music: parseFloat(e.target.value),
-                        });
-                      }}
-                      className="volume-slider"
-                    />
-                    <span className="slider-value">
-                      {Math.round(sound.music * 100)}%
-                    </span>
-                  </div>
-                </div>
-                <div className="setting-item">
-                  <label>{t("settings.effects")}</label>
-                  <EffectsMuteButton isAbsolute={false} />
-                  <div className="slider-container">
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={sound.effects}
-                      onChange={(e) => {
-                        handleSettingsButtonClick();
-                        updateSoundSettings({
-                          effects: parseFloat(e.target.value),
-                        });
-                      }}
-                      className="volume-slider"
-                    />
-                    <span className="slider-value">
-                      {Math.round(sound.effects * 100)}%
-                    </span>
-                  </div>
-                </div>
+          <div className="settings-section">
+            {/* Language Settings */}
+            <LanguageSelector />
+            
+            {/* Sound Settings */}
+            <div className="setting-item">
+              <label>{t("settings.music")}</label>
+              <MusicMuteButton isAbsolute={false} />
+              <div className="slider-container">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={sound.music}
+                  onChange={(e) => {
+                    handleSettingsButtonClick();
+                    updateSoundSettings({
+                      music: parseFloat(e.target.value),
+                    });
+                  }}
+                  className="volume-slider"
+                />
+                <span className="slider-value">
+                  {Math.round(sound.music * 100)}%
+                </span>
               </div>
             </div>
+            <div className="setting-item">
+              <label>{t("settings.effects")}</label>
+              <EffectsMuteButton isAbsolute={false} />
+              <div className="slider-container">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={sound.effects}
+                  onChange={(e) => {
+                    handleSettingsButtonClick();
+                    updateSoundSettings({
+                      effects: parseFloat(e.target.value),
+                    });
+                  }}
+                  className="volume-slider"
+                />
+                <span className="slider-value">
+                  {Math.round(sound.effects * 100)}%
+                </span>
+              </div>
+            </div>
+            
+            {/* Graphics Settings */}
+            <QualitySelector />
           </div>
         </div>
       </div>

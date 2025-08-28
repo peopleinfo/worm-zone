@@ -19,7 +19,7 @@ The game targets mobile users seeking quick, competitive multiplayer experiences
 
 Our Snake Zone game consists of the following main pages:
 
-1. **Game Arena**: main game canvas, real-time multiplayer gameplay with bots, score display, joypad controls
+1. **Game Arena**: main game canvas, real-time multiplayer gameplay with bots, enhanced point system with different food values, floating score animations, directional snake head indicators, score display, joypad controls
 2. **Room Lobby**: auto room joining, countdown display (3,2,1), player list with bot indicators
 3. **Game Over Modal**: score summary with multiplayer rankings, highest score display, global leaderboard, restart functionality
 4. **Landing Home**: main entry point with settings icon, language selection, game start
@@ -80,16 +80,36 @@ Our Snake Zone game consists of the following main pages:
 - Smooth animations when leaderboard updates with new records
 - Real-time player activity tracking and analytics collection
 
-### 2.6 Page Details
+### 2.6 Enhanced Point System & Visual Features
+
+**Point System Enhancement:**
+- **Pizza & Apple**: 1 point each (standard food items)
+- **Cherry, Donut & Burger**: 2 points each (premium food items)
+- **Visual Feedback**: Enhanced floating score animations (+1 or +2) with improved fade-out effects
+- **Performance Optimized**: Animations are lightweight and don't affect gameplay performance
+
+**Snake Visual Enhancements:**
+- **Direction Indicators**: Snake heads display directional arrows showing movement direction
+- **Score Animations**: Enhanced floating text with smooth fade-out transitions and better visibility
+- **Synchronized Rendering**: All visual enhancements work seamlessly in multiplayer mode
+
+**Critical Bug Fixes & Improvements:**
+- **Score Animation Enhancement**: Improved fade-out with smoother opacity transitions (0.8s duration), better easing functions (cubic-bezier), enhanced color contrast during fade-out, and optimized rendering performance
+- **Food Visibility System**: Robust food synchronization with client-side validation, enhanced error handling for food rendering, improved food state management to prevent invisible food consumption, and real-time visibility verification before allowing food interaction
+- **Synchronization Improvements**: Enhanced server-client food state sync, improved error recovery mechanisms, and comprehensive food lifecycle management to prevent desynchronization issues
+
+### 2.7 Page Details
 
 | Page Name       | Module Name      | Feature Description                                                        |
 | --------------- | ---------------- | -------------------------------------------------------------------------- |
 | Landing Home    | Settings Icon    | Right-side settings gear icon that opens settings modal                    |
 | Landing Home    | Game Start       | Main entry point with play button and game branding                        |
 | Landing Home    | Language Display | Current language flag indicator in top area                                |
-| Game Arena      | Game Canvas      | Render worm movement, food collection, collision detection, real-time sync |
+| Game Arena      | Game Canvas      | Render worm movement with directional indicators, enhanced food collection with different point values, collision detection, real-time sync |
+| Game Arena      | Point System     | Different food types award different points: Pizza/Apple (1pt), Cherry/Donut/Burger (2pts) |
+| Game Arena      | Visual Effects   | Floating score animations (+1/+2), directional snake head indicators, performance-optimized rendering |
 | Game Arena      | Joypad Controls  | Touch-based directional controls optimized for rotated landscape interface |
-| Game Arena      | Score Display    | Real-time score updates, leaderboard during gameplay                       |
+| Game Arena      | Score Display    | Real-time score updates with enhanced visual feedback, leaderboard during gameplay |
 | Room Lobby      | Auto Matchmaking | Connect players to available rooms, automatically spawn bots to maintain 3-player gameplay |
 | Room Lobby      | Countdown Timer  | Display 3-2-1 countdown before game starts                                 |
 | Room Lobby      | Player Status    | Show connected players, intelligent bot indicators, connection status      |
@@ -119,10 +139,19 @@ Our Snake Zone game consists of the following main pages:
 7. Game engine adapts performance settings based on device tier and thermal state
 8. Display lobby with player count (human + bot indicators) and 3-2-1 countdown
 9. Game starts with synchronized multiplayer gameplay (human players + AI bots)
-10. On death → Show game over modal with scores, rankings, and global leaderboard
-11. System updates backend with new score and analytics data
-12. Modal Close → Complete state reset (equivalent to app restart)
-13. Restart → New game with zero score, rejoin multiplayer room with fresh bot spawning
+10. User collects food to grow their snake and increase score:
+    - **Pizza & Apple**: Award 1 point with +1 floating animation
+    - **Cherry, Donut & Burger**: Award 2 points with +2 floating animation
+    - **Visual Feedback**: Snake head shows directional indicator for movement
+11. On death → Show game over modal with scores, rankings, and global leaderboard
+12. System updates backend with new score and analytics data
+13. Modal Close → Complete state reset (equivalent to app restart)
+14. Restart → New game with zero score, rejoin multiplayer room with fresh bot spawning
+
+**Enhanced Gameplay Features:**
+- **Point System**: Different food types provide varying point values for strategic gameplay
+- **Visual Feedback**: Floating score animations and directional indicators enhance user experience
+- **Performance Optimized**: All visual enhancements maintain optimal fps gameplay
 
 **Performance Optimization Flow:**
 
@@ -202,13 +231,19 @@ graph TD
 
 * **Performance Colors**: Blue (#2196F3) for optimal, Orange (#FF9800) for warning, Red (#F44336) for critical states
 
+* **Score Animation Colors**: Bright yellow (#FFD60A) for +1 points, gold (#FF9F0A) for +2 points, cherry (#FF4D4F) for +3 points, donut (#FFC107) for +4 points, burger (#FF9800) for +5 points
+
 * **Button Style**: Rounded corners with 8px radius, gradient backgrounds
 
-* **Font**: Roboto Bold for scores, Roboto Regular for UI text (16px-24px), Roboto Mono for performance metrics (14px)
+* **Font**: Roboto Bold for scores, Roboto Regular for UI text (16px-24px), Roboto Mono for performance metrics (14px), Bold sans-serif for floating score animations (18px)
 
 * **Layout Style**: Full-screen landscape with floating UI elements, adaptive canvas scaling
 
 * **Icons**: Minimalist line icons, gaming-themed emojis (🐍, 🎮, 🏆), performance indicators (🔥, ⚡, 🔋)
+
+* **Direction Indicators**: Triangular arrows with 3px stroke, semi-transparent overlay
+
+* **Visual Effects**: Performance-optimized canvas animations with alpha blending, floating scores with 1.5s fade-out
 
 * **Performance Indicators**: Color-coded badges for device tier, thermal state icons, battery optimization visual feedback
 
@@ -217,9 +252,12 @@ graph TD
 | Page Name       | Module Name      | UI Elements                                                                |
 |-----------------|------------------|----------------------------------------------------------------------------|
 | Landing Home    | Main Interface   | Game title, start button, settings icon, language indicator, performance badge |
-| Game Arena      | Game Canvas      | Snake sprites, food items, score display, touch control overlay, adaptive scaling |
-| Game Arena      | UI Overlay       | Current score, pause button, mini-map, FPS indicator, thermal status      |
+| Game Arena      | Game Canvas      | Snake sprites with directional indicators, enhanced food items with different point values, floating score animations, touch control overlay, adaptive scaling |
+| Game Arena      | UI Overlay       | Current score with visual feedback, pause button, mini-map, FPS indicator, thermal status |
 | Game Arena      | Performance HUD  | Device tier badge, battery status, frame rate display, thermal warning    |
+| Game Arena      | Visual Effects   | **Enhanced floating +1/+2 score animations with smooth fade-out (0.8s cubic-bezier easing), improved color contrast (bright yellow #FFD60A for +1, gold #FF9F0A for +2), directional snake head arrows (semi-transparent triangles), performance-optimized canvas rendering with alpha blending** |
+| Game Arena      | Point System UI  | **Visual differentiation for food types: Pizza/Apple (standard glow), Cherry/Donut/Burger (premium glow effect), enhanced food visibility validation system** |
+| Game Arena      | Food Sync System | **Real-time food visibility verification, client-side validation before consumption, enhanced error handling for invisible food prevention, robust food state synchronization** |
 | Game Over Modal | Score Display    | Current score, best score, ranking position, restart button, score comparison |
 | Game Over Modal | Leaderboard      | Top 10 global scores, player highlighting, crown icons for top 3, real-time updates |
 | Game Over Modal | Analytics        | Session statistics, performance metrics, backend sync status              |
@@ -244,11 +282,11 @@ graph TD
 
 * **Frontend**: React 18 + TypeScript + Vite
 
-* **State Management**: Zustand for multiplayer game state and UI state
+* **State Management**: Zustand for multiplayer game state and enhanced scoring system
 
 * **Internationalization**: react-i18next for multi-language support
 
-* **Real-time Communication**: Socket.io client for multiplayer and bot communication
+* **Real-time Communication**: Socket.io client for multiplayer and bot communication with synchronized point updates
 
 * **Mobile Integration**: MOS SDK for mini-program features
 
@@ -258,11 +296,15 @@ graph TD
 
 * **Backend Integration**: AuthService for user profile and score synchronization
 
-* **Backend**: Node.js + Express + Socket.io server with intelligent bot management
+* **Backend**: Node.js + Express + Socket.io server with intelligent bot management and enhanced point system validation
 
 * **Analytics**: Real-time game statistics broadcasting and player activity tracking
 
 * **User Management**: Backend user profile storage and global leaderboard system
+
+* **Visual Effects Engine**: Enhanced performance-optimized animations with improved fade-out transitions, cubic-bezier easing functions, and better color contrast for score feedback and directional indicators
+
+* **Food Synchronization System**: Robust client-server food state management with real-time visibility validation, enhanced error recovery, and comprehensive food lifecycle tracking to prevent invisible food bugs
 
 ### 5.2 Development Flow
 
@@ -329,21 +371,72 @@ npx kill-port 3000 5000
 #### 5.2.3 Development Guidelines
 
 1. **Orientation Enforcement**: Implement CSS and JavaScript locks for landscape mode
-2. **Socket Synchronization**: Use Zustand middleware for socket state sync
-3. **Game State Management**: Centralized game state with predictable updates
+2. **Socket Synchronization**: Use Zustand middleware for socket state sync with enhanced scoring system
+3. **Game State Management**: Centralized game state with predictable updates and point value validation
 4. **Internationalization**: react-i18next setup with JSON translation files
 5. **Error Handling**: Graceful degradation for connection issues
-6. **Performance**: 60fps gameplay with optimized rendering
+6. **Performance**: 60fps gameplay with optimized rendering and lightweight visual effects
+7. **Visual Effects**: Performance-optimized animations that don't impact game logic or network sync
+8. **Point System**: Server-side validation with client-side visual feedback for different food values
 
 #### 5.2.4 Testing Strategy
 
+**Core Testing Requirements**:
 * **Unit Tests**: Game logic, utilities, and pure functions
-
 * **Integration Tests**: Socket communication and state synchronization
-
 * **Mobile Testing**: Landscape orientation and touch controls
-
 * **Multiplayer Testing**: Room management and real-time sync
+
+**Critical Bug Fix Testing**:
+
+**Score Animation Testing**:
+- **Visual Regression Tests**: Automated screenshot comparison for animation quality
+- **Performance Tests**: Ensure 60fps maintained during score animations
+- **Cross-device Tests**: Validate animation smoothness on low/medium/high tier devices
+- **Timing Tests**: Verify 1200ms duration and cubic-bezier easing implementation
+- **Visibility Tests**: Confirm enhanced text shadow and color contrast improvements
+
+**Invisible Food Bug Testing**:
+- **Synchronization Tests**: Validate client-server food state consistency
+- **Edge Case Tests**: Test food consumption during network latency/disconnection
+- **Validation Tests**: Ensure client-side validation prevents invisible food consumption
+- **Error Handling Tests**: Verify proper error recovery when food validation fails
+- **Load Tests**: Test food synchronization under high player count and rapid consumption
+- **Race Condition Tests**: Validate food regeneration and consumption event handling
+
+**Automated Test Scenarios**:
+```typescript
+// Test invisible food prevention
+describe('Food Visibility Validation', () => {
+  test('should prevent consumption of invisible food', async () => {
+    // Simulate food not rendered on client
+    const result = await attemptFoodConsumption(foodId, false);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Food not visible');
+  });
+  
+  test('should validate server-client food state sync', async () => {
+    // Test food state consistency
+    const clientFoods = getClientFoodState();
+    const serverFoods = await getServerFoodState();
+    expect(clientFoods).toEqual(serverFoods);
+  });
+});
+
+// Test score animation improvements
+describe('Score Animation Enhancement', () => {
+  test('should complete animation in 1200ms with smooth fade-out', async () => {
+    const animation = createScoreAnimation('+2', position);
+    const startTime = performance.now();
+    
+    await animation.complete();
+    const duration = performance.now() - startTime;
+    
+    expect(duration).toBeCloseTo(1200, 50);
+    expect(animation.finalOpacity).toBe(0);
+  });
+});
+```
 
 ### 5.3 Internationalization Setup
 
@@ -458,7 +551,153 @@ const LanguageSelector = () => {
 };
 ```
 
-### 5.4 Deployment
+### 5.4 Critical Bug Fixes & Technical Implementation
+
+#### 5.4.1 Score Animation Enhancement
+
+**Current Issue**: Score animation fade-out is not visually appealing and lacks smooth transitions.
+
+**Technical Requirements**:
+- **Animation Duration**: Extend from current 800ms to 1200ms for smoother visual experience
+- **Easing Function**: Implement cubic-bezier(0.25, 0.46, 0.45, 0.94) for natural fade-out motion
+- **Opacity Transition**: Smooth opacity reduction from 1.0 to 0.0 starting at 50% animation progress (instead of 60%)
+- **Color Enhancement**: Increase text shadow and stroke width for better visibility during fade-out
+- **Performance**: Maintain 60fps with optimized canvas rendering and alpha blending
+
+**Implementation Details**:
+```typescript
+// ScoreAnimation.ts enhancements
+interface ScoreAnimationData {
+  opacity: number; // Enhanced opacity management
+  fadeStartProgress: 0.5; // Earlier fade start for smoother transition
+  easingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+  duration: 1200; // Extended duration
+  textShadow: '2px 2px 4px rgba(0,0,0,0.8)'; // Enhanced visibility
+}
+```
+
+#### 5.4.2 Invisible Food Bug Resolution
+
+**Current Issue**: Players can consume food that is not visible on the client, causing score updates without visual feedback.
+
+**Root Cause Analysis**:
+- Food state desynchronization between server and client
+- Missing client-side validation before food consumption
+- Inadequate error handling for food rendering failures
+- Race conditions in food regeneration and consumption events
+
+**Technical Solution**:
+
+**Client-Side Validation**:
+```typescript
+// GameEngine.ts - Enhanced food consumption validation
+const validateFoodConsumption = (foodId: number): boolean => {
+  const food = gameStore.getState().foods.find(f => f.id === foodId);
+  if (!food) return false;
+  
+  // Verify food is rendered and visible
+  const isVisible = isInViewport(food.x, food.y) && food.opacity > 0;
+  const isRendered = renderedFoodIds.has(foodId);
+  
+  return isVisible && isRendered;
+};
+```
+
+**Server-Side Validation**:
+```typescript
+// server.js - Enhanced food state management
+socket.on('foodEaten', ({ playerId, foodId, clientVisible }) => {
+  const food = gameState.foods.find(f => f.id === foodId);
+  
+  if (!food) {
+    socket.emit('foodError', { error: 'Food not found', foodId });
+    return;
+  }
+  
+  if (!clientVisible) {
+    // Log invisible food consumption attempt
+    console.warn(`Player ${playerId} attempted to eat invisible food ${foodId}`);
+    socket.emit('foodVisibilityCheck', { foodId, visible: false });
+    return;
+  }
+  
+  // Process valid food consumption
+  processFoodConsumption(playerId, food);
+});
+```
+
+**Enhanced Synchronization**:
+- **Real-time Validation**: Server validates food visibility before processing consumption
+- **Error Recovery**: Client requests food state refresh when validation fails
+- **Comprehensive Logging**: Track invisible food attempts for debugging
+- **State Reconciliation**: Periodic client-server food state synchronization
+
+#### 5.4.3 Implementation Priority
+
+1. **Phase 1**: Score animation improvements (low risk, high visual impact)
+2. **Phase 2**: Food visibility validation system (critical bug fix)
+3. **Phase 3**: Enhanced error handling and logging (stability improvement)
+4. **Phase 4**: Performance optimization and monitoring (long-term maintenance)
+
+#### 5.4.4 Monitoring & Analytics
+
+**Score Animation Metrics**:
+- **Animation Performance**: Track frame drops during score animations
+- **User Engagement**: Monitor score animation visibility and completion rates
+- **Device Performance**: Measure animation smoothness across device tiers
+- **Visual Quality**: Track user feedback on animation improvements
+
+**Food Synchronization Metrics**:
+- **Invisible Food Incidents**: Count and log invisible food consumption attempts
+- **Synchronization Errors**: Track client-server food state mismatches
+- **Error Recovery**: Monitor successful food state reconciliation events
+- **Network Performance**: Measure food update latency and packet loss
+
+**Implementation Tracking**:
+```typescript
+// Analytics integration for bug fixes
+interface BugFixMetrics {
+  scoreAnimations: {
+    completionRate: number;
+    averageFPS: number;
+    userSatisfaction: number;
+  };
+  foodSynchronization: {
+    invisibleFoodAttempts: number;
+    syncErrors: number;
+    recoverySuccess: number;
+    averageLatency: number;
+  };
+}
+
+// Real-time monitoring
+const trackScoreAnimation = (animationId: string, performance: AnimationMetrics) => {
+  analytics.track('score_animation_completed', {
+    animationId,
+    duration: performance.duration,
+    fps: performance.averageFPS,
+    deviceTier: getDeviceTier()
+  });
+};
+
+const trackInvisibleFoodAttempt = (playerId: string, foodId: number) => {
+  analytics.track('invisible_food_attempt', {
+    playerId,
+    foodId,
+    timestamp: Date.now(),
+    clientState: getClientFoodState(),
+    serverState: getServerFoodState()
+  });
+};
+```
+
+**Success Criteria**:
+- **Score Animation**: 95% completion rate with smooth fade-out, user satisfaction score > 4.0/5.0
+- **Food Visibility**: Zero invisible food consumption incidents, < 1% food synchronization errors
+- **Performance**: Maintain 60fps during animations, < 100ms food update latency
+- **User Experience**: Reduced bug reports, improved gameplay satisfaction metrics
+
+### 5.5 Deployment
 
 * **Development**: Local development with hot reload and i18n hot reloading
 
@@ -475,7 +714,8 @@ const LanguageSelector = () => {
 | Event Name              | Parameters                                                                 | Description                                                 |
 | ----------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | `playerMove`            | `{ playerId: string, angle: number, x: number, y: number, points: Array }` | Updates player position and movement data                   |
-| `foodEaten`             | `{ playerId: string, foodId: number }`                                     | Notifies server when player consumes food                   |
+| `foodEaten`             | `{ playerId: string, foodId: number, clientVisible: boolean }`             | Notifies server when player consumes food with client visibility status |
+| `validateFoodVisibility` | `{ foodId: number }`                                                      | Requests server validation of food visibility before consumption |
 | `deadPointEaten`        | `{ playerId: string, deadPoints: Array }`                                  | Notifies server when player consumes dead points            |
 | `playerDied`            | `{ playerId: string, deadPoints: Array }`                                  | Notifies server when player dies and provides body points   |
 | `requestMinimumPlayers` | `{ minPlayers: number }`                                                   | Requests server to spawn bots to reach minimum player count |
@@ -492,7 +732,9 @@ const LanguageSelector = () => {
 | `playerRespawned`    | `Player`                                                                   | Broadcasts player respawn after death             |
 | `playerDisconnected` | `string`                                                                   | Broadcasts player ID when they disconnect         |
 | `playerLeft`         | `{ playerId: string }`                                                     | Broadcasts when player leaves the game            |
-| `foodRegenerated`    | `Food`                                                                     | Broadcasts food regeneration after consumption    |
+| `foodRegenerated`    | `Food`                                                                     | Broadcasts food regeneration after consumption with enhanced visibility validation |
+| `foodsUpdated`       | `{ foods: Array<Food> }`                                                   | Broadcasts comprehensive food state updates for synchronization |
+| `foodVisibilityCheck` | `{ foodId: number, visible: boolean }`                                    | Server-side food visibility validation response |
 | `deadPointsRemoved`  | `{ deadPoints: Array }`                                                    | Broadcasts removal of consumed dead points        |
 | `scoreUpdate`        | `{ playerId: string, score: number }`                                      | Broadcasts score updates                          |
 | `leaderboardUpdate`  | `{ leaderboard: Array }`                                                   | Broadcasts updated leaderboard                    |
@@ -599,6 +841,7 @@ interface Food {
   y: number;
   radius: number;
   color: string;
+  type: 'apple' | 'cherry' | 'donut' | 'burger' | 'pizza';
 }
 
 interface DeadPoint {
@@ -606,6 +849,8 @@ interface DeadPoint {
   y: number;
   radius: number;
   color: string;
+  type?: 'apple' | 'cherry' | 'donut' | 'burger' | 'pizza';
+  createdAt: number;
 }
 ```
 
@@ -632,6 +877,37 @@ interface DeadPoint {
 * Human players respawn after 3 seconds, bots are permanently removed
 
 * Score system: 1 point per food, 1 point per dead point consumed
+
+#### Food Type Preservation System
+
+**Enhanced Food Lifecycle Management**: The game implements a comprehensive food type preservation system that ensures accurate display of food types throughout the entire game lifecycle - from spawned food → eaten by snake → stored in segments → released as dead food with correct type.
+
+**Food Type Categories**:
+* Apple (🍎) - Basic food type with standard nutritional value
+* Cherry (🍒) - Small, quick-consumption food items
+* Donut (🍩) - Medium-value food with distinctive appearance
+* Burger (🍔) - High-value food items for significant growth
+* Pizza (🍕) - Premium food type with maximum nutritional benefit
+
+**Type Preservation Process**:
+1. **Food Spawning**: Each food item is assigned a specific type (apple, cherry, donut, burger, pizza) with corresponding visual representation and color coding
+2. **Snake Consumption**: When a snake eats food, the food's type is preserved and stored in the snake's body segments (Point objects with type property)
+3. **Segment Storage**: Snake segments maintain the original food type throughout the snake's lifetime, creating a visual history of consumed foods
+4. **Death Conversion**: When a snake dies, each body segment is converted to dead food while preserving its original type, ensuring accurate visual representation
+5. **Dead Food Display**: Dead food items display with the correct type and color, showing apple, cherry, donut, burger, or pizza instead of defaulting to pizza
+
+**Cross-Platform Synchronization**:
+* **Client-Side Type Handling**: Snake.ts properly stores food types in Point objects and preserves them during death conversion
+* **Server-Side Type Management**: Server maintains food type consistency in bot deaths, player deaths, and dead point to food conversion
+* **Unified Type Mapping**: Consistent food type definitions and color mappings between client and server ensure synchronized visual representation
+* **Type Validation**: Both client and server validate food types with fallback to 'pizza' only when type data is genuinely unavailable
+
+**Technical Implementation**:
+* Point class supports optional 'type' property for food type storage
+* Snake.eat() method preserves food type when creating new body segments
+* Snake death handlers (both client and server) maintain type information during conversion
+* Server-side bot and player death functions properly map food types to colors
+* Dead point cleanup system preserves type information throughout the 30-second lifecycle
 
 ### 6.3 Server Configuration
 

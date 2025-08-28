@@ -9,7 +9,8 @@ const io = socketIo(server, {
     origin: "*",
     methods: ["GET", "POST"],
   },
-  transports: ["websocket", "polling"],
+  transports: ["websocket"],
+  // transports: ["websocket", "polling"],
   allowEIO3: true,
 });
 
@@ -74,9 +75,9 @@ io.use((socket, next) => {
       });
     }
   } else {
-    // Allow guest connections
+    // Allow Player connections
     socket.data.isAuthenticated = false;
-    console.log("👤 Guest connection allowed:", socket.id);
+    console.log("👤 Player connection allowed:", socket.id);
   }
 
   next(); // Always allow connection, but track auth status
@@ -508,7 +509,7 @@ function getRandomColor() {
 
 // Get random food type matching client-side Food.ts types
 function getRandomFood() {
-  const types = ['pizza', 'apple', 'cherry', 'donut', 'burger', 'pizza'];
+  const types = ['pizza', 'apple', 'cherry', 'burger', 'pizza'];
   return types[Math.floor(Math.random() * types.length)];
 }
 
@@ -518,14 +519,24 @@ function getFoodColorByType(type) {
     case 'apple': return 'red';
     case 'cherry': return 'darkred';
     case 'pizza': return 'orange';
-    case 'pizza': return 'orange';
     case 'donut': return 'yellow';
     case 'burger': return 'brown';
     default: return 'orange';
   }
 }
 
-// Generate random player ID (for guests/fallback)
+// Get point value based on food type
+function getPointValueByType(type) {
+  switch (type) {
+    case 'pizza': return 1;
+    case 'apple': return 2;
+    case 'cherry': return 3;
+    case 'burger': return 4;
+    default: return POINT;
+  }
+}
+
+// Generate random player ID (for Players/fallback)
 function generatePlayerId() {
   return Math.random().toString(36).substr(2, 9);
 }
@@ -1103,6 +1114,7 @@ function createBot(id) {
       y: bot.y,
       radius: bot.radius,
       color: bot.color, // Use bot's main color for consistency
+      type: getRandomFood(), // Add random food type for variety when bot dies
     });
   }
 
@@ -1175,22 +1187,24 @@ function handleBotDeath(bot) {
 
   bot.alive = false;
 
-  // Convert bot's body points to food items (bots default to pizza_01 since they don't track food types)
+  // Convert bot's body points to food items with strict limit enforcement
   const newFoodItems = [];
-  bot.points.forEach((point) => {
-    // Use food type from point if available, otherwise default to pizza_01
-    const type = point.type || "pizza_01";
+  const currentFoodCount = gameState.foods.length;
+  const availableSlots = Math.max(0, gameState.maxFoods - currentFoodCount);
+  
+  // Only convert segments up to the available food slots
+  const segmentsToConvert = Math.min(bot.points.length, availableSlots);
+  
+  for (let i = 0; i < segmentsToConvert; i++) {
+    const point = bot.points[i];
+    // Use food type from point if available, otherwise default to pizza
+    const type = point.type || "pizza";
     const foodId = `${type}_bot_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 9)}`;
     
-    // Determine color based on food type
-    let foodColor = "orange"; // Default pizza color
-    if (type === "apple_01") foodColor = "red";
-    else if (type === "banana_01") foodColor = "yellow";
-    else if (type === "grape_01") foodColor = "purple";
-    else if (type === "cherry_01") foodColor = "darkred";
-    else if (type === "orange_01") foodColor = "orange";
+    // Determine color based on food type using existing function
+    const foodColor = getFoodColorByType(type);
     
     const foodItem = {
       id: foodId,
@@ -1204,11 +1218,17 @@ function handleBotDeath(bot) {
 
     gameState.foods.push(foodItem);
     newFoodItems.push(foodItem);
-  });
+  }
 
-  console.log(
-    `🍕 Bot death: Created ${newFoodItems.length} food items from bot ${bot.id} segments (types: ${newFoodItems.map(f => f.type).join(', ')})`
-  );
+  if (segmentsToConvert < bot.points.length) {
+    console.log(
+      `🍕 Bot death: Created ${newFoodItems.length}/${bot.points.length} food items from bot ${bot.id} segments (limited by maxFoods: ${gameState.maxFoods})`
+    );
+  } else {
+    console.log(
+      `🍕 Bot death: Created ${newFoodItems.length} food items from bot ${bot.id} segments (types: ${newFoodItems.map(f => f.type).join(', ')})`
+    );
+  }
 
   // Remove bot from game state
   gameState.players.delete(bot.id);
@@ -1222,11 +1242,16 @@ function handleBotDeath(bot) {
   io.emit("playerDied", {
     playerId: bot.id,
     deadPoints: [], // No dead points anymore
-    newFoods: newFoodItems, // Send new pizza_01 food items
+    newFoods: newFoodItems, // Send new pizza food items
   });
 
   // Also broadcast food update to sync all clients
   io.emit("foodsUpdated", newFoodItems);
+  
+  // Perform food cleanup if we're approaching the limit
+  if (gameState.foods.length > gameState.maxFoods * 0.8) {
+    performFoodCleanup();
+  }
 
   // Broadcast bot removal
   io.emit("playerDisconnected", bot.id);
@@ -1349,27 +1374,135 @@ function updatePlayerActivity() {
   }
 }
 
+// ===== FOOD CLEANUP FUNCTIONS =====
+
+// Clean up excess food items when approaching maxFoods limit
+function performFoodCleanup(targetReduction = 50) {
+  const currentCount = gameState.foods.length;
+  
+  if (currentCount <= gameState.maxFoods * 0.8) {
+    return; // Only cleanup when we're at 80% of max capacity
+  }
+  
+  console.log(`🧹 FOOD CLEANUP: Starting cleanup - current: ${currentCount}, max: ${gameState.maxFoods}`);
+  
+  // Get current player positions for distance calculations
+  const playerPositions = Array.from(gameState.players.values())
+    .filter((p) => p.alive)
+    .map((p) => ({ x: p.x, y: p.y }));
+  
+  // Add timestamps to food items if missing and calculate cleanup priority
+  const currentTime = Date.now();
+  const foodsWithPriority = gameState.foods.map((food) => {
+    if (!food.createdAt) food.createdAt = currentTime - Math.random() * 30000;
+    
+    let priority = 0;
+    const age = currentTime - food.createdAt;
+    
+    // Age factor (older food gets higher priority for removal)
+    priority += Math.min(age / 30000, 5); // Max 5 points for age (30s = max age score)
+    
+    // Distance from players (farther = higher priority for removal)
+    let minPlayerDistance = Infinity;
+    for (const pos of playerPositions) {
+      const distance = Math.hypot(food.x - pos.x, food.y - pos.y);
+      minPlayerDistance = Math.min(minPlayerDistance, distance);
+    }
+    
+    if (minPlayerDistance > 400) priority += 3; // Far from players
+    else if (minPlayerDistance > 200) priority += 1; // Moderately far
+    else if (minPlayerDistance < 100) priority -= 2; // Close to players (keep)
+    
+    return { food, priority };
+  });
+  
+  // Sort by priority (highest first) and remove excess food
+  foodsWithPriority.sort((a, b) => b.priority - a.priority);
+  const foodsToRemove = Math.min(targetReduction, currentCount - gameState.maxFoods + 20);
+  
+  if (foodsToRemove > 0) {
+    const removedFoods = [];
+    for (let i = 0; i < foodsToRemove; i++) {
+      removedFoods.push(foodsWithPriority[i].food);
+    }
+    
+    // Remove from gameState
+    gameState.foods = gameState.foods.filter(food => !removedFoods.includes(food));
+    
+    // Broadcast removal to clients
+    io.emit("foodsRemoved", removedFoods.map(f => f.id));
+    
+    console.log(`🧹 FOOD CLEANUP: Removed ${foodsToRemove} food items (${gameState.foods.length} remaining)`);
+  }
+}
+
 // ===== SMART DEAD SNAKE CLEANUP FUNCTIONS =====
 
 // Calculate priority score for dead point cleanup (higher = more likely to be removed)
-function calculateCleanupPriority(deadPoint, playerPositions, spawnZones) {
+function calculateCleanupPriority(deadPoint, humanPlayerPositions, botPlayerPositions, spawnZones) {
   let priority = 0;
   const currentTime = Date.now();
 
-  // Age factor (older points get higher priority for removal)
+  // Protection mechanism: Don't clean up points that haven't existed for CLEANUP_INTERVAL
   const age = currentTime - (deadPoint.createdAt || currentTime);
-  priority += Math.min(age / 60000, 10); // Max 10 points for age (1 minute = max age score)
-
-  // Distance from players (farther = higher priority for removal)
-  let minPlayerDistance = Infinity;
-  for (const pos of playerPositions) {
-    const distance = Math.hypot(deadPoint.x - pos.x, deadPoint.y - pos.y);
-    minPlayerDistance = Math.min(minPlayerDistance, distance);
+  const CLEANUP_PROTECTION_TIME = PERFORMANCE_CONFIG.CLEANUP_INTERVAL; // 30 seconds
+  
+  // If the dead point is too new, give it very low priority (protect it)
+  if (age < CLEANUP_PROTECTION_TIME) {
+    return -1000; // Very low priority, should not be cleaned up
   }
 
-  if (minPlayerDistance > 300) priority += 5; // Far from players
-  else if (minPlayerDistance > 150) priority += 2; // Moderately far
-  else if (minPlayerDistance < 50) priority -= 3; // Very close to players (keep)
+  // Age factor (older points get higher priority for removal)
+  priority += Math.min(age / 60000, 8); // Max 8 points for age (1 minute = max age score)
+
+  // Enhanced distance-based scoring with player type awareness
+  let minHumanDistance = Infinity;
+  let minBotDistance = Infinity;
+
+  // Calculate distances to human players (highest priority for preservation)
+  for (const pos of humanPlayerPositions) {
+    const distance = Math.hypot(deadPoint.x - pos.x, deadPoint.y - pos.y);
+    minHumanDistance = Math.min(minHumanDistance, distance);
+  }
+
+  // Calculate distances to bot players (medium priority for preservation)
+  for (const pos of botPlayerPositions) {
+    const distance = Math.hypot(deadPoint.x - pos.x, deadPoint.y - pos.y);
+    minBotDistance = Math.min(minBotDistance, distance);
+  }
+
+  // Priority system: Far from humans > Near bots but far from humans > Near humans
+  if (minHumanDistance !== Infinity) {
+    if (minHumanDistance > 400) {
+      priority += 15; // Very far from human players - highest cleanup priority
+    } else if (minHumanDistance > 250) {
+      priority += 10; // Far from human players - high cleanup priority
+    } else if (minHumanDistance > 150) {
+      priority += 5; // Moderately far from human players
+    } else if (minHumanDistance > 80) {
+      priority += 1; // Close to human players - low cleanup priority
+    } else {
+      priority -= 10; // Very close to human players - protect strongly
+    }
+  }
+
+  // Bot distance consideration (lower weight than human distance)
+  if (minBotDistance !== Infinity) {
+    if (minBotDistance > 300) {
+      priority += 3; // Far from bots - moderate cleanup priority
+    } else if (minBotDistance > 150) {
+      priority += 1; // Moderately far from bots
+    } else if (minBotDistance < 60) {
+      priority -= 2; // Close to bots - slight protection
+    }
+  }
+
+  // If no human players, use bot distances with higher weight
+  if (humanPlayerPositions.length === 0 && minBotDistance !== Infinity) {
+    if (minBotDistance > 300) priority += 8;
+    else if (minBotDistance > 150) priority += 4;
+    else if (minBotDistance < 80) priority -= 5;
+  }
 
   // Distance from spawn zones (closer to spawn = lower priority for removal)
   let minSpawnDistance = Infinity;
@@ -1378,11 +1511,8 @@ function calculateCleanupPriority(deadPoint, playerPositions, spawnZones) {
     minSpawnDistance = Math.min(minSpawnDistance, distance);
   }
 
-  if (minSpawnDistance < 100) priority -= 4; // Very close to spawn (keep)
-  else if (minSpawnDistance < 200) priority -= 1; // Close to spawn
-
-  // Cluster density (remove from dense areas)
-  // This will be calculated in the main cleanup function
+  if (minSpawnDistance < 100) priority -= 6; // Very close to spawn (protect more)
+  else if (minSpawnDistance < 200) priority -= 2; // Close to spawn
 
   return priority;
 }
@@ -1397,17 +1527,25 @@ function performSmartDeadPointCleanup(forceCleanup = false) {
   }
 
   const targetCount = PERFORMANCE_CONFIG.MAX_DEAD_POINTS;
-  const pointsToRemove = Math.max(0, currentCount - targetCount);
+  let pointsToRemove = Math.max(0, currentCount - targetCount);
 
   if (pointsToRemove === 0) return;
+
+  // Implement gradual cleanup - don't remove everything at once
+  const maxRemovalPerCleanup = Math.min(pointsToRemove, Math.max(50, Math.floor(currentCount * 0.15)));
+  pointsToRemove = Math.min(pointsToRemove, maxRemovalPerCleanup);
 
   console.log(
     `🧹 CLEANUP: Starting smart cleanup - removing ${pointsToRemove} of ${currentCount} dead points`
   );
 
-  // Get current player positions
-  const playerPositions = Array.from(gameState.players.values())
-    .filter((p) => p.alive)
+  // Separate human and bot players for enhanced priority calculation
+  const alivePlayers = Array.from(gameState.players.values()).filter((p) => p.alive);
+  const humanPlayerPositions = alivePlayers
+    .filter((p) => !p.isBot)
+    .map((p) => ({ x: p.x, y: p.y }));
+  const botPlayerPositions = alivePlayers
+    .filter((p) => p.isBot)
     .map((p) => ({ x: p.x, y: p.y }));
 
   // Get spawn zones
@@ -1431,21 +1569,33 @@ function performSmartDeadPointCleanup(forceCleanup = false) {
     point.clusterDensity = nearbyCount;
   });
 
-  // Calculate priority scores
+  // Calculate priority scores with enhanced player type awareness
   const pointsWithPriority = gameState.deadPoints.map((point) => {
-    let priority = calculateCleanupPriority(point, playerPositions, spawnZones);
+    let priority = calculateCleanupPriority(point, humanPlayerPositions, botPlayerPositions, spawnZones);
 
     // Add cluster density bonus (remove from dense areas)
-    if (point.clusterDensity > 5) priority += 3;
-    else if (point.clusterDensity > 2) priority += 1;
+    if (point.clusterDensity > 5) priority += 4;
+    else if (point.clusterDensity > 3) priority += 2;
+    else if (point.clusterDensity > 1) priority += 1;
+
+    // Add small randomization to make cleanup less predictable
+    priority += (Math.random() - 0.5) * 2;
 
     return { point, priority };
   });
 
   // Sort by priority (highest first) and remove top candidates
   pointsWithPriority.sort((a, b) => b.priority - a.priority);
-  const pointsToRemoveList = pointsWithPriority
-    .slice(0, pointsToRemove)
+  
+  // Filter out points that are too new (additional safety check)
+  const eligiblePoints = pointsWithPriority.filter(item => {
+    const age = currentTime - (item.point.createdAt || currentTime);
+    return age >= PERFORMANCE_CONFIG.CLEANUP_INTERVAL;
+  });
+
+  const actualPointsToRemove = Math.min(pointsToRemove, eligiblePoints.length);
+  const pointsToRemoveList = eligiblePoints
+    .slice(0, actualPointsToRemove)
     .map((item) => item.point);
 
   // Remove selected points
@@ -1454,16 +1604,16 @@ function performSmartDeadPointCleanup(forceCleanup = false) {
   );
 
   // Update metrics
-  performanceMetrics.deadPointsCleanedUp += pointsToRemove;
+  performanceMetrics.deadPointsCleanedUp += actualPointsToRemove;
 
   console.log(
-    `✅ CLEANUP: Removed ${pointsToRemove} dead points, ${gameState.deadPoints.length} remaining`
+    `✅ CLEANUP: Removed ${actualPointsToRemove} dead points, ${gameState.deadPoints.length} remaining (${humanPlayerPositions.length} humans, ${botPlayerPositions.length} bots)`
   );
 
-  // Broadcast cleanup to clients if significant
-  if (pointsToRemove > 100) {
+  // Broadcast cleanup to clients if significant (with reduced threshold)
+  if (actualPointsToRemove > 500) {
     io.emit("deadPointsCleanup", {
-      removedCount: pointsToRemove,
+      removedCount: actualPointsToRemove,
       remainingCount: gameState.deadPoints.length,
     });
   }
@@ -1917,11 +2067,14 @@ function updateBots() {
     for (let i = 0; i < gameState.foods.length; i++) {
       const food = gameState.foods[i];
       if (isCollided(botHead, food)) {
-        // Bot eats food - same logic as human players
-        player.score += POINT;
-        
-        // Extract the food type that was eaten (for potential future bot food type tracking)
+        // Extract the food type that was eaten
         const eatentype = food.type || 'pizza';
+        
+        // Get point value based on food type
+        const pointValue = getPointValueByType(eatentype);
+        
+        // Bot eats food - same logic as human players
+        player.score += pointValue;
 
         // Add new point to bot's body using bot's main color
         if (player.points.length > 0) {
@@ -1970,46 +2123,61 @@ function updateBots() {
     for (let i = gameState.deadPoints.length - 1; i >= 0; i--) {
       const deadPoint = gameState.deadPoints[i];
       if (isCollided(botHead, deadPoint)) {
-        // Bot eats dead point - award POINT per dead snake
-        player.score += POINT;
+        // Check if dead point is old enough to be consumed (age-based protection)
+        const currentTime = Date.now();
+        const age = currentTime - (deadPoint.createdAt || 0);
+        
+        // Only allow consumption if dead point is older than CLEANUP_INTERVAL (30 seconds)
+        if (age >= CLEANUP_INTERVAL) {
+          // Get point value based on dead point food type
+          const deadPointType = deadPoint.type || 'pizza';
+          const pointValue = getPointValueByType(deadPointType);
+          
+          // Bot eats dead point - award points based on food type
+          player.score += pointValue;
 
-        // Add new point to bot's body using bot's main color
-        if (player.points.length > 0) {
-          const tail = player.points[player.points.length - 1];
-          player.points.push({
-            x: tail.x,
-            y: tail.y,
-            radius: player.radius,
-            color: player.color, // Use bot's main color for consistency
+          // Add new point to bot's body using bot's main color
+          if (player.points.length > 0) {
+            const tail = player.points[player.points.length - 1];
+            player.points.push({
+              x: tail.x,
+              y: tail.y,
+              radius: player.radius,
+              color: player.color, // Use bot's main color for consistency
+              type: deadPoint.type || 'pizza', // Preserve food type from consumed dead point
+            });
+          }
+
+          // Store the consumed dead point for broadcast before removing it
+          const consumedDeadPoint = { ...deadPoint };
+
+          // Remove consumed dead point
+          gameState.deadPoints.splice(i, 1);
+
+          // Broadcast dead point removal to all clients (same as human players)
+          io.emit("deadPointsRemoved", {
+            deadPoints: [consumedDeadPoint],
           });
+
+          // Broadcast score update
+          io.emit("scoreUpdate", {
+            playerId: player.id,
+            score: Math.round(player.score * 10) / 10,
+          });
+
+          // Broadcast updated leaderboard
+          const leaderboard = generateLeaderboard();
+          const fullLeaderboard = generateFullLeaderboard();
+          io.emit("leaderboardUpdate", {
+            leaderboard: leaderboard,
+            fullLeaderboard: fullLeaderboard,
+          });
+
+          break; // Only eat one dead point per update cycle
+        } else {
+          // Dead point is protected due to age
+          console.log(`🛡️ Bot ${player.id} attempted to eat protected dead point (age: ${Math.round(age/1000)}s < ${CLEANUP_INTERVAL/1000}s)`);
         }
-
-        // Store the consumed dead point for broadcast before removing it
-        const consumedDeadPoint = { ...deadPoint };
-
-        // Remove consumed dead point
-        gameState.deadPoints.splice(i, 1);
-
-        // Broadcast dead point removal to all clients (same as human players)
-        io.emit("deadPointsRemoved", {
-          deadPoints: [consumedDeadPoint],
-        });
-
-        // Broadcast score update
-        io.emit("scoreUpdate", {
-          playerId: player.id,
-          score: Math.round(player.score * 10) / 10,
-        });
-
-        // Broadcast updated leaderboard
-        const leaderboard = generateLeaderboard();
-        const fullLeaderboard = generateFullLeaderboard();
-        io.emit("leaderboardUpdate", {
-          leaderboard: leaderboard,
-          fullLeaderboard: fullLeaderboard,
-        });
-
-        break; // Only eat one dead point per update cycle
       }
     }
   });
@@ -2223,6 +2391,9 @@ io.on("connection", (socket) => {
       // Extract the food type that was eaten
       const eatentype = food.type || 'pizza';
       
+      // Get point value based on food type
+      const pointValue = getPointValueByType(eatentype);
+      
       // Regenerate food with logging
       const oldPos = { x: food.x, y: food.y };
       const newtype = getRandomFood();
@@ -2231,7 +2402,7 @@ io.on("connection", (socket) => {
       food.color = getFoodColorByType(newtype);
       food.type = newtype;
 
-      player.score += POINT;
+      player.score += pointValue;
       performanceMetrics.foodEaten++;
 
       console.log(
@@ -2247,11 +2418,12 @@ io.on("connection", (socket) => {
       // Broadcast food regeneration to all players
       io.emit("foodRegenerated", food);
       
-      // Broadcast the eaten food type to the client for snake segment storage
+      // Broadcast the eaten food type and point value to the client for snake segment storage and animations
       io.emit("typeEaten", { 
         playerId, 
         foodId, 
-        eatentype 
+        eatentype,
+        pointValue 
       });
 
       // Broadcast score update
@@ -2280,7 +2452,12 @@ io.on("connection", (socket) => {
       if (!player.isBot) {
         updatePlayerActivity();
       }
-      // Remove consumed dead points from game state
+      
+      const currentTime = Date.now();
+      const validDeadPoints = [];
+      const protectedDeadPoints = [];
+      
+      // Filter dead points based on age - only allow consumption of points older than CLEANUP_INTERVAL
       deadPoints.forEach((consumedPoint) => {
         const index = gameState.deadPoints.findIndex(
           (dp) =>
@@ -2288,33 +2465,68 @@ io.on("connection", (socket) => {
             Math.abs(dp.y - consumedPoint.y) < 1 &&
             dp.color === consumedPoint.color
         );
+        
         if (index !== -1) {
-          gameState.deadPoints.splice(index, 1);
+          const deadPoint = gameState.deadPoints[index];
+          const age = currentTime - (deadPoint.createdAt || 0);
+          
+          // Only allow consumption if dead point is older than CLEANUP_INTERVAL (30 seconds)
+          if (age >= CLEANUP_INTERVAL) {
+            validDeadPoints.push({ point: consumedPoint, index });
+          } else {
+            protectedDeadPoints.push(deadPoint);
+            console.log(`🛡️ Dead point protected from consumption (age: ${Math.round(age/1000)}s < ${CLEANUP_INTERVAL/1000}s)`);
+          }
         }
       });
-
-      // Update player score - award POINT per dead snake consumed
-      player.score += POINT;
-      performanceMetrics.deadPointsEaten += deadPoints.length;
-
-      // Broadcast dead point removal to all clients
-      io.emit("deadPointsRemoved", {
-        deadPoints: deadPoints,
+      
+      // Remove only the valid (aged) dead points from game state
+      // Sort indices in descending order to avoid index shifting issues
+      validDeadPoints.sort((a, b) => b.index - a.index);
+      validDeadPoints.forEach(({ index }) => {
+        gameState.deadPoints.splice(index, 1);
       });
 
-      // Broadcast score update
-      io.emit("scoreUpdate", {
-        playerId: playerId,
-        score: player.score,
+      // Update player score - award points based on dead point food types
+      const consumedCount = validDeadPoints.length;
+      let totalPoints = 0;
+      validDeadPoints.forEach(({ point }) => {
+        const deadPointType = point.type || 'pizza';
+        const pointValue = getPointValueByType(deadPointType);
+        totalPoints += pointValue;
       });
+      player.score += totalPoints;
+      performanceMetrics.deadPointsEaten += consumedCount;
 
-      // Broadcast updated leaderboard
-      const leaderboard = generateLeaderboard();
-      const fullLeaderboard = generateFullLeaderboard();
-      io.emit("leaderboardUpdate", {
-        leaderboard: leaderboard,
-        fullLeaderboard: fullLeaderboard,
-      });
+      // Only broadcast removal if there were valid dead points consumed
+      if (consumedCount > 0) {
+        const consumedDeadPoints = validDeadPoints.map(vdp => vdp.point);
+        io.emit("deadPointsRemoved", {
+          deadPoints: consumedDeadPoints,
+        });
+      }
+      
+      // Log protection activity
+      if (protectedDeadPoints.length > 0) {
+        console.log(`🛡️ Protected ${protectedDeadPoints.length} dead points from consumption (player: ${playerId})`);
+      }
+
+      // Only broadcast score and leaderboard updates if points were actually consumed
+      if (consumedCount > 0) {
+        // Broadcast score update
+        io.emit("scoreUpdate", {
+          playerId: playerId,
+          score: player.score,
+        });
+
+        // Broadcast updated leaderboard
+        const leaderboard = generateLeaderboard();
+        const fullLeaderboard = generateFullLeaderboard();
+        io.emit("leaderboardUpdate", {
+          leaderboard: leaderboard,
+          fullLeaderboard: fullLeaderboard,
+        });
+      }
     }
   });
 
@@ -2326,30 +2538,31 @@ io.on("connection", (socket) => {
 
       player.alive = false;
 
-      // Convert dead points to food items preserving their original types
+      // Convert dead points to food items with strict limit enforcement
       const deadPoints = data.deadPoints;
       const newFoodItems = [];
+      const currentFoodCount = gameState.foods.length;
+      const availableSlots = Math.max(0, gameState.maxFoods - currentFoodCount);
+      
+      // Only convert segments up to the available food slots
+      const segmentsToConvert = Math.min(deadPoints.length, availableSlots);
 
-      deadPoints.forEach((dp) => {
-        // Use the food type from the dead point, default to pizza_01 if not specified
-        const type = dp.type || "pizza_01";
+      for (let i = 0; i < segmentsToConvert; i++) {
+        const dp = deadPoints[i];
+        // Use the food type from the dead point, default to pizza if not specified
+        const type = dp.type || "pizza";
         const foodId = `${type}_${Date.now()}_${Math.random()
           .toString(36)
           .substr(2, 9)}`;
         
-        // Determine color based on food type
-        let foodColor = "orange"; // Default pizza color
-        if (type === "apple_01") foodColor = "red";
-        else if (type === "banana_01") foodColor = "yellow";
-        else if (type === "grape_01") foodColor = "purple";
-        else if (type === "cherry_01") foodColor = "darkred";
-        else if (type === "orange_01") foodColor = "orange";
+        // Determine color based on food type using existing function
+        const foodColor = getFoodColorByType(type);
         
         const foodItem = {
           id: foodId,
           x: dp.x,
           y: dp.y,
-          radius: 8, // Slightly larger than regular food
+          radius: 5, // Slightly larger than regular food
           color: foodColor,
           type: type,
           createdAt: Date.now(),
@@ -2357,21 +2570,32 @@ io.on("connection", (socket) => {
 
         gameState.foods.push(foodItem);
         newFoodItems.push(foodItem);
-      });
+      }
 
-      console.log(
-        `🍕 Player death: Created ${newFoodItems.length} food items from snake segments (types: ${newFoodItems.map(f => f.type).join(', ')})`
-      );
+      if (segmentsToConvert < deadPoints.length) {
+        console.log(
+          `🍕 Player death: Created ${newFoodItems.length}/${deadPoints.length} food items from snake segments (limited by maxFoods: ${gameState.maxFoods})`
+        );
+      } else {
+        console.log(
+          `🍕 Player death: Created ${newFoodItems.length} food items from snake segments (types: ${newFoodItems.map(f => f.type).join(', ')})`
+        );
+      }
 
       // Broadcast player death and new food items
       io.emit("playerDied", {
         playerId: data.playerId,
         deadPoints: [], // No dead points anymore
-        newFoods: newFoodItems, // Send new pizza_01 food items
+        newFoods: newFoodItems, // Send new pizza food items
       });
 
       // Also broadcast food update to sync all clients
       io.emit("foodsUpdated", newFoodItems);
+      
+      // Perform food cleanup if we're approaching the limit
+      if (gameState.foods.length > gameState.maxFoods * 0.8) {
+        performFoodCleanup();
+      }
 
       // Only respawn human players, remove bots from arena
       if (player.isBot) {
@@ -2569,6 +2793,11 @@ function startCleanupInterval() {
 
   cleanupInterval = setInterval(() => {
     performSmartDeadPointCleanup();
+    
+    // Also perform food cleanup if approaching limit
+    if (gameState.foods.length > gameState.maxFoods * 0.8) {
+      performFoodCleanup();
+    }
   }, interval);
 }
 
@@ -2771,8 +3000,8 @@ function generateLeaderboard() {
     name:
       player.userName ||
       (player.isBot
-        ? `Guest ${player.id.replace("bot-", "")}`
-        : `Guest ${player.id}`),
+        ? `Player ${player.id.replace("bot-", "")}`
+        : `Player ${player.id}`),
     score: player.score,
     rank: index + 1, // This is the actual rank in the full leaderboard
     isBot: player.isBot || false,
@@ -2795,8 +3024,8 @@ function generateFullLeaderboard() {
     name:
       player.userName ||
       (player.isBot
-        ? `Guest ${player.id.replace("bot-", "")}`
-        : `Guest ${player.id}`),
+        ? `Player ${player.id.replace("bot-", "")}`
+        : `Player ${player.id}`),
     score: player.score,
     rank: index + 1,
     isBot: player.isBot || false,
