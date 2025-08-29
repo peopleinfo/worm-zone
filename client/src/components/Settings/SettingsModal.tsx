@@ -5,7 +5,8 @@ import { useSettingsStore } from "../../stores/settingsStore";
 import { MusicMuteButton } from "../Game/MusicMuteButton";
 import { EffectsMuteButton } from "../Game/EffectsMuteButton";
 import { LanguageSelector } from "./LanguageSelector";
-import { QualitySelector } from "./QualitySelector";
+import socketClient from "../../services/socketClient";
+import { useGameStore } from "../../stores/gameStore";
 
 export const SettingsModal: React.FC = () => {
   const { t } = useTranslation("common");
@@ -15,6 +16,8 @@ export const SettingsModal: React.FC = () => {
   const closeSettingsModal = useSettingsStore(
     (state) => state.closeSettingsModal
   );
+  const isPlaying = useGameStore((state) => state.isPlaying);
+  const resetGame = useGameStore((state) => state.resetGame);
 
   // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -23,6 +26,14 @@ export const SettingsModal: React.FC = () => {
     }
   };
 
+  // Handle quit confirmation
+  const handleQuitConfirm = () => {
+    // Disconnect from socket room first
+    socketClient.leaveRoom();
+    // Then reset the game state
+    resetGame();
+    closeSettingsModal();
+  };
 
   if (!isSettingsModalOpen) return null;
 
@@ -46,7 +57,7 @@ export const SettingsModal: React.FC = () => {
           <div className="settings-section">
             {/* Language Settings */}
             <LanguageSelector />
-            
+
             {/* Sound Settings */}
             <div className="setting-item">
               <label>{t("settings.music")}</label>
@@ -56,9 +67,14 @@ export const SettingsModal: React.FC = () => {
               <label>{t("settings.effects")}</label>
               <EffectsMuteButton isAbsolute={false} />
             </div>
-            
+
             {/* Graphics Settings */}
-            <QualitySelector />
+            {/* <QualitySelector /> */}
+            {isPlaying && (
+              <button onClick={handleQuitConfirm} className="to-quit-btn">
+                {t("game:quit.confirm")}
+              </button>
+            )}
           </div>
         </div>
       </div>

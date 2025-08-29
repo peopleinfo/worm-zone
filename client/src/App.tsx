@@ -110,6 +110,8 @@ function App() {
     return cleanup;
   }, []);
 
+  console.error('devicePixelRatio', window.devicePixelRatio);
+
   if (isUserInfoDenied) {
     return <UserInfoDeniedModal onRetry={autoLogin} />;
   }
