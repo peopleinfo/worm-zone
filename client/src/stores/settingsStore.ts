@@ -30,6 +30,9 @@ interface SettingsState {
   // Graphics Settings
   quality: QualityLevel;
 
+  // Audio Interaction State
+  isFirstInteraction: boolean;
+
   // Actions
   openSettingsModal: () => void;
   closeSettingsModal: () => void;
@@ -43,6 +46,7 @@ interface SettingsState {
   setLanguage: (language: SupportedLanguage) => void;
   updateSoundSettings: (settings: Partial<SoundSettings>) => void;
   setQuality: (quality: QualityLevel) => void;
+  setFirstInteractionComplete: () => void;
   resetSettings: () => void;
 }
 
@@ -55,11 +59,12 @@ const defaultSettings = {
     master: 0.8,
     music: 0.6,
     effects: 0.8,
-    muted: false, // Legacy property for backward compatibility
-    musicMuted: false,
-    effectsMuted: false,
+    muted: true, // Legacy property for backward compatibility - default to muted
+    musicMuted: true, // Default to muted - user must interact to unmute
+    effectsMuted: true, // Default to muted - user must interact to unmute
   },
   quality: "hd" as QualityLevel,
+  isFirstInteraction: false, // Track if it's the first user interaction (false = not completed yet)
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -115,11 +120,8 @@ export const useSettingsStore = create<SettingsState>()(
             if (settings.effectsMuted !== undefined) {
               audioService.setEffectsMuted(settings.effectsMuted);
             }
-            // Legacy support for backward compatibility
-            if (settings.muted !== undefined) {
-              audioService.setMusicMuted(settings.muted);
-              audioService.setEffectsMuted(settings.muted);
-            }
+            // Note: Legacy 'muted' property is kept for backward compatibility but not used
+            // to maintain independence between music and effects mute settings
           }).catch((error) => {
             console.error('Failed to sync with audio service:', error);
           });
@@ -132,6 +134,15 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       resetSettings: () => set(defaultSettings),
+      setFirstInteractionComplete: () => set((state) => ({
+        isFirstInteraction: true,
+        sound: {
+          ...state.sound,
+          musicMuted: false, // Unmute music on first interaction
+          effectsMuted: false, // Unmute effects on first interaction
+          muted: false, // Legacy property - unmute on first interaction
+        }
+      })),
     }),
     {
       name: "snake-zone-settings",
@@ -139,6 +150,7 @@ export const useSettingsStore = create<SettingsState>()(
         language: state.language,
         sound: state.sound,
         quality: state.quality,
+        isFirstInteraction: state.isFirstInteraction,
       }),
     }
   )

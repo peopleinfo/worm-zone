@@ -7,6 +7,7 @@ import { EffectsMuteButton } from "../Game/EffectsMuteButton";
 import { LanguageSelector } from "./LanguageSelector";
 import socketClient from "../../services/socketClient";
 import { useGameStore } from "../../stores/gameStore";
+import { audioService } from "../../services/audioService";
 
 export const SettingsModal: React.FC = () => {
   const { t } = useTranslation("common");
@@ -34,6 +35,13 @@ export const SettingsModal: React.FC = () => {
     resetGame();
     closeSettingsModal();
   };
+
+  React.useEffect(() => {
+    if (isSettingsModalOpen) {
+      console.log('🎵 Settings modal opened - unlocking audio context for iOS');
+      audioService.handleUserInteraction();
+    }
+  }, [isSettingsModalOpen]);
 
   if (!isSettingsModalOpen) return null;
 

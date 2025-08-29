@@ -5,15 +5,18 @@ class AudioService {
   private isInitialized = false;
   private currentVolume = 0.6; // Default 60%
   private currentEffectsVolume = 0.8; // Default 80%
-  private isMusicMuted = false;
-  private isEffectsMuted = false;
-  private wasPlayingBeforeHidden = false; // Track if music was playing before page became hidden
+  private isMusicMuted = true; // Default to muted - user must interact to unmute
+  private isEffectsMuted = true; // Default to muted - user must interact to unmute
+  private wasPlayingBeforeHidden = false;
   private audioContext: AudioContext | null = null;
+  private isAudioContextUnlocked = false;
+  private unlockAttempts = 0; // Track unlock attempts for iOS
 
   constructor() {
     this.initializeAudio();
     this.setupPageVisibilityListener();
     this.setupMediaSession();
+    this.setupIOSAudioUnlock();
   }
 
   private initializeAudio(): void {
@@ -315,11 +318,32 @@ class AudioService {
       return;
     }
 
-    // Sync with current settings before attempting to play
-    this.syncWithSettings();
-
     // Initialize audio context for iOS compatibility
     this.initializeAudioContext();
+    this.isAudioContextUnlocked = true;
+
+    // Check if this is the first interaction using the store
+    import('../stores/settingsStore').then(({ useSettingsStore }) => {
+      const settings = useSettingsStore.getState();
+      
+      if (settings.isFirstInteraction) {
+        // First interaction: Force everything muted regardless of saved settings
+        console.log('🎵 First user interaction - forcing everything muted');
+        this.isMusicMuted = true;
+        this.isEffectsMuted = true;
+        this.updateVolume();
+        this.updateEffectsVolume();
+        // Mark first interaction as complete
+        useSettingsStore.getState().setFirstInteractionComplete();
+        return;
+      } else {
+        // Subsequent interactions: Respect user's saved settings
+        console.log('🎵 Subsequent user interaction - respecting saved settings');
+        this.syncWithSettings();
+      }
+    }).catch((error) => {
+      console.error('Failed to check first interaction state:', error);
+    });
 
     if (this.backgroundMusic.paused) {
       console.log('🎵 User interaction - attempting to unlock audio');
@@ -520,6 +544,77 @@ class AudioService {
       navigator.mediaSession.metadata = null;
       navigator.mediaSession.playbackState = 'none';
       console.log('🎵 Media session metadata cleared');
+    }
+  }
+
+  private setupIOSAudioUnlock(): void {
+    const unlockAudio = () => {
+      if (!this.isAudioContextUnlocked) {
+        this.initializeAudioContext();
+        this.isAudioContextUnlocked = true;
+        this.unlockAttempts++;
+        console.log('🎵 iOS Audio context unlocked via user interaction (attempt:', this.unlockAttempts, ')');
+        
+        // Force unlock all audio elements
+        this.forceUnlockAllAudio();
+        
+        // Check if this is the first interaction using the store
+        import('../stores/settingsStore').then(({ useSettingsStore }) => {
+          const settings = useSettingsStore.getState();
+          
+          if (!settings.isFirstInteraction) {
+            // First interaction: Set isFirstInteraction to true and unmute everything
+            console.log('🎵 First user interaction - unmuting everything and setting settings to true');
+            useSettingsStore.getState().setFirstInteractionComplete();
+            // The setFirstInteractionComplete method will unmute everything and sync with audioService
+          } else {
+            // Subsequent interactions: Respect user's saved settings
+            console.log('🎵 Subsequent user interaction - respecting saved settings');
+            this.syncWithSettings();
+          }
+        }).catch((error) => {
+          console.error('Failed to check first interaction state:', error);
+        });
+        
+        // Remove event listeners after first unlock
+        document.removeEventListener('touchstart', unlockAudio);
+        document.removeEventListener('touchend', unlockAudio);
+        document.removeEventListener('click', unlockAudio);
+      }
+    };
+
+    // Add multiple event listeners for iOS compatibility
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    document.addEventListener('touchend', unlockAudio, { once: true });
+    document.addEventListener('click', unlockAudio, { once: true });
+  }
+
+  private forceUnlockAllAudio(): void {
+    console.log('🎵 Force unlocking all audio elements for iOS...');
+    
+    if (this.backgroundMusic) {
+      this.backgroundMusic.play().then(() => {
+        this.backgroundMusic?.pause();
+        console.log('🎵 Background music unlocked successfully');
+      }).catch((error) => {
+        console.warn('Failed to unlock background music:', error);
+      });
+    }
+    if (this.eatSound) {
+      this.eatSound.play().then(() => {
+        this.eatSound?.pause();
+        console.log('🎵 Eat sound unlocked successfully');
+      }).catch((error) => {
+        console.warn('Failed to unlock eat sound:', error);
+      });
+    }
+    if (this.gameOverSound) {
+      this.gameOverSound.play().then(() => {
+        this.gameOverSound?.pause();
+        console.log('🎵 Game over sound unlocked successfully');
+      }).catch((error) => {
+        console.warn('Failed to unlock game over sound:', error);
+      });
     }
   }
 }
