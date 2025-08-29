@@ -78,7 +78,7 @@ function App() {
   // Sync audio service when sound settings change
   useEffect(() => {
     audioService.syncWithSettings();
-  }, [sound.music, sound.musicMuted, sound.effects, sound.effectsMuted, sound.muted]);
+  }, [sound.music, sound.musicMuted, sound.effects, sound.effectsMuted]);
 
   // iOS Audio Context Initialization
   useEffect(() => {
@@ -109,6 +109,8 @@ function App() {
     const cleanup = initializeIOSAudio();
     return cleanup;
   }, []);
+
+  console.error('devicePixelRatio', window.devicePixelRatio);
 
   if (isUserInfoDenied) {
     return <UserInfoDeniedModal onRetry={autoLogin} />;

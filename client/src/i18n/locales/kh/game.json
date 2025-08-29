@@ -74,7 +74,7 @@
     "currentScore": "ពិន្ទុបច្ចុប្បន្ន៖",
     "bestScore": "ពិន្ទុល្អបំផុត៖",
     "ranking": "ចំណាត់ថ្នាក់៖",
-    "newRecord": "កំណត់ត្រាថ្មី! +{{points}} ពិន្ទុ!",
+    "newRecord": "កំណត់ត្រាថ្មី! {{points}} ពិន្ទុ!",
     "loading": "កំពុងផ្ទុក..."
   },
   "howToPlay": {
