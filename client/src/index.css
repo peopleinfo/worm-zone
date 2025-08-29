@@ -2555,8 +2555,8 @@ canvas:not(#gameCanvas) {
 
 .leaderboard-container {
   width: 100%;
-  max-height: 384px;
-  overflow-y: auto;
+  /* max-height: 384px;
+  overflow-y: auto; */
 }
 
 .leaderboard-header {
@@ -2582,6 +2582,17 @@ canvas:not(#gameCanvas) {
 
 .leaderboard-item.current-player {
   font-weight: 600;
+}
+
+.top-leaderboard-item.current-player {
+  font-weight: 600;
+  position: fixed;
+  bottom: 0;
+  background:#E8E8E8;
+  width: 100%;
+  z-index: 1000;
+  left: 0px;
+  padding: 4px 20px;
 }
 
 .player-rank {
