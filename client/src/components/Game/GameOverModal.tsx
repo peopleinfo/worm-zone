@@ -6,7 +6,7 @@ import { useAuthStore } from "../../stores/authStore";
 
 export const GameOverModal = React.memo(() => {
   const { t } = useTranslation();
-  
+
   // Use selective subscriptions to minimize re-renders
   const isGameOver = useGameStore((state) => state.isGameOver);
   const score = useGameStore((state) => state.finalScore);
@@ -45,7 +45,7 @@ export const GameOverModal = React.memo(() => {
     <div className="settings-modal">
       {/* Modal Header */}
       <div className="modal-header">
-        <h2 className="modal-title">{t('game:gameOver.title')}</h2>
+        <h2 className="modal-title">{t("game:gameOver.title")}</h2>
         <button className="close-button" onClick={handleClose}>
           <X size={24} />
         </button>
@@ -56,7 +56,11 @@ export const GameOverModal = React.memo(() => {
             className="stat-item"
             style={{ width: "100%", display: "flex", justifyContent: "center" }}
           >
-            <img src={"/icons/current-rank.png"} alt="score" className="stat-icon" />
+            <img
+              src={"/icons/current-rank.png"}
+              alt="score"
+              className="stat-icon"
+            />
             <div
               style={{
                 display: "flex",
@@ -64,7 +68,9 @@ export const GameOverModal = React.memo(() => {
                 justifyContent: "center",
               }}
             >
-              <span className="stat-label">{t('game:gameOver.currentScore')}</span>
+              <span className="stat-label">
+                {t("game:gameOver.currentScore")}
+              </span>
               <span className="stat-value">{score}</span>
             </div>
           </div>
@@ -82,9 +88,13 @@ export const GameOverModal = React.memo(() => {
                   textAlign: "left",
                 }}
               >
-                <span className="stat-label">{t('game:gameOver.bestScore')}</span>
+                <span className="stat-label">
+                  {t("game:gameOver.bestScore")}
+                </span>
                 <div className="stat-value highlight">
-                  {isLoadingScores ? t('game:gameOver.loading') : userHighestScore}
+                  {isLoadingScores
+                    ? t("game:gameOver.loading")
+                    : userHighestScore}
                 </div>
               </div>
             </div>
@@ -101,14 +111,18 @@ export const GameOverModal = React.memo(() => {
                   textAlign: "left",
                 }}
               >
-                <span className="stat-label">{t('game:gameOver.ranking')}</span>
+                <span className="stat-label">{t("game:gameOver.ranking")}</span>
                 <div className="stat-value">#{rank}</div>
               </div>
             </div>
           </div>
           {isNewRecord && (
-            <div className="new-record">
-              🎉 {t('game:gameOver.newRecord', { points: scoreUpdateData?.scoreChange })} 🎉
+            <div className="new-record" style={{ marginTop: "4px" }}>
+              🎉{" "}
+              {t("game:gameOver.newRecord", {
+                points: scoreUpdateData?.newScore,
+              })}{" "}
+              🎉
             </div>
           )}
         </div>

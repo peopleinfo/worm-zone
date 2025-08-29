@@ -9,17 +9,27 @@ export const EffectsMuteButton: React.FC<{ isAbsolute?: boolean }> = React.memo(
   const { t } = useTranslation();
   const isEffectsMuted = sound.effectsMuted;
 
-  const handleToggleEffectsMute = () => {
+  const handleToggleEffectsMute = async () => {
     const newEffectsMutedState = !isEffectsMuted;
     
-    updateSoundSettings({ 
-      effectsMuted: newEffectsMutedState,
-      // Update legacy muted property if both music and effects are muted
-      muted: newEffectsMutedState && sound.musicMuted
-    });
+    console.log('🎵 Effects mute button clicked, new state:', newEffectsMutedState);
+    
+    try {
+      // For iOS, ensure audio context is unlocked on user interaction
+      audioService.handleUserInteraction();
+      
+      // Update settings - only effects mute, keep music mute independent
+      updateSoundSettings({ 
+        effectsMuted: newEffectsMutedState
+      });
 
-    // Ensure audio service is synced
-    audioService.setEffectsMuted(newEffectsMutedState);
+      // Ensure audio service is synced
+      audioService.setEffectsMuted(newEffectsMutedState);
+      
+      console.log('🎵 Effects mute toggle completed successfully');
+    } catch (error) {
+      console.error('🎵 Error toggling effects mute:', error);
+    }
   };
 
   return (

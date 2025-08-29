@@ -1108,6 +1108,26 @@ canvas:not(#gameCanvas) {
   box-shadow: 0px 3px 0px #512d15, inset 2px 4px 4px rgba(255, 255, 255, 0.67);
 }
 
+.to-quit-btn {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-dark) 100%
+  );
+  border: 3px solid var(--color-primary-dark);
+  border-radius: 25px;
+  color: var(--color-light);
+  font-size: 24px;
+  font-weight: bold;
+  padding: 6px 40px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0px 3px 0px #512d15, inset 2px 4px 4px rgba(255, 255, 255, 0.67);
+}
+
 .to-battle-btn:hover:not(:disabled) {
   background: linear-gradient(
     135deg,
@@ -1488,8 +1508,8 @@ canvas:not(#gameCanvas) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding: 4px 0;
+  padding: 2px 0;
+  gap: 4px;
 }
 
 .setting-item label {
@@ -2535,8 +2555,8 @@ canvas:not(#gameCanvas) {
 
 .leaderboard-container {
   width: 100%;
-  max-height: 384px;
-  overflow-y: auto;
+  /* max-height: 384px;
+  overflow-y: auto; */
 }
 
 .leaderboard-header {
@@ -2562,6 +2582,17 @@ canvas:not(#gameCanvas) {
 
 .leaderboard-item.current-player {
   font-weight: 600;
+}
+
+.top-leaderboard-item.current-player {
+  font-weight: 600;
+  position: fixed;
+  bottom: 0;
+  background:#E8E8E8;
+  width: 100%;
+  z-index: 1000;
+  left: 0px;
+  padding: 4px 20px;
 }
 
 .player-rank {

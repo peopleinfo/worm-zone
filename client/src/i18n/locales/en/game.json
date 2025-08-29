@@ -74,7 +74,7 @@
     "currentScore": "Current Score:",
     "bestScore": "Best Score:",
     "ranking": "Ranking:",
-    "newRecord": "New Record! +{{points}} points!",
+    "newRecord": "New Record! {{points}} points!",
     "loading": "Loading..."
   },
   "howToPlay": {

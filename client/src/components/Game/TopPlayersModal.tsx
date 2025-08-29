@@ -110,25 +110,34 @@ export const TopPlayersModal: React.FC = () => {
                   })}
 
                   {/* Current User Rank (if not in top players) */}
-                  {rank?.currentUserRank &&
-                    !rank.topPlayers.some(
-                      (player) => player.id === rank.currentUserRank?.id
-                    ) && (
-                      <>
-                        <div className="leaderboard-separator">...</div>
-                        <div className="leaderboard-item current-player">
-                          <div className="player-rank">
-                            {rank.currentUserRank.rank}
-                          </div>
-                          <div className="player-name">
-                            {rank.currentUserRank.name}
-                          </div>
-                          <div className="player-score">
-                            {rank.currentUserRank.score.toLocaleString()}
-                          </div>
-                        </div>
-                      </>
-                    )}
+                  <div className="leaderboard-separator">...</div>
+                  <div className="leaderboard-item top-leaderboard-item current-player">
+                    <div className="player-rank">
+                      {rank?.currentUserRank?.rank}
+                    </div>
+                    <div
+                      className="player-name"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <img
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: "50%",
+                        }}
+                        src={rank?.currentUserRank?.avatarUrl}
+                        alt={rank?.currentUserRank?.name}
+                      />
+                      {rank?.currentUserRank?.name}
+                    </div>
+                    <div className="player-score">
+                      {rank?.currentUserRank?.score.toLocaleString()}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

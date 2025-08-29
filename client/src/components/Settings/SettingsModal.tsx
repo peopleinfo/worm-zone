@@ -2,11 +2,12 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 import { useSettingsStore } from "../../stores/settingsStore";
-import { audioService } from "../../services/audioService";
 import { MusicMuteButton } from "../Game/MusicMuteButton";
 import { EffectsMuteButton } from "../Game/EffectsMuteButton";
 import { LanguageSelector } from "./LanguageSelector";
-import { QualitySelector } from "./QualitySelector";
+import socketClient from "../../services/socketClient";
+import { useGameStore } from "../../stores/gameStore";
+import { audioService } from "../../services/audioService";
 
 export const SettingsModal: React.FC = () => {
   const { t } = useTranslation("common");
@@ -16,11 +17,8 @@ export const SettingsModal: React.FC = () => {
   const closeSettingsModal = useSettingsStore(
     (state) => state.closeSettingsModal
   );
-  const sound = useSettingsStore((state) => state.sound);
-  const updateSoundSettings = useSettingsStore(
-    (state) => state.updateSoundSettings
-  );
-
+  const isPlaying = useGameStore((state) => state.isPlaying);
+  const resetGame = useGameStore((state) => state.resetGame);
 
   // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -29,10 +27,21 @@ export const SettingsModal: React.FC = () => {
     }
   };
 
-  // Handle settings button click to initialize audio context
-  const handleSettingsButtonClick = () => {
-    audioService.handleUserInteraction();
+  // Handle quit confirmation
+  const handleQuitConfirm = () => {
+    // Disconnect from socket room first
+    socketClient.leaveRoom();
+    // Then reset the game state
+    resetGame();
+    closeSettingsModal();
   };
+
+  React.useEffect(() => {
+    if (isSettingsModalOpen) {
+      console.log('🎵 Settings modal opened - unlocking audio context for iOS');
+      audioService.handleUserInteraction();
+    }
+  }, [isSettingsModalOpen]);
 
   if (!isSettingsModalOpen) return null;
 
@@ -56,57 +65,24 @@ export const SettingsModal: React.FC = () => {
           <div className="settings-section">
             {/* Language Settings */}
             <LanguageSelector />
-            
+
             {/* Sound Settings */}
             <div className="setting-item">
               <label>{t("settings.music")}</label>
               <MusicMuteButton isAbsolute={false} />
-              <div className="slider-container">
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={sound.music}
-                  onChange={(e) => {
-                    handleSettingsButtonClick();
-                    updateSoundSettings({
-                      music: parseFloat(e.target.value),
-                    });
-                  }}
-                  className="volume-slider"
-                />
-                <span className="slider-value">
-                  {Math.round(sound.music * 100)}%
-                </span>
-              </div>
             </div>
             <div className="setting-item">
               <label>{t("settings.effects")}</label>
               <EffectsMuteButton isAbsolute={false} />
-              <div className="slider-container">
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={sound.effects}
-                  onChange={(e) => {
-                    handleSettingsButtonClick();
-                    updateSoundSettings({
-                      effects: parseFloat(e.target.value),
-                    });
-                  }}
-                  className="volume-slider"
-                />
-                <span className="slider-value">
-                  {Math.round(sound.effects * 100)}%
-                </span>
-              </div>
             </div>
-            
+
             {/* Graphics Settings */}
-            <QualitySelector />
+            {/* <QualitySelector /> */}
+            {isPlaying && (
+              <button onClick={handleQuitConfirm} className="to-quit-btn">
+                {t("game:quit.confirm")}
+              </button>
+            )}
           </div>
         </div>
       </div>

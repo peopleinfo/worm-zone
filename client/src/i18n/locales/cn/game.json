@@ -74,7 +74,7 @@
     "currentScore": "当前得分：",
     "bestScore": "最佳得分：",
     "ranking": "排名：",
-    "newRecord": "新纪录！+{{points}} 分！",
+    "newRecord": "新纪录！{{points}} 分！",
     "loading": "加载中..."
   },
   "howToPlay": {
