@@ -72,17 +72,24 @@ export class GameEngine {
 
   private setupCanvas(): void {
     const devicePerf = performanceManager.getDevicePerformance();
+    const pixelRatio = window.devicePixelRatio || 1;
     
     // Use rotated dimensions for landscape mode with performance scaling
-    const baseWidth = window.innerHeight * devicePerf.canvasScale;
-    const baseHeight = window.innerWidth * devicePerf.canvasScale;
+    const displayWidth = window.innerHeight;
+    const displayHeight = window.innerWidth;
+    const baseWidth = displayWidth * devicePerf.canvasScale;
+    const baseHeight = displayHeight * devicePerf.canvasScale;
     
-    this.canvas.width = baseWidth;
-    this.canvas.height = baseHeight;
+    // Set actual canvas size accounting for device pixel ratio for crisp rendering
+    this.canvas.width = baseWidth * pixelRatio;
+    this.canvas.height = baseHeight * pixelRatio;
     
     // Scale canvas display size back to full screen
-    this.canvas.style.width = window.innerHeight + 'px';
-    this.canvas.style.height = window.innerWidth + 'px';
+    this.canvas.style.width = displayWidth + 'px';
+    this.canvas.style.height = displayHeight + 'px';
+    
+    // Scale the drawing context to match device pixel ratio
+    this.ctx.scale(pixelRatio, pixelRatio);
     
     this.ctx.lineJoin = 'round';
     this.ctx.lineCap = 'round';
@@ -111,14 +118,24 @@ export class GameEngine {
     const oldWidth = this.canvas.width;
     const oldHeight = this.canvas.height;
     const devicePerf = performanceManager.getDevicePerformance();
+    const pixelRatio = window.devicePixelRatio || 1;
     
     // Update canvas dimensions for rotated view with performance scaling
-    this.canvas.width = window.innerHeight * devicePerf.canvasScale;
-    this.canvas.height = window.innerWidth * devicePerf.canvasScale;
+    const displayWidth = window.innerHeight;
+    const displayHeight = window.innerWidth;
+    const baseWidth = displayWidth * devicePerf.canvasScale;
+    const baseHeight = displayHeight * devicePerf.canvasScale;
+    
+    // Set actual canvas size accounting for device pixel ratio for crisp rendering
+    this.canvas.width = baseWidth * pixelRatio;
+    this.canvas.height = baseHeight * pixelRatio;
     
     // Scale canvas display size back to full screen
-    this.canvas.style.width = window.innerHeight + 'px';
-    this.canvas.style.height = window.innerWidth + 'px';
+    this.canvas.style.width = displayWidth + 'px';
+    this.canvas.style.height = displayHeight + 'px';
+    
+    // Scale the drawing context to match device pixel ratio
+    this.ctx.scale(pixelRatio, pixelRatio);
     
     // Restore canvas context properties with performance optimizations
     this.ctx.lineJoin = 'round';
@@ -133,8 +150,12 @@ export class GameEngine {
     }
     
     // Calculate scale factors for repositioning game elements
-    const scaleX = this.canvas.width / oldWidth;
-    const scaleY = this.canvas.height / oldHeight;
+    // Account for pixel ratio in old dimensions when calculating scale
+    const oldPixelRatio = oldWidth / (window.innerHeight * devicePerf.canvasScale) || 1;
+    const oldBaseWidth = oldWidth / oldPixelRatio;
+    const oldBaseHeight = oldHeight / oldPixelRatio;
+    const scaleX = baseWidth / oldBaseWidth;
+    const scaleY = baseHeight / oldBaseHeight;
     
     // Reposition player snake if it exists
     if (this.mySnake && this.mySnake.isAlive) {
@@ -449,19 +470,23 @@ export class GameEngine {
   private render(): void {
     const store = useGameStore.getState();
     
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    // Clear using display dimensions, not scaled canvas dimensions
+    this.ctx.clearRect(0, 0, this.canvas.width / (window.devicePixelRatio || 1), this.canvas.height / (window.devicePixelRatio || 1));
     this.ctx.save();
     this.ctx.scale(this.zoom, this.zoom);
 
-    // Calculate viewport bounds for culling
+    // Calculate viewport bounds for culling using display dimensions
     let viewX = 0, viewY = 0;
-    const viewWidth = this.canvas.width / this.zoom;
-    const viewHeight = this.canvas.height / this.zoom;
+    const pixelRatio = window.devicePixelRatio || 1;
+    const displayWidth = this.canvas.width / pixelRatio;
+    const displayHeight = this.canvas.height / pixelRatio;
+    const viewWidth = displayWidth / this.zoom;
+    const viewHeight = displayHeight / this.zoom;
 
     if (this.mySnake && this.mySnake.isAlive) {
       const head = this.mySnake.getHead();
-      const zoomFactorX = this.canvas.width / 2 / this.zoom;
-      const zoomFactorY = this.canvas.height / 2 / this.zoom;
+      const zoomFactorX = displayWidth / 2 / this.zoom;
+      const zoomFactorY = displayHeight / 2 / this.zoom;
       
       viewX = head.x - zoomFactorX;
       viewY = head.y - zoomFactorY;
@@ -591,7 +616,8 @@ export class GameEngine {
       socketClient.disconnect();
     }
     
-    // Clear canvas
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    // Clear canvas using display dimensions
+    const pixelRatio = window.devicePixelRatio || 1;
+    this.ctx.clearRect(0, 0, this.canvas.width / pixelRatio, this.canvas.height / pixelRatio);
   }
 }
